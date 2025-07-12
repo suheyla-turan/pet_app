@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'features/pet/screens/pet_list_page.dart';
 import 'services/notification_service.dart';
+import 'services/firebase_config.dart';
 import 'providers/pet_provider.dart';
 import 'providers/ai_provider.dart';
 import 'providers/theme_provider.dart';
@@ -11,9 +12,10 @@ import 'providers/settings_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  
+  // Güvenli Firebase başlatma
+  await FirebaseConfig.initialize();
+  
   await NotificationService.initialize();
   runApp(const MiniPetApp());
 }
