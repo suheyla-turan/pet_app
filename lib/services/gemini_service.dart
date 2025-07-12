@@ -1,13 +1,13 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:pet_app/secrets.dart';
 
 class GeminiService {
-  static const String _apiKey = 'AIzaSyATwI2Ox60P_iOqgHU7Oj1gS9yp0iJ7Z1w'; // kendi keyin
   static const String _baseUrl =
       'https://generativelanguage.googleapis.com/v1/models/gemini-2.5-pro:generateContent';
 
   static Future<String> getSuggestion(String userInput) async {
-    final url = Uri.parse('$_baseUrl?key=$_apiKey');
+    final url = Uri.parse('$_baseUrl?key=$geminiApiKey');
     final headers = {'Content-Type': 'application/json'};
     final body = jsonEncode({
       "contents": [
