@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
-
+import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'package:pet_app/features/pet/models/pet.dart';
-import 'package:pet_app/services/firestore_service.dart';
-
+import 'package:pet_app/providers/pet_provider.dart';
 
 class PetFormPage extends StatefulWidget {
   final Pet? pet;
@@ -62,6 +61,42 @@ class _PetFormPageState extends State<PetFormPage> {
       setState(() {
         _imagePath = picked.path;
       });
+    }
+  }
+
+  Future<void> _savePet() async {
+    if (_formKey.currentState!.validate() && _birthDate != null) {
+      final pet = Pet(
+        name: _nameController.text,
+        gender: _gender!,
+        birthDate: _birthDate!,
+        hunger: _hunger,
+        happiness: _happiness,
+        energy: _energy,
+        care: _care,
+        hungerInterval: _hungerInterval,
+        happinessInterval: _happinessInterval,
+        energyInterval: _energyInterval,
+        careInterval: _careInterval,
+        vaccines: widget.pet?.vaccines ?? [],
+        type: _type ?? 'Köpek',
+        imagePath: _imagePath,
+      );
+
+      try {
+        if (widget.pet == null) {
+          // Yeni hayvan ekleme
+          await context.read<PetProvider>().addPet(pet);
+        } else {
+          // Mevcut hayvanı güncelleme
+          await context.read<PetProvider>().updatePet(widget.pet!.name, pet);
+        }
+        Navigator.pop(context, pet);
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Hata: $e')),
+        );
+      }
     }
   }
 
@@ -222,28 +257,7 @@ class _PetFormPageState extends State<PetFormPage> {
               
               const SizedBox(height: 24),
               ElevatedButton(
-                onPressed: () async {
-                  if (_formKey.currentState!.validate() && _birthDate != null) {
-                    final pet = Pet(
-                      name: _nameController.text,
-                      gender: _gender!,
-                      birthDate: _birthDate!,
-                      hunger: _hunger,
-                      happiness: _happiness,
-                      energy: _energy,
-                      care: _care,
-                      hungerInterval: _hungerInterval,
-                      happinessInterval: _happinessInterval,
-                      energyInterval: _energyInterval,
-                      careInterval: _careInterval,
-                      vaccines: widget.pet?.vaccines ?? [],
-                      type: _type ?? 'Köpek',
-                      imagePath: _imagePath,
-                    );
-                    await FirestoreService.hayvanEkle(pet);
-                    Navigator.pop(context, pet);
-                  }
-                },
+                onPressed: _savePet,
                 child: const Text('Kaydet'),
               ),
             ],

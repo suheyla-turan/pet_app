@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
-import 'dart:async';
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:provider/provider.dart';
 
 import 'package:pet_app/features/pet/models/pet.dart';
 import 'package:pet_app/features/pet/widgets/progress_indicator.dart';
 import 'package:pet_app/features/pet/screens/vaccine_page.dart';
 import 'package:pet_app/features/pet/screens/pet_form_page.dart';
-import 'package:pet_app/services/gemini_service.dart';
+import 'package:pet_app/providers/ai_provider.dart';
+import 'package:pet_app/providers/pet_provider.dart';
 import 'package:pet_app/services/notification_service.dart';
-
 
 class PetDetailPage extends StatefulWidget {
   final Pet pet;
@@ -21,9 +21,6 @@ class PetDetailPage extends StatefulWidget {
 }
 
 class _PetDetailPageState extends State<PetDetailPage> {
-  String? aiResponse;
-  bool isLoading = false;
-  Timer? _timer;
   late Pet _pet;
   final FlutterTts flutterTts = FlutterTts();
 
@@ -36,28 +33,12 @@ class _PetDetailPageState extends State<PetDetailPage> {
     super.initState();
     _pet = widget.pet;
     _checkBirthday();
-    _startTimer();
     // Doğum günü ise otomatik seslendir
     if (_pet.isBirthday) {
       Future.delayed(const Duration(milliseconds: 500), () {
         speak('Doğum günün kutlu olsun!');
       });
     }
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  void _startTimer() {
-    _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
-      setState(() {
-        _pet.updateValues();
-      });
-      _checkLowValues();
-    });
   }
 
   void _checkBirthday() async {
@@ -75,25 +56,11 @@ class _PetDetailPageState extends State<PetDetailPage> {
     }
   }
 
-  void _checkLowValues() {
-    if (_pet.hunger >= 8) {
-      NotificationService.showLowValueNotification(_pet.name, 'açlık');
-    }
-    if (_pet.happiness <= 2) {
-      NotificationService.showLowValueNotification(_pet.name, 'mutluluk');
-    }
-    if (_pet.energy <= 2) {
-      NotificationService.showLowValueNotification(_pet.name, 'enerji');
-    }
-    if (_pet.care <= 2) {
-      NotificationService.showLowValueNotification(_pet.name, 'bakım');
-    }
-  }
-
   void besle() {
     setState(() {
       _pet.hunger = (_pet.hunger > 0) ? _pet.hunger - 1 : 0;
     });
+    context.read<PetProvider>().updatePetValues(_pet);
     speak('Afiyet olsun!');
   }
 
@@ -101,6 +68,7 @@ class _PetDetailPageState extends State<PetDetailPage> {
     setState(() {
       _pet.happiness = (_pet.happiness < 10) ? _pet.happiness + 1 : 10;
     });
+    context.read<PetProvider>().updatePetValues(_pet);
     speak('Sen harika bir dostsun!');
   }
 
@@ -108,6 +76,7 @@ class _PetDetailPageState extends State<PetDetailPage> {
     setState(() {
       _pet.energy = (_pet.energy < 10) ? _pet.energy + 1 : 10;
     });
+    context.read<PetProvider>().updatePetValues(_pet);
     speak('İyi uykular!');
   }
 
@@ -115,44 +84,10 @@ class _PetDetailPageState extends State<PetDetailPage> {
     setState(() {
       _pet.care = (_pet.care < 10) ? _pet.care + 1 : 10;
     });
+    context.read<PetProvider>().updatePetValues(_pet);
     speak('Bakım zamanı, aferin!');
   }
 
-  Future<void> aiOneriGetir() async {
-    setState(() {
-      isLoading = true;
-    });
-
-    final suggestion = await GeminiService.getSuggestion(
-        '${_pet.name} adlı ${_pet.type} türündeki evcil hayvan için bakım önerisi verir misin?');
-
-    setState(() {
-      aiResponse = suggestion;
-      isLoading = false;
-    });
-  }
-
-  Future<void> getMamaOnerisi() async {
-    setState(() { isLoading = true; });
-    final suggestion = await GeminiService.getSuggestion(
-      '${_pet.name} adlı ${_pet.type} için mama önerisi verir misin?'
-    );
-    setState(() { aiResponse = suggestion; isLoading = false; });
-  }
-  Future<void> getOyunOnerisi() async {
-    setState(() { isLoading = true; });
-    final suggestion = await GeminiService.getSuggestion(
-      '${_pet.name} adlı ${_pet.type} için oyun önerisi verir misin?'
-    );
-    setState(() { aiResponse = suggestion; isLoading = false; });
-  }
-  Future<void> getBakimOnerisi() async {
-    setState(() { isLoading = true; });
-    final suggestion = await GeminiService.getSuggestion(
-      '${_pet.name} adlı ${_pet.type} için bakım önerisi verir misin?'
-    );
-    setState(() { aiResponse = suggestion; isLoading = false; });
-  }
   Future<void> soruSorDialog() async {
     final controller = TextEditingController();
     final result = await showDialog<String>(
@@ -171,9 +106,7 @@ class _PetDetailPageState extends State<PetDetailPage> {
       ),
     );
     if (result != null && result.trim().isNotEmpty) {
-      setState(() { isLoading = true; });
-      final suggestion = await GeminiService.getSuggestion(result);
-      setState(() { aiResponse = suggestion; isLoading = false; });
+      await context.read<AIProvider>().getSuggestion(result);
     }
   }
 
@@ -196,6 +129,7 @@ class _PetDetailPageState extends State<PetDetailPage> {
                 setState(() {
                   _pet = result;
                 });
+                context.read<PetProvider>().updatePetValues(_pet);
               }
             },
           ),
@@ -261,17 +195,17 @@ class _PetDetailPageState extends State<PetDetailPage> {
                   ElevatedButton(onPressed: dinlendir, child: const Text('Dinlendir')),
                   ElevatedButton(onPressed: bakim, child: const Text('Bakım')),
                   ElevatedButton.icon(
-                    onPressed: getMamaOnerisi,
+                    onPressed: () => context.read<AIProvider>().getMamaOnerisi(_pet.name, _pet.type),
                     icon: const Icon(Icons.restaurant),
                     label: const Text('Mama Önerisi'),
                   ),
                   ElevatedButton.icon(
-                    onPressed: getOyunOnerisi,
+                    onPressed: () => context.read<AIProvider>().getOyunOnerisi(_pet.name, _pet.type),
                     icon: const Icon(Icons.sports_esports),
                     label: const Text('Oyun Önerisi'),
                   ),
                   ElevatedButton.icon(
-                    onPressed: getBakimOnerisi,
+                    onPressed: () => context.read<AIProvider>().getBakimOnerisi(_pet.name, _pet.type),
                     icon: const Icon(Icons.auto_awesome),
                     label: const Text('Bakım Önerisi'),
                   ),
@@ -283,13 +217,19 @@ class _PetDetailPageState extends State<PetDetailPage> {
                 ],
               ),
               const SizedBox(height: 10),
-              if (isLoading)
-                const CircularProgressIndicator()
-              else if (aiResponse != null)
-                Text(
-                  aiResponse!,
-                  style: const TextStyle(fontStyle: FontStyle.italic),
-                ),
+              Consumer<AIProvider>(
+                builder: (context, aiProvider, child) {
+                  if (aiProvider.isLoading) {
+                    return const CircularProgressIndicator();
+                  } else if (aiProvider.currentResponse != null) {
+                    return Text(
+                      aiProvider.currentResponse!,
+                      style: const TextStyle(fontStyle: FontStyle.italic),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
             ],
           ),
         ),
