@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'dart:async';
+import 'package:flutter_tts/flutter_tts.dart';
 
 import 'package:pet_app/features/pet/models/pet.dart';
-import 'package:pet_app/features/pet/models/vaccine.dart';
 import 'package:pet_app/features/pet/widgets/progress_indicator.dart';
 import 'package:pet_app/features/pet/screens/vaccine_page.dart';
 import 'package:pet_app/features/pet/screens/pet_form_page.dart';
@@ -25,6 +25,11 @@ class _PetDetailPageState extends State<PetDetailPage> {
   bool isLoading = false;
   Timer? _timer;
   late Pet _pet;
+  final FlutterTts flutterTts = FlutterTts();
+
+  Future<void> speak(String text) async {
+    await flutterTts.speak(text);
+  }
 
   @override
   void initState() {
@@ -32,6 +37,12 @@ class _PetDetailPageState extends State<PetDetailPage> {
     _pet = widget.pet;
     _checkBirthday();
     _startTimer();
+    // Doğum günü ise otomatik seslendir
+    if (_pet.isBirthday) {
+      Future.delayed(const Duration(milliseconds: 500), () {
+        speak('Doğum günün kutlu olsun!');
+      });
+    }
   }
 
   @override
@@ -83,24 +94,28 @@ class _PetDetailPageState extends State<PetDetailPage> {
     setState(() {
       _pet.hunger = (_pet.hunger > 0) ? _pet.hunger - 1 : 0;
     });
+    speak('Afiyet olsun!');
   }
 
   void sev() {
     setState(() {
       _pet.happiness = (_pet.happiness < 10) ? _pet.happiness + 1 : 10;
     });
+    speak('Sen harika bir dostsun!');
   }
 
   void dinlendir() {
     setState(() {
       _pet.energy = (_pet.energy < 10) ? _pet.energy + 1 : 10;
     });
+    speak('İyi uykular!');
   }
 
   void bakim() {
     setState(() {
       _pet.care = (_pet.care < 10) ? _pet.care + 1 : 10;
     });
+    speak('Bakım zamanı, aferin!');
   }
 
   Future<void> aiOneriGetir() async {
@@ -241,6 +256,10 @@ class _PetDetailPageState extends State<PetDetailPage> {
                 spacing: 10,
                 runSpacing: 10,
                 children: [
+                  ElevatedButton(onPressed: besle, child: const Text('Besle')),
+                  ElevatedButton(onPressed: sev, child: const Text('Sev')),
+                  ElevatedButton(onPressed: dinlendir, child: const Text('Dinlendir')),
+                  ElevatedButton(onPressed: bakim, child: const Text('Bakım')),
                   ElevatedButton.icon(
                     onPressed: getMamaOnerisi,
                     icon: const Icon(Icons.restaurant),

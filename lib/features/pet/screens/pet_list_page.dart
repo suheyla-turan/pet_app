@@ -150,8 +150,8 @@ class _PetListPageState extends State<PetListPage> {
                               )
                             : CircleAvatar(
                                 backgroundColor: Colors.teal.shade100,
-                                child: const Icon(Icons.pets, color: Colors.teal),
                                 radius: 24,
+                                child: const Icon(Icons.pets, color: Colors.teal),
                               ),
                         title: Row(
                           children: [

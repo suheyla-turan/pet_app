@@ -4,11 +4,7 @@ import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 
 import 'package:pet_app/features/pet/models/pet.dart';
-import 'package:pet_app/features/pet/models/vaccine.dart';
-import 'package:pet_app/features/pet/widgets/progress_indicator.dart';
-import 'package:pet_app/features/pet/screens/vaccine_page.dart';
 import 'package:pet_app/services/firestore_service.dart';
-import 'package:pet_app/services/gemini_service.dart';
 
 
 class PetFormPage extends StatefulWidget {
