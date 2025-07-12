@@ -117,6 +117,51 @@ class _PetDetailPageState extends State<PetDetailPage> {
     });
   }
 
+  Future<void> getMamaOnerisi() async {
+    setState(() { isLoading = true; });
+    final suggestion = await GeminiService.getSuggestion(
+      '${_pet.name} adlı ${_pet.type} için mama önerisi verir misin?'
+    );
+    setState(() { aiResponse = suggestion; isLoading = false; });
+  }
+  Future<void> getOyunOnerisi() async {
+    setState(() { isLoading = true; });
+    final suggestion = await GeminiService.getSuggestion(
+      '${_pet.name} adlı ${_pet.type} için oyun önerisi verir misin?'
+    );
+    setState(() { aiResponse = suggestion; isLoading = false; });
+  }
+  Future<void> getBakimOnerisi() async {
+    setState(() { isLoading = true; });
+    final suggestion = await GeminiService.getSuggestion(
+      '${_pet.name} adlı ${_pet.type} için bakım önerisi verir misin?'
+    );
+    setState(() { aiResponse = suggestion; isLoading = false; });
+  }
+  Future<void> soruSorDialog() async {
+    final controller = TextEditingController();
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Yapay Zekaya Soru Sor'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(hintText: 'Sorunuzu yazın...'),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('İptal')),
+          ElevatedButton(onPressed: () => Navigator.pop(context, controller.text), child: const Text('Sor')),
+        ],
+      ),
+    );
+    if (result != null && result.trim().isNotEmpty) {
+      setState(() { isLoading = true; });
+      final suggestion = await GeminiService.getSuggestion(result);
+      setState(() { aiResponse = suggestion; isLoading = false; });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -143,78 +188,91 @@ class _PetDetailPageState extends State<PetDetailPage> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            // Doğum günü mesajı
-            if (_pet.isBirthday)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Colors.pink, Colors.purple],
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Column(
-                  children: [
-                    Icon(Icons.cake, color: Colors.white, size: 32),
-                    SizedBox(height: 8),
-                    Text(
-                      '🎉 Doğum Günün Kutlu Olsun! 🎉',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              // Doğum günü mesajı
+              if (_pet.isBirthday)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Colors.pink, Colors.purple],
                     ),
-                  ],
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Column(
+                    children: [
+                      Icon(Icons.cake, color: Colors.white, size: 32),
+                      SizedBox(height: 8),
+                      Text(
+                        '🎉 Doğum Günün Kutlu Olsun! 🎉',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
+              
+              if (_pet.imagePath != null)
+                Image.file(
+                  File(_pet.imagePath!),
+                  width: 150,
+                  height: 150,
+                  fit: BoxFit.cover,
+                ),
+              const SizedBox(height: 10),
+              Text('Adı: ${_pet.name}'),
+              Text('Cinsiyet: ${_pet.gender}'),
+              Text('Doğum Tarihi: ${_pet.birthDate.day}.${_pet.birthDate.month}.${_pet.birthDate.year}'),
+              Text('Yaş: ${_pet.age} yaşında'),
+              const SizedBox(height: 10),
+              StatusIndicator(icon: Icons.restaurant, value: _pet.hunger),
+              StatusIndicator(icon: Icons.favorite, value: _pet.happiness),
+              StatusIndicator(icon: Icons.battery_charging_full, value: _pet.energy),
+              StatusIndicator(icon: Icons.healing, value: _pet.care),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: getMamaOnerisi,
+                    icon: const Icon(Icons.restaurant),
+                    label: const Text('Mama Önerisi'),
+                  ),
+                  ElevatedButton.icon(
+                    onPressed: getOyunOnerisi,
+                    icon: const Icon(Icons.sports_esports),
+                    label: const Text('Oyun Önerisi'),
+                  ),
+                  ElevatedButton.icon(
+                    onPressed: getBakimOnerisi,
+                    icon: const Icon(Icons.auto_awesome),
+                    label: const Text('Bakım Önerisi'),
+                  ),
+                  ElevatedButton.icon(
+                    onPressed: soruSorDialog,
+                    icon: const Icon(Icons.question_answer),
+                    label: const Text('Soru Sor'),
+                  ),
+                ],
               ),
-            
-            if (_pet.imagePath != null)
-              Image.file(
-                File(_pet.imagePath!),
-                width: 150,
-                height: 150,
-                fit: BoxFit.cover,
-              ),
-            const SizedBox(height: 10),
-            Text('Adı: ${_pet.name}'),
-            Text('Cinsiyet: ${_pet.gender}'),
-            Text('Doğum Tarihi: ${_pet.birthDate.day}.${_pet.birthDate.month}.${_pet.birthDate.year}'),
-            Text('Yaş: ${_pet.age} yaşında'),
-            const SizedBox(height: 10),
-            StatusIndicator(icon: Icons.restaurant, value: _pet.hunger),
-            StatusIndicator(icon: Icons.favorite, value: _pet.happiness),
-            StatusIndicator(icon: Icons.battery_charging_full, value: _pet.energy),
-            StatusIndicator(icon: Icons.healing, value: _pet.care),
-            const SizedBox(height: 10),
-            Wrap(
-              spacing: 10,
-              children: [
-                ElevatedButton(onPressed: besle, child: const Text('Besle')),
-                ElevatedButton(onPressed: sev, child: const Text('Sev')),
-                ElevatedButton(onPressed: dinlendir, child: const Text('Dinlendir')),
-                ElevatedButton(onPressed: bakim, child: const Text('Bakım')),
-              ],
-            ),
-            const SizedBox(height: 10),
-            ElevatedButton.icon(
-              onPressed: aiOneriGetir,
-              icon: const Icon(Icons.auto_awesome),
-              label: const Text('AI Bakım Önerisi'),
-            ),
-            const SizedBox(height: 10),
-            if (isLoading)
-              const CircularProgressIndicator()
-            else if (aiResponse != null)
-              Text(
-                aiResponse!,
-                style: const TextStyle(fontStyle: FontStyle.italic),
-              ),
-          ],
+              const SizedBox(height: 10),
+              if (isLoading)
+                const CircularProgressIndicator()
+              else if (aiResponse != null)
+                Text(
+                  aiResponse!,
+                  style: const TextStyle(fontStyle: FontStyle.italic),
+                ),
+            ],
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(

@@ -22,7 +22,7 @@ class GeminiService {
     try {
       final response = await http
           .post(url, headers: headers, body: body)
-          .timeout(const Duration(seconds: 10));
+          .timeout(const Duration(seconds: 60));
 
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body);
