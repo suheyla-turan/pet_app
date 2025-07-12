@@ -114,15 +114,15 @@ class _PetListPageState extends State<PetListPage> {
                           Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.favorite, size: 16, color: pet.happiness < 3 ? Colors.red : Colors.green),
-                              Text(' ${pet.happiness}/10'),
+                              Icon(Icons.battery_charging_full, size: 16, color: pet.energy < 3 ? Colors.red : Colors.green),
+                              Text(' ${pet.energy}/10'),
                             ],
                           ),
                           Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.battery_charging_full, size: 16, color: pet.energy < 3 ? Colors.red : Colors.green),
-                              Text(' ${pet.energy}/10'),
+                              Icon(Icons.favorite, size: 16, color: pet.happiness < 3 ? Colors.red : Colors.green),
+                              Text(' ${pet.happiness}/10'),
                             ],
                           ),
                           Row(

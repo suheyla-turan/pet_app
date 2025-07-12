@@ -27,10 +27,16 @@ class MiniPetApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => PetProvider()),
-        ChangeNotifierProvider(create: (_) => AIProvider()),
-        ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
+        ChangeNotifierProvider(create: (_) => PetProvider()),
+        ChangeNotifierProxyProvider<SettingsProvider, AIProvider>(
+          create: (_) => AIProvider(),
+          update: (_, settingsProvider, aiProvider) {
+            aiProvider?.setSettingsProvider(settingsProvider);
+            return aiProvider ?? AIProvider();
+          },
+        ),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {

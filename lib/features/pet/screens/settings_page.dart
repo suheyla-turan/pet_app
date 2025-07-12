@@ -44,6 +44,144 @@ class SettingsPage extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           
+          // Konuşma Stili Ayarları
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'AI Konuşma Stili',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'AI asistanın size nasıl yanıt vereceğini seçin',
+                    style: TextStyle(fontSize: 14, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 16),
+                  Consumer<SettingsProvider>(
+                    builder: (context, settingsProvider, child) {
+                      return Column(
+                        children: ConversationStyle.values.map((style) {
+                          return RadioListTile<ConversationStyle>(
+                            title: Text(style.title),
+                            subtitle: Text(style.description),
+                            value: style,
+                            groupValue: settingsProvider.conversationStyle,
+                            onChanged: (value) {
+                              if (value != null) {
+                                settingsProvider.setConversationStyle(value);
+                              }
+                            },
+                          );
+                        }).toList(),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          
+          // Sesli Konuşma Ayarları
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.volume_up,
+                        color: Colors.blue.shade700,
+                        size: 24,
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Sesli Konuşma',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'AI ile sesli konuşma özelliklerini yönetin',
+                    style: TextStyle(fontSize: 14, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 16),
+                  Consumer<SettingsProvider>(
+                    builder: (context, settingsProvider, child) {
+                      return Column(
+                        children: [
+                          SwitchListTile(
+                            title: const Text('Otomatik Sesli Yanıt'),
+                            subtitle: const Text('AI cevaplarını otomatik olarak sesli oku'),
+                            value: settingsProvider.voiceResponseEnabled,
+                            onChanged: (value) => settingsProvider.setVoiceResponseEnabled(value),
+                            secondary: Icon(
+                              Icons.auto_awesome,
+                              color: settingsProvider.voiceResponseEnabled 
+                                  ? Colors.blue.shade600 
+                                  : Colors.grey,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.shade50,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.blue.shade200),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.info_outline,
+                                      color: Colors.blue.shade600,
+                                      size: 16,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'Sesli Dinleme Özelliği',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 12,
+                                        color: Colors.blue.shade600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  '• Her AI yanıtının altında "Sesli Dinle" butonu bulunur\n'
+                                  '• Bu buton ile istediğiniz zaman cevabı sesli dinleyebilirsiniz\n'
+                                  '• Otomatik sesli yanıt kapalı olsa bile manuel olarak dinleyebilirsiniz',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey.shade700,
+                                    height: 1.3,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          
           // Bildirim Ayarları
           Card(
             child: Padding(

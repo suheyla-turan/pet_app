@@ -90,24 +90,145 @@ class _PetDetailPageState extends State<PetDetailPage> {
 
   Future<void> soruSorDialog() async {
     final controller = TextEditingController();
-    final result = await showDialog<String>(
+    final aiProvider = context.read<AIProvider>();
+    
+    // AI Provider'ı başlat
+    await aiProvider.initializeVoiceService();
+    
+    return showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Yapay Zekaya Soru Sor'),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(hintText: 'Sorunuzu yazın...'),
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('İptal')),
-          ElevatedButton(onPressed: () => Navigator.pop(context, controller.text), child: const Text('Sor')),
-        ],
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            title: const Text('Yapay Zekaya Soru Sor'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Tanınan metin gösterimi
+                if (aiProvider.recognizedText != null && aiProvider.recognizedText!.isNotEmpty)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(8),
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.blue.shade200),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Tanınan Metin:',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                            color: Colors.blue,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          aiProvider.recognizedText!,
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                      ],
+                    ),
+                  ),
+                
+                // Metin girişi
+                TextField(
+                  controller: controller,
+                  decoration: const InputDecoration(
+                    hintText: 'Sorunuzu yazın veya sesli sorun...',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 3,
+                  autofocus: true,
+                ),
+                
+                const SizedBox(height: 12),
+                
+                // Sesli konuşma butonu
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: aiProvider.isLoading
+                            ? null
+                            : () {
+                                if (aiProvider.isListening) {
+                                  aiProvider.stopVoiceInput();
+                                } else {
+                                  aiProvider.startVoiceInput();
+                                }
+                                setDialogState(() {});
+                              },
+                        icon: Icon(
+                          aiProvider.isListening ? Icons.stop : Icons.mic,
+                          color: aiProvider.isListening ? Colors.white : null,
+                        ),
+                        label: Text(
+                          aiProvider.isListening ? 'Dinlemeyi Durdur' : 'Sesli Sor',
+                          style: TextStyle(
+                            color: aiProvider.isListening ? Colors.white : null,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: aiProvider.isListening ? Colors.red : null,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                
+                // Yükleme göstergesi
+                if (aiProvider.isLoading)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 12),
+                    child: Row(
+                      children: [
+                        SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                        SizedBox(width: 8),
+                        Text('AI düşünüyor...'),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  aiProvider.stopVoiceInput();
+                  Navigator.pop(context);
+                },
+                child: const Text('İptal'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  String question = controller.text.trim();
+                  
+                  // Eğer sesli tanınan metin varsa onu kullan
+                  if (aiProvider.recognizedText != null && aiProvider.recognizedText!.isNotEmpty) {
+                    question = aiProvider.recognizedText!;
+                  }
+                  
+                  if (question.isNotEmpty) {
+                    aiProvider.stopVoiceInput();
+                    Navigator.pop(context);
+                    await aiProvider.getSuggestion(question);
+                  }
+                },
+                child: const Text('Sor'),
+              ),
+            ],
+          );
+        },
       ),
     );
-    if (result != null && result.trim().isNotEmpty) {
-      await context.read<AIProvider>().getSuggestion(result);
-    }
   }
 
   @override
@@ -222,9 +343,124 @@ class _PetDetailPageState extends State<PetDetailPage> {
                   if (aiProvider.isLoading) {
                     return const CircularProgressIndicator();
                   } else if (aiProvider.currentResponse != null) {
-                    return Text(
-                      aiProvider.currentResponse!,
-                      style: const TextStyle(fontStyle: FontStyle.italic),
+                    return Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade50,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.green.shade200),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.green.shade100,
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.psychology,
+                                color: Colors.green.shade700,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              const Text(
+                                'AI Yanıtı',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  color: Colors.green,
+                                ),
+                              ),
+                              const Spacer(),
+                              // Sesli okuma durumu göstergesi
+                              if (aiProvider.isSpeaking)
+                                Row(
+                                  children: [
+                                    const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Sesli okuyor...',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.green.shade600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            aiProvider.currentResponse!,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              height: 1.4,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          // Sesli okuma kontrol butonları
+                          Row(
+                            children: [
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  onPressed: aiProvider.isSpeaking
+                                      ? () => aiProvider.stopSpeaking()
+                                      : () async {
+                                          print('🎤 PetDetailPage: Sesli Dinle butonuna basıldı');
+                                          print('🎤 Mevcut yanıt: ${aiProvider.currentResponse}');
+                                          if (aiProvider.currentResponse != null && aiProvider.currentResponse!.isNotEmpty) {
+                                            await aiProvider.speakResponse(aiProvider.currentResponse);
+                                          } else {
+                                            print('❌ Boş yanıt, sesli okuma yapılamıyor');
+                                          }
+                                        },
+                                  icon: Icon(
+                                    aiProvider.isSpeaking ? Icons.stop : Icons.volume_up,
+                                    size: 18,
+                                  ),
+                                  label: Text(
+                                    aiProvider.isSpeaking ? 'Durdur' : 'Sesli Dinle',
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: aiProvider.isSpeaking 
+                                        ? Colors.red.shade100 
+                                        : Colors.green.shade100,
+                                    foregroundColor: aiProvider.isSpeaking 
+                                        ? Colors.red.shade700 
+                                        : Colors.green.shade700,
+                                    elevation: 2,
+                                    padding: const EdgeInsets.symmetric(vertical: 8),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              IconButton(
+                                onPressed: () => aiProvider.clearResponse(),
+                                icon: const Icon(Icons.clear, size: 20),
+                                tooltip: 'Temizle',
+                                style: IconButton.styleFrom(
+                                  backgroundColor: Colors.grey.shade100,
+                                  foregroundColor: Colors.grey.shade600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     );
                   }
                   return const SizedBox.shrink();
