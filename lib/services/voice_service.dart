@@ -173,43 +173,64 @@ class VoiceService {
         print('❌ Boş metin, okuma yapılmıyor');
         return;
       }
-      String shortText = cleanText;
-      if (cleanText.length > 200) {
-        shortText = cleanText.substring(0, 200);
-        final lastPeriod = shortText.lastIndexOf('.');
-        final lastExclamation = shortText.lastIndexOf('!');
-        final lastQuestion = shortText.lastIndexOf('?');
-        final lastSentenceEnd = [lastPeriod, lastExclamation, lastQuestion]
-            .where((i) => i > 0)
-            .fold(-1, (a, b) => a > b ? a : b);
-        if (lastSentenceEnd > 0) {
-          shortText = shortText.substring(0, lastSentenceEnd + 1);
+      // Metni 200 karakterlik cümle sonlarına göre parçalara ayır
+      List<String> chunks = [];
+      int start = 0;
+      while (start < cleanText.length) {
+        int end = start + 200;
+        if (end >= cleanText.length) {
+          chunks.add(cleanText.substring(start));
+          break;
         }
-        print('🎤 Uzun metin kısaltıldı: ${cleanText.length} -> ${shortText.length} karakter');
+        // 200. karakterden geriye doğru ilk nokta, ünlem veya soru işareti bul
+        int lastPeriod = cleanText.lastIndexOf('.', end);
+        int lastExclamation = cleanText.lastIndexOf('!', end);
+        int lastQuestion = cleanText.lastIndexOf('?', end);
+        int lastSentenceEnd = [lastPeriod, lastExclamation, lastQuestion]
+            .where((i) => i >= start)
+            .fold(-1, (a, b) => a > b ? a : b);
+        if (lastSentenceEnd > start) {
+          chunks.add(cleanText.substring(start, lastSentenceEnd + 1));
+          start = lastSentenceEnd + 1;
+        } else {
+          // Cümle sonu yoksa 200 karakterlik parça al
+          chunks.add(cleanText.substring(start, end));
+          start = end;
+        }
       }
-      // Set language, voice, rate, pitch
+      // TTS ayarlarını uygula
       await _flutterTts.setLanguage("tr-TR");
       await setVoice(voice ?? _currentVoice);
       await setRate(rate ?? _currentRate);
       await setPitch(pitch ?? _currentPitch);
-      print('🎤 TTS çağrısı yapılıyor...');
-      print('🎤 Okunacak metin: $shortText');
-      final result = await _flutterTts.speak(shortText);
-      print('🎤 TTS sonucu: $result');
-      if (result != 1) {
-        print('❌ Türkçe TTS başarısız, İngilizce deneniyor...');
-        await _flutterTts.setLanguage("en-US");
-        await setVoice(null);
-        final result2 = await _flutterTts.speak("Hello, this is a test message.");
-        print('🎤 İngilizce TTS sonucu: $result2');
-        if (result2 != 1) {
-          print('❌ TTS başlatılamadı');
-          onSpeechError?.call('Sesli okuma başlatılamadı');
+      // Parçaları sırayla oku
+      for (final chunk in chunks) {
+        print('🎤 Okunacak parça: $chunk');
+        final result = await _flutterTts.speak(chunk);
+        // TTS tamamlanana kadar bekle
+        await _waitForTtsCompletion();
+        if (result != 1) {
+          print('❌ Türkçe TTS başarısız, İngilizce deneniyor...');
+          await _flutterTts.setLanguage("en-US");
+          await setVoice(null);
+          final result2 = await _flutterTts.speak("Hello, this is a test message.");
+          print('🎤 İngilizce TTS sonucu: $result2');
+          if (result2 != 1) {
+            print('❌ TTS başlatılamadı');
+            onSpeechError?.call('Sesli okuma başlatılamadı');
+          }
         }
       }
     } catch (e) {
       print('❌ Konuşma hatası: $e');
       onSpeechError?.call('Konuşma hatası: $e');
+    }
+  }
+
+  Future<void> _waitForTtsCompletion() async {
+    // TTS konuşması bitene kadar bekle
+    while (_isSpeaking) {
+      await Future.delayed(const Duration(milliseconds: 100));
     }
   }
 
