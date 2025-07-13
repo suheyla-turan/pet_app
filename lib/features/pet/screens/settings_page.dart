@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../providers/settings_provider.dart';
 import '../../../providers/theme_provider.dart';
 import '../../../services/voice_service.dart';
+import '../../profile/profile_page.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -502,6 +503,15 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                         ),
                         
                         const SizedBox(height: 20),
+                        ListTile(
+                          leading: Icon(Icons.person),
+                          title: Text('Profilim'),
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(builder: (_) => ProfilePage()),
+                            );
+                          },
+                        ),
                       ],
                     ),
                   ),

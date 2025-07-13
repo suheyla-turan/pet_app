@@ -1,10 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../features/pet/models/pet.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class FirestoreService {
   static Future<void> hayvanEkle(Pet pet) async {
     try {
-      await FirebaseFirestore.instance.collection('hayvanlar').add(pet.toMap());
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) throw Exception('Kullanıcı oturumu yok');
+      final petMap = pet.toMap();
+      petMap['ownerId'] = user.uid;
+      await FirebaseFirestore.instance.collection('hayvanlar').add(petMap);
       print('✅ Hayvan Firestore\'a kaydedildi.');
     } catch (e) {
       print('❌ HATA - Firestore\'a kaydedilemedi: $e');
@@ -22,7 +27,12 @@ class FirestoreService {
 
   static Future<List<Pet>> hayvanlariGetir() async {
     try {
-      final snapshot = await FirebaseFirestore.instance.collection('hayvanlar').get();
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) throw Exception('Kullanıcı oturumu yok');
+      final snapshot = await FirebaseFirestore.instance
+          .collection('hayvanlar')
+          .where('ownerId', isEqualTo: user.uid)
+          .get();
       return snapshot.docs.map((doc) {
         final data = doc.data();
         

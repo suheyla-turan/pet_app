@@ -8,6 +8,7 @@ import 'settings_page.dart';
 import '../../../providers/pet_provider.dart';
 import '../../../providers/theme_provider.dart';
 import '../../../providers/ai_provider.dart';
+import '../../profile/profile_page.dart';
 
 class PetListPage extends StatefulWidget {
   const PetListPage({super.key});
@@ -50,6 +51,19 @@ class _PetListPageState extends State<PetListPage> with TickerProviderStateMixin
     final isDark = theme.brightness == Brightness.dark;
     
     return Scaffold(
+      appBar: AppBar(
+        title: Text('Evcil Hayvanlarım'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.person),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => ProfilePage()),
+              );
+            },
+          ),
+        ],
+      ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(

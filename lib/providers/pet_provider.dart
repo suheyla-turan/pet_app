@@ -123,8 +123,7 @@ class PetProvider with ChangeNotifier {
   Future<void> addPet(Pet pet) async {
     try {
       await FirestoreService.hayvanEkle(pet);
-      _pets.add(pet);
-      notifyListeners();
+      await loadPets(); // Sadece Firestore'dan güncel listeyi çek
     } catch (e) {
       print('❌ HATA - Hayvan eklenemedi: $e');
       rethrow;

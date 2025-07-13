@@ -106,8 +106,8 @@ class _PetFormPageState extends State<PetFormPage> with TickerProviderStateMixin
 
       try {
         if (widget.pet == null) {
-          // Yeni hayvan ekleme
-          await context.read<PetProvider>().addPet(pet);
+          // Yeni hayvan ekleme - sadece Navigator.pop ile pet'i döndür
+          // PetListPage'de addPet çağrılacak
         } else {
           // Mevcut hayvanı güncelleme
           await context.read<PetProvider>().updatePet(widget.pet!.name, pet);

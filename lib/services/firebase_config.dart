@@ -1,13 +1,24 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../secrets.dart';
 
 class FirebaseConfig {
   static Future<void> initialize() async {
-    await Firebase.initializeApp();
-    
-    // Firebase güvenlik kurallarını kontrol et
-    await _checkFirebaseSecurity();
+    try {
+      await Firebase.initializeApp();
+      print('✅ Firebase başlatıldı');
+      
+      // Firebase Auth'u temizle
+      await FirebaseAuth.instance.signOut();
+      print('✅ Firebase Auth temizlendi');
+      
+      // Firebase güvenlik kurallarını kontrol et
+      await _checkFirebaseSecurity();
+    } catch (e) {
+      print('❌ Firebase başlatma hatası: $e');
+      rethrow;
+    }
   }
 
   static Future<void> _checkFirebaseSecurity() async {
