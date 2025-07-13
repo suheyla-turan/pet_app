@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/material.dart'; // Added for TimeOfDay
 
 enum ConversationStyle {
   friendly('Dostane', 'Sıcak ve samimi bir ton kullanır'),
@@ -19,6 +20,12 @@ class SettingsProvider with ChangeNotifier {
   int _updateInterval = 60; // dakika
   ConversationStyle _conversationStyle = ConversationStyle.friendly;
   bool _voiceResponseEnabled = false;
+  String? _ttsVoice;
+  double _ttsRate = 0.3;
+  double _ttsPitch = 1.0;
+  String? _notificationSound;
+  bool _scheduledNotificationsEnabled = false;
+  TimeOfDay _scheduledNotificationTime = const TimeOfDay(hour: 9, minute: 0);
 
   bool get notificationsEnabled => _notificationsEnabled;
   bool get soundEnabled => _soundEnabled;
@@ -26,6 +33,12 @@ class SettingsProvider with ChangeNotifier {
   int get updateInterval => _updateInterval;
   ConversationStyle get conversationStyle => _conversationStyle;
   bool get voiceResponseEnabled => _voiceResponseEnabled;
+  String? get ttsVoice => _ttsVoice;
+  double get ttsRate => _ttsRate;
+  double get ttsPitch => _ttsPitch;
+  String? get notificationSound => _notificationSound;
+  bool get scheduledNotificationsEnabled => _scheduledNotificationsEnabled;
+  TimeOfDay get scheduledNotificationTime => _scheduledNotificationTime;
 
   SettingsProvider() {
     _loadSettings();
@@ -45,6 +58,15 @@ class SettingsProvider with ChangeNotifier {
       
       // Sesli yanıt ayarını yükle
       _voiceResponseEnabled = prefs.getBool('voice_response_enabled') ?? false;
+      _ttsVoice = prefs.getString('tts_voice');
+      _ttsRate = prefs.getDouble('tts_rate') ?? 0.3;
+      _ttsPitch = prefs.getDouble('tts_pitch') ?? 1.0;
+      
+      _notificationSound = prefs.getString('notification_sound');
+      _scheduledNotificationsEnabled = prefs.getBool('scheduled_notifications_enabled') ?? false;
+      final hour = prefs.getInt('scheduled_notification_hour') ?? 9;
+      final minute = prefs.getInt('scheduled_notification_minute') ?? 0;
+      _scheduledNotificationTime = TimeOfDay(hour: hour, minute: minute);
       
       notifyListeners();
     } catch (e) {
@@ -94,6 +116,57 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> setTtsVoice(String? voice) async {
+    _ttsVoice = voice;
+    final prefs = await SharedPreferences.getInstance();
+    if (voice == null) {
+      await prefs.remove('tts_voice');
+    } else {
+      await prefs.setString('tts_voice', voice);
+    }
+    notifyListeners();
+  }
+
+  Future<void> setTtsRate(double rate) async {
+    _ttsRate = rate;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('tts_rate', rate);
+    notifyListeners();
+  }
+
+  Future<void> setTtsPitch(double pitch) async {
+    _ttsPitch = pitch;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('tts_pitch', pitch);
+    notifyListeners();
+  }
+
+  Future<void> setNotificationSound(String? sound) async {
+    _notificationSound = sound;
+    final prefs = await SharedPreferences.getInstance();
+    if (sound == null) {
+      await prefs.remove('notification_sound');
+    } else {
+      await prefs.setString('notification_sound', sound);
+    }
+    notifyListeners();
+  }
+
+  Future<void> setScheduledNotificationsEnabled(bool enabled) async {
+    _scheduledNotificationsEnabled = enabled;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('scheduled_notifications_enabled', enabled);
+    notifyListeners();
+  }
+
+  Future<void> setScheduledNotificationTime(TimeOfDay time) async {
+    _scheduledNotificationTime = time;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('scheduled_notification_hour', time.hour);
+    await prefs.setInt('scheduled_notification_minute', time.minute);
+    notifyListeners();
+  }
+
   Future<void> resetToDefaults() async {
     _notificationsEnabled = true;
     _soundEnabled = true;
@@ -101,6 +174,12 @@ class SettingsProvider with ChangeNotifier {
     _updateInterval = 60;
     _conversationStyle = ConversationStyle.friendly;
     _voiceResponseEnabled = false;
+    _ttsVoice = null;
+    _ttsRate = 0.3;
+    _ttsPitch = 1.0;
+    _notificationSound = null;
+    _scheduledNotificationsEnabled = false;
+    _scheduledNotificationTime = const TimeOfDay(hour: 9, minute: 0);
     
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('notifications_enabled', true);
@@ -109,6 +188,13 @@ class SettingsProvider with ChangeNotifier {
     await prefs.setInt('update_interval', 60);
     await prefs.setInt('conversation_style', 0);
     await prefs.setBool('voice_response_enabled', false);
+    await prefs.remove('tts_voice');
+    await prefs.setDouble('tts_rate', 0.3);
+    await prefs.setDouble('tts_pitch', 1.0);
+    await prefs.remove('notification_sound');
+    await prefs.setBool('scheduled_notifications_enabled', false);
+    await prefs.setInt('scheduled_notification_hour', 9);
+    await prefs.setInt('scheduled_notification_minute', 0);
     
     notifyListeners();
   }

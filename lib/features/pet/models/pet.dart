@@ -21,6 +21,7 @@ class Pet {
   String type;
   String? imagePath;
   DateTime lastUpdate;
+  String? breed;
 
   Pet({
     required this.name,
@@ -36,6 +37,7 @@ class Pet {
     this.careInterval = 1440,
     List<Vaccine>? vaccines,
     this.type = 'Köpek',
+    this.breed,
     this.imagePath,
     DateTime? lastUpdate,
   }) : 
@@ -92,6 +94,7 @@ class Pet {
       'careInterval': careInterval,
       'vaccines': vaccines.map((v) => {'name': v.name, 'date': v.date.toIso8601String()}).toList(),
       'type': type,
+      'breed': breed,
       'imagePath': imagePath,
       'lastUpdate': lastUpdate.toIso8601String(),
     };
@@ -99,9 +102,9 @@ class Pet {
 
   factory Pet.fromMap(Map<String, dynamic> map) {
     return Pet(
-      name: map['name'] ?? '',
-      gender: map['gender'] ?? '',
-      birthDate: DateTime.parse(map['birthDate'] ?? DateTime.now().toIso8601String()),
+      name: map['name'],
+      gender: map['gender'],
+      birthDate: DateTime.parse(map['birthDate']),
       hunger: map['hunger'] ?? 5,
       happiness: map['happiness'] ?? 5,
       energy: map['energy'] ?? 5,
@@ -110,13 +113,11 @@ class Pet {
       happinessInterval: map['happinessInterval'] ?? 60,
       energyInterval: map['energyInterval'] ?? 60,
       careInterval: map['careInterval'] ?? 1440,
-      vaccines: (map['vaccines'] as List? ?? []).map((v) => Vaccine(
-        name: v['name'] ?? '',
-        date: DateTime.parse(v['date'] ?? DateTime.now().toIso8601String()),
-      )).toList(),
+      vaccines: (map['vaccines'] as List?)?.map((v) => Vaccine(name: v['name'], date: DateTime.parse(v['date']))).toList() ?? [],
       type: map['type'] ?? 'Köpek',
+      breed: map['breed'],
       imagePath: map['imagePath'],
-      lastUpdate: DateTime.parse(map['lastUpdate'] ?? DateTime.now().toIso8601String()),
+      lastUpdate: map['lastUpdate'] != null ? DateTime.parse(map['lastUpdate']) : null,
     );
   }
 }

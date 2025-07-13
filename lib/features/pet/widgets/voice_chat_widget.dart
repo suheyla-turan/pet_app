@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/ai_provider.dart';
+import '../models/pet.dart';
 
 class VoiceChatWidget extends StatelessWidget {
-  const VoiceChatWidget({super.key});
+  final Pet pet;
+  const VoiceChatWidget({super.key, required this.pet});
 
   @override
   Widget build(BuildContext context) {
+    final aiProvider = Provider.of<AIProvider>(context);
+    final aiResponse = aiProvider.getCurrentResponseForPet(pet.name);
+
     return Consumer<AIProvider>(
       builder: (context, aiProvider, child) {
         return Card(
@@ -76,7 +81,7 @@ class VoiceChatWidget extends StatelessWidget {
                 const SizedBox(height: 16),
                 
                 // AI yanıtı gösterimi
-                if (aiProvider.currentResponse != null)
+                if (aiResponse != null)
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(12),
@@ -112,7 +117,7 @@ class VoiceChatWidget extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          aiProvider.currentResponse!,
+                          aiResponse,
                           style: const TextStyle(fontSize: 14),
                         ),
                       ],
@@ -156,9 +161,9 @@ class VoiceChatWidget extends StatelessWidget {
                     const SizedBox(width: 8),
                     
                     // Sesli oku butonu
-                    if (aiProvider.currentResponse != null && !aiProvider.isSpeaking)
+                    if (aiResponse != null && !aiProvider.isSpeaking)
                       IconButton(
-                        onPressed: () => aiProvider.speakResponse(aiProvider.currentResponse),
+                        onPressed: () => aiProvider.speakResponse(aiResponse),
                         icon: const Icon(Icons.volume_up),
                         tooltip: 'Sesli Oku',
                         style: IconButton.styleFrom(
@@ -197,7 +202,7 @@ class VoiceChatWidget extends StatelessWidget {
                   ),
                 
                 // Temizle butonu
-                if (aiProvider.currentResponse != null || aiProvider.recognizedText != null)
+                if (aiResponse != null || aiProvider.recognizedText != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
                     child: TextButton.icon(

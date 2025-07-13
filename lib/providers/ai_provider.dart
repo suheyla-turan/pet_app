@@ -2,9 +2,15 @@ import 'package:flutter/foundation.dart';
 import '../services/gemini_service.dart';
 import '../services/voice_service.dart';
 import '../providers/settings_provider.dart';
+import '../features/pet/models/pet.dart';
 
 class AIProvider with ChangeNotifier {
-  String? _currentResponse;
+  final Map<String, String> _petResponses = {};
+  String? getCurrentResponseForPet(String petKey) => _petResponses[petKey];
+  void clearResponseForPet(String petKey) {
+    _petResponses.remove(petKey);
+    notifyListeners();
+  }
   bool _isLoading = false;
   SettingsProvider? _settingsProvider;
   final VoiceService _voiceService = VoiceService();
@@ -14,7 +20,6 @@ class AIProvider with ChangeNotifier {
   bool _isSpeaking = false;
   String? _recognizedText;
 
-  String? get currentResponse => _currentResponse;
   bool get isLoading => _isLoading;
   bool get isListening => _isListening;
   bool get isSpeaking => _isSpeaking;
@@ -61,38 +66,55 @@ class AIProvider with ChangeNotifier {
     };
   }
 
-  Future<void> getSuggestion(String prompt) async {
-    _setLoading(true);
-    _currentResponse = null;
-    notifyListeners();
+  String _petInfoPrompt(Pet pet) {
+    return '''Aşağıda evcil hayvanımın bilgileri var:
+- Adı: ${pet.name}
+- Türü: ${pet.type}
+- Cinsiyet: ${pet.gender}
+- Yaş: ${pet.age}
+- Doğum Tarihi: ${pet.birthDate.day}.${pet.birthDate.month}.${pet.birthDate.year}
+- Açlık: ${pet.hunger}/10
+- Mutluluk: ${pet.happiness}/10
+- Enerji: ${pet.energy}/10
+- Bakım: ${pet.care}/10
+''';
+  }
 
+  Future<void> getSuggestion(String prompt, {required Pet pet}) async {
+    _setLoading(true);
+    notifyListeners();
     try {
       final conversationStyle = _settingsProvider?.conversationStyle ?? ConversationStyle.friendly;
-      final response = await GeminiService.getSuggestion(prompt, style: conversationStyle);
-      _currentResponse = response;
-      
+      String fullPrompt = _petInfoPrompt(pet) + '\nSoru: ' + prompt;
+      final response = await GeminiService.getSuggestion(fullPrompt, style: conversationStyle);
+      _petResponses[pet.name] = response;
       // Eğer sesli yanıt etkinse, cevabı sesli oku
       if (_settingsProvider?.voiceResponseEnabled ?? false) {
-        await _voiceService.speak(response);
+        await _voiceService.speak(
+          response,
+          voice: _settingsProvider?.ttsVoice,
+          rate: _settingsProvider?.ttsRate,
+          pitch: _settingsProvider?.ttsPitch,
+        );
       }
     } catch (e) {
-      _currentResponse = 'Hata: $e';
+      _petResponses[pet.name] = 'Hata: $e';
     } finally {
       _setLoading(false);
       notifyListeners();
     }
   }
 
-  Future<void> getMamaOnerisi(String petName, String petType) async {
-    await getSuggestion('$petName adlı $petType için mama önerisi verir misin?');
+  Future<void> getMamaOnerisi(Pet pet) async {
+    await getSuggestion('Mama önerisi verir misin?', pet: pet);
   }
 
-  Future<void> getOyunOnerisi(String petName, String petType) async {
-    await getSuggestion('$petName adlı $petType için oyun önerisi verir misin?');
+  Future<void> getOyunOnerisi(Pet pet) async {
+    await getSuggestion('Oyun önerisi verir misin?', pet: pet);
   }
 
-  Future<void> getBakimOnerisi(String petName, String petType) async {
-    await getSuggestion('$petName adlı $petType için bakım önerisi verir misin?');
+  Future<void> getBakimOnerisi(Pet pet) async {
+    await getSuggestion('Bakım önerisi verir misin?', pet: pet);
   }
 
   // Sesli konuşma metodları
@@ -114,7 +136,12 @@ class AIProvider with ChangeNotifier {
     if (text != null && text.isNotEmpty) {
       try {
         print('🎤 VoiceService.speak çağrılıyor...');
-        await _voiceService.speak(text);
+        await _voiceService.speak(
+          text,
+          voice: _settingsProvider?.ttsVoice,
+          rate: _settingsProvider?.ttsRate,
+          pitch: _settingsProvider?.ttsPitch,
+        );
         print('🎤 VoiceService.speak tamamlandı');
       } catch (e) {
         print('❌ AIProvider speakResponse hatası: $e'); 
@@ -129,7 +156,7 @@ class AIProvider with ChangeNotifier {
   }
 
   void clearResponse() {
-    _currentResponse = null;
+    // _currentResponse = null; // Removed
     _recognizedText = null;
     notifyListeners();
   }

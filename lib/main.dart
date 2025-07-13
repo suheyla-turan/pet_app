@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
-import 'firebase_options.dart';
 import 'features/pet/screens/pet_list_page.dart';
 import 'services/notification_service.dart';
 import 'services/firebase_config.dart';
@@ -28,7 +26,13 @@ class MiniPetApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
-        ChangeNotifierProvider(create: (_) => PetProvider()),
+        ChangeNotifierProxyProvider<SettingsProvider, PetProvider>(
+          create: (_) => PetProvider(),
+          update: (_, settingsProvider, petProvider) {
+            petProvider?.setSettingsProvider(settingsProvider);
+            return petProvider ?? PetProvider();
+          },
+        ),
         ChangeNotifierProxyProvider<SettingsProvider, AIProvider>(
           create: (_) => AIProvider(),
           update: (_, settingsProvider, aiProvider) {
@@ -44,7 +48,7 @@ class MiniPetApp extends StatelessWidget {
             title: 'Mini Pet',
             theme: themeProvider.lightTheme,
             darkTheme: themeProvider.darkTheme,
-            themeMode: themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+            themeMode: themeProvider.themeMode,
             home: const PetListPage(),
             debugShowCheckedModeBanner: false,
           );

@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 
@@ -22,6 +21,10 @@ class VoiceService {
   Function()? onListeningStopped;
   Function()? onSpeakingStarted;
   Function()? onSpeakingStopped;
+
+  String? _currentVoice;
+  double _currentRate = 0.3;
+  double _currentPitch = 1.0;
 
   bool get speechEnabled => _speechEnabled;
   bool get isListening => _isListening;
@@ -137,59 +140,68 @@ class VoiceService {
     }
   }
 
-  Future<void> speak(String text) async {
+  Future<List<dynamic>> getAvailableVoices() async {
+    return await _flutterTts.getVoices;
+  }
+
+  Future<void> setVoice(String? voice) async {
+    _currentVoice = voice;
+    if (voice != null) {
+      await _flutterTts.setVoice({"name": voice});
+    }
+  }
+
+  Future<void> setRate(double rate) async {
+    _currentRate = rate;
+    await _flutterTts.setSpeechRate(rate);
+  }
+
+  Future<void> setPitch(double pitch) async {
+    _currentPitch = pitch;
+    await _flutterTts.setPitch(pitch);
+  }
+
+  Future<void> speak(String text, {String? voice, double? rate, double? pitch}) async {
     print('🎤 Sesli okuma başlatılıyor: $text');
-    
     if (_isSpeaking) {
       print('⚠️ Zaten konuşuyor, durduruluyor');
       await _flutterTts.stop();
     }
-
     try {
-      // Metni temizle ve optimize et
       final cleanText = text.trim();
       if (cleanText.isEmpty) {
         print('❌ Boş metin, okuma yapılmıyor');
         return;
       }
-      
-      // Uzun metinleri kısalt
       String shortText = cleanText;
       if (cleanText.length > 200) {
-        // İlk 200 karakteri al ve cümle sonunda kes
         shortText = cleanText.substring(0, 200);
         final lastPeriod = shortText.lastIndexOf('.');
         final lastExclamation = shortText.lastIndexOf('!');
         final lastQuestion = shortText.lastIndexOf('?');
-        
         final lastSentenceEnd = [lastPeriod, lastExclamation, lastQuestion]
             .where((i) => i > 0)
-            .reduce((a, b) => a > b ? a : b);
-            
+            .fold(-1, (a, b) => a > b ? a : b);
         if (lastSentenceEnd > 0) {
           shortText = shortText.substring(0, lastSentenceEnd + 1);
         }
-        
         print('🎤 Uzun metin kısaltıldı: ${cleanText.length} -> ${shortText.length} karakter');
       }
-      
-      // Önce Türkçe dene
-      print('🎤 Türkçe TTS deneniyor...');
+      // Set language, voice, rate, pitch
       await _flutterTts.setLanguage("tr-TR");
-      await _flutterTts.setVolume(1.0);
-      await _flutterTts.setSpeechRate(0.3);
-      
+      await setVoice(voice ?? _currentVoice);
+      await setRate(rate ?? _currentRate);
+      await setPitch(pitch ?? _currentPitch);
       print('🎤 TTS çağrısı yapılıyor...');
       print('🎤 Okunacak metin: $shortText');
       final result = await _flutterTts.speak(shortText);
       print('🎤 TTS sonucu: $result');
-      
       if (result != 1) {
         print('❌ Türkçe TTS başarısız, İngilizce deneniyor...');
         await _flutterTts.setLanguage("en-US");
+        await setVoice(null);
         final result2 = await _flutterTts.speak("Hello, this is a test message.");
         print('🎤 İngilizce TTS sonucu: $result2');
-        
         if (result2 != 1) {
           print('❌ TTS başlatılamadı');
           onSpeechError?.call('Sesli okuma başlatılamadı');
@@ -206,6 +218,7 @@ class VoiceService {
       print('🎤 Konuşma durduruluyor');
       await _flutterTts.stop();
       _isSpeaking = false;
+      onSpeakingStopped?.call(); // Ensure UI updates immediately
     }
   }
 
