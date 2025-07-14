@@ -85,7 +85,7 @@ class AIProvider with ChangeNotifier {
     notifyListeners();
     try {
       final conversationStyle = _settingsProvider?.conversationStyle ?? ConversationStyle.friendly;
-      String fullPrompt = _petInfoPrompt(pet) + '\nSoru: ' + prompt;
+      String fullPrompt = '${_petInfoPrompt(pet)}\nSoru: $prompt';
       final response = await GeminiService.getSuggestion(fullPrompt, style: conversationStyle);
       _petResponses[pet.name] = response;
       // Eğer sesli yanıt etkinse, cevabı sesli oku

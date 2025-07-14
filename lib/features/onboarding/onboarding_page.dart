@@ -5,6 +5,8 @@ import '../../providers/auth_provider.dart';
 import 'package:provider/provider.dart';
 
 class OnboardingPage extends StatefulWidget {
+  const OnboardingPage({super.key});
+
   @override
   State<OnboardingPage> createState() => _OnboardingPageState();
 }
@@ -154,7 +156,7 @@ class _OnboardingInfo extends StatelessWidget {
 
 class LoginScreen extends StatefulWidget {
   final VoidCallback onRegisterTap;
-  const LoginScreen({required this.onRegisterTap});
+  const LoginScreen({super.key, required this.onRegisterTap});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -275,7 +277,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
 class RegisterScreen extends StatefulWidget {
   final VoidCallback onLoginTap;
-  const RegisterScreen({required this.onLoginTap});
+  const RegisterScreen({super.key, required this.onLoginTap});
 
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();

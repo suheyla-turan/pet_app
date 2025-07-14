@@ -278,7 +278,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                                               value: name,
                                               child: Text(name),
                                             ))
-                                        .toList(),
+                                        ,
                                   ];
                                   String? selectedVoice = settingsProvider.ttsVoice;
                                   if (selectedVoice != null && !voiceItems.any((item) => item.value == selectedVoice)) {
@@ -441,7 +441,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                                                   ),
                                                 ),
                                                 Text(
-                                                  '${settingsProvider.scheduledNotificationTime.format(context)}',
+                                                  settingsProvider.scheduledNotificationTime.format(context),
                                                   style: TextStyle(
                                                     fontSize: 14,
                                                     color: isDark ? Colors.grey.shade300 : Colors.grey.shade600,

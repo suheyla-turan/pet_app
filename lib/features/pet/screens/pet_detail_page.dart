@@ -477,6 +477,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                                   const SizedBox(height: 20),
                                   // Pet Info
                                   _buildInfoRow('Tür', _pet.type, Icons.pets),
+                                  _buildInfoRow('Cins', _pet.breed?.isNotEmpty == true ? _pet.breed! : '-', Icons.label),
                                   _buildInfoRow('Cinsiyet', _pet.gender, Icons.person),
                                   _buildInfoRow('Doğum Tarihi', '${_pet.birthDate.day}.${_pet.birthDate.month}.${_pet.birthDate.year}', Icons.calendar_today),
                                   _buildInfoRow('Yaş', '${_pet.age} yaşında', Icons.cake),

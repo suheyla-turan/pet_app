@@ -6,8 +6,6 @@ import 'pet_detail_page.dart';
 import 'pet_form_page.dart';
 import 'settings_page.dart';
 import '../../../providers/pet_provider.dart';
-import '../../../providers/theme_provider.dart';
-import '../../../providers/ai_provider.dart';
 import '../../profile/profile_page.dart';
 
 class PetListPage extends StatefulWidget {
@@ -109,7 +107,7 @@ class _PetListPageState extends State<PetListPage> with TickerProviderStateMixin
                             borderRadius: BorderRadius.circular(12),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
+                                color: Colors.black.withValues(alpha: 0.1),
                                 blurRadius: 8,
                                 offset: const Offset(0, 4),
                               ),
@@ -217,7 +215,7 @@ class _PetListPageState extends State<PetListPage> with TickerProviderStateMixin
                                 borderRadius: BorderRadius.circular(24),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.1),
+                                    color: Colors.black.withValues(alpha: 0.1),
                                     blurRadius: 15,
                                     offset: const Offset(0, 8),
                                   ),
@@ -256,7 +254,7 @@ class _PetListPageState extends State<PetListPage> with TickerProviderStateMixin
                               borderRadius: BorderRadius.circular(28),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
+                                  color: Colors.black.withValues(alpha: 0.1),
                                   blurRadius: 20,
                                   offset: const Offset(0, 10),
                                 ),
@@ -388,7 +386,7 @@ class _PetListPageState extends State<PetListPage> with TickerProviderStateMixin
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -459,7 +457,7 @@ class _PetListPageState extends State<PetListPage> with TickerProviderStateMixin
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.15),
+                        color: Colors.black.withValues(alpha: 0.15),
                         blurRadius: 12,
                         offset: const Offset(0, 6),
                       ),

@@ -152,18 +152,24 @@ class AuthService {
     try {
       if (currentUser != null) {
         // Firebase Auth'ta güncelle
-        if (displayName != null) {
+        if (displayName != null && displayName.trim().isNotEmpty) {
           await currentUser!.updateDisplayName(displayName);
         }
         if (photoURL != null) {
           await currentUser!.updatePhotoURL(photoURL);
         }
         // Firestore'da güncelle veya oluştur
-        await _firestore.collection('profiller').doc(currentUser!.uid).set({
-          if (displayName != null) 'name': displayName,
+        final dataToUpdate = <String, dynamic>{
+          if (displayName != null && displayName.trim().isNotEmpty) 'name': displayName.trim(),
           if (photoURL != null) 'photoURL': photoURL,
           'updatedAt': FieldValue.serverTimestamp(),
-        }, SetOptions(merge: true));
+        };
+        print('Firestore profiller güncellemesi: ${currentUser!.uid} => $dataToUpdate');
+        await _firestore.collection('profiller').doc(currentUser!.uid).set(
+          dataToUpdate,
+          SetOptions(merge: true),
+        );
+        print('✅ Firestore profil güncelleme başarılı');
       }
     } catch (e) {
       print('❌ Profil güncelleme hatası: $e');

@@ -6,6 +6,8 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ProfilePage extends StatelessWidget {
+  const ProfilePage({super.key});
+
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
@@ -47,7 +49,7 @@ class ProfilePage extends StatelessWidget {
                   SizedBox(height: 8),
                   Text('Email: ${user.email}', style: TextStyle(fontSize: 16)),
                   SizedBox(height: 24),
-                  Container(
+                  SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
                       onPressed: () async {
@@ -106,6 +108,8 @@ class ProfilePage extends StatelessWidget {
 }
 
 class EditProfileDialog extends StatefulWidget {
+  const EditProfileDialog({super.key});
+
   @override
   State<EditProfileDialog> createState() => _EditProfileDialogState();
 }
@@ -169,9 +173,9 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
               : () async {
                   if (_formKey.currentState!.validate()) {
                     setState(() => _loading = true);
-                    // Profil fotoğrafı yükleme işlemi burada yapılabilir (ör. Firebase Storage)
-                    // Şimdilik sadece isim güncellenecek
-                    await authProvider.updateProfile(displayName: _name?.trim().isNotEmpty == true ? _name!.trim() : user?.displayName);
+                    await authProvider.updateProfile(
+                      displayName: _name?.trim().isNotEmpty == true ? _name!.trim() : user?.displayName,
+                    );
                     setState(() => _loading = false);
                     if (context.mounted) Navigator.of(context).pop();
                   }
