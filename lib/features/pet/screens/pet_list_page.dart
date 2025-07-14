@@ -97,15 +97,7 @@ class _PetListPageState extends State<PetListPage> with TickerProviderStateMixin
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                'Evcil',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w700,
-                                  color: isDark ? Colors.grey.shade300 : Colors.grey.shade600,
-                                  letterSpacing: 1.1,
-                                ),
-                              ),
+                              // 'Evcil' yazısı kaldırıldı
                             ],
                           ),
                         ),

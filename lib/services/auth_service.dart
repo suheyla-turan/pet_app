@@ -151,6 +151,13 @@ class AuthService {
   }) async {
     try {
       if (currentUser != null) {
+        // Firebase Auth'ta güncelle
+        if (displayName != null) {
+          await currentUser!.updateDisplayName(displayName);
+        }
+        if (photoURL != null) {
+          await currentUser!.updatePhotoURL(photoURL);
+        }
         // Firestore'da güncelle veya oluştur
         await _firestore.collection('profiller').doc(currentUser!.uid).set({
           if (displayName != null) 'name': displayName,

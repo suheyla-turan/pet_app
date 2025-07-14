@@ -127,6 +127,11 @@ class AuthProvider extends ChangeNotifier {
         photoURL: photoURL,
       );
       
+      // Kullanıcıyı yeniden yükle
+      await _user?.reload();
+      _user = _authService.currentUser;
+      notifyListeners();
+
       return true;
     } catch (e) {
       _setError(_getErrorMessage(e.toString()));
