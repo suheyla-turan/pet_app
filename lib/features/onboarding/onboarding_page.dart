@@ -166,6 +166,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   String email = '', password = '';
   bool _obscure = true;
+  bool _resetLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -211,23 +212,19 @@ class _LoginScreenState extends State<LoginScreen> {
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
-                    onPressed: authProvider.isLoading
-                        ? null
-                        : () async {
-                            if (email.isNotEmpty && email.contains('@')) {
-                              await authProvider.resetPassword(email);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Şifre sıfırlama maili gönderildi (varsa).')),
-                              );
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Lütfen geçerli bir email girin.')),
-                              );
-                            }
-                          },
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const ResetPasswordScreen()),
+                      );
+                    },
                     child: Text('Şifremi Unuttum?'),
                   ),
                 ),
+                if (_resetLoading)
+                 Center(child: Padding(
+                   padding: EdgeInsets.only(bottom: 8),
+                   child: SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2)),
+                 )),
                 if (authProvider.errorMessage != null)
                   Container(
                     margin: EdgeInsets.only(bottom: 8),
@@ -377,6 +374,91 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   child: Text('Zaten hesabınız var mı? Giriş Yap'),
                 ),
               ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class ResetPasswordScreen extends StatefulWidget {
+  const ResetPasswordScreen({super.key});
+
+  @override
+  State<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
+}
+
+class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
+  final _formKey = GlobalKey<FormState>();
+  String email = '';
+  bool _loading = false;
+  bool _showSuccess = false;
+  @override
+  Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+    return Scaffold(
+      appBar: AppBar(title: const Text('Şifre Yenile')),
+      body: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Center(
+          child: SingleChildScrollView(
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (_showSuccess)
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.green[100],
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.check_circle, color: Colors.green[700]),
+                          SizedBox(width: 8),
+                          Expanded(child: Text('Şifre sıfırlama maili gönderildi!', style: TextStyle(color: Colors.green[900]))),
+                        ],
+                      ),
+                    ),
+                  Text('Şifre Yenile', style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+                  SizedBox(height: 24),
+                  TextFormField(
+                    decoration: InputDecoration(
+                      labelText: 'Email',
+                      prefixIcon: Icon(Icons.email_outlined),
+                      border: OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.emailAddress,
+                    onChanged: (v) => email = v,
+                    validator: (v) => v != null && v.contains('@') ? null : 'Geçerli email girin',
+                  ),
+                  SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: _loading
+                        ? null
+                        : () async {
+                            if (_formKey.currentState!.validate()) {
+                              setState(() => _loading = true);
+                              await authProvider.resetPassword(email);
+                              setState(() {
+                                _loading = false;
+                                _showSuccess = true;
+                              });
+                              await Future.delayed(const Duration(seconds: 10));
+                              if (context.mounted) Navigator.pop(context);
+                            }
+                          },
+                    child: _loading
+                        ? SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        : Text('Şifreyi Sıfırla'),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
