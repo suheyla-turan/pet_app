@@ -113,7 +113,7 @@ class NotificationService {
       details,
       androidAllowWhileIdle: true,
       uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-      matchDateTimeComponents: DateTimeComponents.time,
+      // matchDateTimeComponents: DateTimeComponents.time, // Bunu kaldır!
     );
   }
 

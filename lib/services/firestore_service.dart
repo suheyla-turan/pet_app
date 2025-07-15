@@ -8,7 +8,16 @@ class FirestoreService {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) throw Exception('Kullanıcı oturumu yok');
       final petMap = pet.toMap();
-      petMap['ownerId'] = user.uid;
+      // owners alanı yoksa ekle
+      if (!(petMap['owners'] is List) || (petMap['owners'] as List).isEmpty) {
+        petMap['owners'] = [user.uid];
+      } else if (!(petMap['owners'] as List).contains(user.uid)) {
+        (petMap['owners'] as List).add(user.uid);
+      }
+      // creator alanı yoksa ekle
+      if (petMap['creator'] == null) {
+        petMap['creator'] = user.uid;
+      }
       await FirebaseFirestore.instance.collection('hayvanlar').add(petMap);
       print('✅ Hayvan Firestore\'a kaydedildi.');
     } catch (e) {
@@ -31,7 +40,7 @@ class FirestoreService {
       if (user == null) throw Exception('Kullanıcı oturumu yok');
       final snapshot = await FirebaseFirestore.instance
           .collection('hayvanlar')
-          .where('ownerId', isEqualTo: user.uid)
+          .where('owners', arrayContains: user.uid)
           .get();
       return snapshot.docs.map((doc) {
         final data = doc.data();
@@ -43,11 +52,11 @@ class FirestoreService {
             name: data['ad'] ?? '',
             gender: data['cinsiyet'] ?? '',
             birthDate: DateTime.parse(data['dogumTarihi'] ?? DateTime.now().toIso8601String()),
-            hunger: 5,
+            satiety: 5,
             happiness: 5,
             energy: 5,
             care: 5,
-            hungerInterval: 60,
+            satietyInterval: 60,
             happinessInterval: 60,
             energyInterval: 60,
             careInterval: 1440,
@@ -77,6 +86,38 @@ class FirestoreService {
       print('✅ Hayvan Firestore\'dan silindi.');
     } catch (e) {
       print('❌ HATA - Hayvan silinemedi: $e');
+    }
+  }
+
+  static Future<void> addOwnerToPet(String petId, String newOwnerUid) async {
+    try {
+      final docRef = FirebaseFirestore.instance.collection('hayvanlar').doc(petId);
+      await docRef.update({
+        'owners': FieldValue.arrayUnion([newOwnerUid])
+      });
+      print('✅ Yeni sahip eklendi: $newOwnerUid');
+    } catch (e) {
+      print('❌ HATA - Sahip eklenemedi: $e');
+    }
+  }
+
+  static Future<bool> addOwnerToPetByEmail(String petId, String email) async {
+    try {
+      final userQuery = await FirebaseFirestore.instance
+          .collection('profiller')
+          .where('email', isEqualTo: email)
+          .limit(1)
+          .get();
+      if (userQuery.docs.isEmpty) {
+        print('❌ Kullanıcı bulunamadı: $email');
+        return false;
+      }
+      final uid = userQuery.docs.first.id;
+      await addOwnerToPet(petId, uid);
+      return true;
+    } catch (e) {
+      print('❌ HATA - E-posta ile sahip eklenemedi: $e');
+      return false;
     }
   }
 }

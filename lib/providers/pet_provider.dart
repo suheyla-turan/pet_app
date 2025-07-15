@@ -5,12 +5,14 @@ import '../services/firestore_service.dart';
 import '../services/notification_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../providers/settings_provider.dart';
+import '../services/realtime_service.dart';
 
 class PetProvider with ChangeNotifier {
   List<Pet> _pets = [];
   bool _isLoading = false;
   Timer? _timer;
   SettingsProvider? _settingsProvider;
+  final RealtimeService _realtimeService = RealtimeService();
 
   List<Pet> get pets => _pets;
   bool get isLoading => _isLoading;
@@ -34,7 +36,7 @@ class PetProvider with ChangeNotifier {
     bool hasChanges = false;
     for (final pet in _pets) {
       final oldValues = {
-        'hunger': pet.hunger,
+        'satiety': pet.satiety,
         'happiness': pet.happiness,
         'energy': pet.energy,
         'care': pet.care,
@@ -42,7 +44,7 @@ class PetProvider with ChangeNotifier {
       
       pet.updateValues();
       
-      if (oldValues['hunger'] != pet.hunger ||
+      if (oldValues['satiety'] != pet.satiety ||
           oldValues['happiness'] != pet.happiness ||
           oldValues['energy'] != pet.energy ||
           oldValues['care'] != pet.care) {
@@ -57,10 +59,10 @@ class PetProvider with ChangeNotifier {
 
   void _checkLowValues() {
     for (final pet in _pets) {
-      if (pet.hunger >= 8) {
+      if (pet.satiety <= 2) {
         NotificationService.showLowValueNotification(
           pet.name, 
-          'açlık',
+          'tokluk',
           customSound: _settingsProvider?.notificationSound,
         );
       }
@@ -194,6 +196,22 @@ class PetProvider with ChangeNotifier {
   void _setLoading(bool loading) {
     _isLoading = loading;
     notifyListeners();
+  }
+
+  Future<void> setPetFeedingTime(String petId, DateTime feedingTime) async {
+    await _realtimeService.setFeedingTime(petId, feedingTime);
+    // Her gün o saatte bildirim planla
+    await NotificationService.scheduleNotification(
+      id: petId.hashCode,
+      title: '🐾 Beslenme Zamanı',
+      body: '$petId için beslenme zamanı geldi!',
+      scheduledTime: feedingTime,
+    );
+    notifyListeners();
+  }
+
+  Future<DateTime?> getPetFeedingTime(String petId) async {
+    return await _realtimeService.getFeedingTime(petId);
   }
 
   @override

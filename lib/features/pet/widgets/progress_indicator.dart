@@ -17,6 +17,12 @@ class StatusIndicator extends StatelessWidget {
     
     // Determine color based on value
     Color getColor() {
+      if (icon == Icons.restaurant) {
+        if (value <= 2) return Colors.red; // Tokluk düşükse kırmızı
+        if (value >= 8) return Colors.green; // Tokluk yüksekse yeşil
+        if (value >= 5) return Colors.orange;
+        return Colors.yellow;
+      }
       if (value >= 8) return Colors.green;
       if (value >= 5) return Colors.orange;
       return Colors.red;
@@ -142,7 +148,7 @@ class StatusIndicator extends StatelessWidget {
   String _getLabel() {
     switch (icon) {
       case Icons.restaurant:
-        return 'Açlık';
+        return 'Tokluk';
       case Icons.favorite:
         return 'Mutluluk';
       case Icons.battery_charging_full:
@@ -155,6 +161,12 @@ class StatusIndicator extends StatelessWidget {
   }
   
   String _getStatusText() {
+    if (icon == Icons.restaurant) {
+      if (value <= 2) return 'Kritik'; // Tokluk düşükse kritik
+      if (value >= 8) return 'Mükemmel!'; // Tokluk yüksekse mükemmel
+      if (value >= 5) return 'İyi';
+      return 'Orta';
+    }
     if (value >= 9) return 'Mükemmel!';
     if (value >= 7) return 'İyi';
     if (value >= 5) return 'Orta';

@@ -12,97 +12,221 @@ class ProfilePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
     final user = authProvider.user;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Profil'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.edit),
-            onPressed: user == null
-                ? null
-                : () async {
-                    await showDialog(
-                      context: context,
-                      builder: (context) => EditProfileDialog(),
-                    );
-                  },
-            tooltip: 'Profili Düzenle',
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: isDark
+                ? [const Color(0xFF232526), const Color(0xFF414345)]
+                : [theme.colorScheme.primary.withOpacity(0.15), Colors.white],
           ),
-        ],
-      ),
-      body: user == null
-          ? Center(child: Text('Kullanıcı bulunamadı'))
-          : Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: CircleAvatar(
-                      radius: 40,
-                      backgroundImage: user.photoURL != null ? NetworkImage(user.photoURL!) : null,
-                      child: user.photoURL == null ? Icon(Icons.person, size: 40) : null,
-                    ),
-                  ),
-                  SizedBox(height: 16),
-                  Text('İsim: ${user.displayName ?? '-'}', style: TextStyle(fontSize: 18)),
-                  SizedBox(height: 8),
-                  Text('Email: ${user.email}', style: TextStyle(fontSize: 16)),
-                  SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: () async {
-                        await authProvider.signOut();
-                        // Çıkış yapınca direkt giriş sayfasına yönlendir
-                        if (context.mounted) {
-                          Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
-                        }
-                      },
-                      icon: Icon(Icons.logout, color: Colors.white),
-                      label: Text('Çıkış Yap', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        padding: EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+        ),
+        child: SafeArea(
+          child: user == null
+              ? Center(child: Text('Kullanıcı bulunamadı'))
+              : SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      // Header
+                      Stack(
+                        children: [
+                          // Header ana içeriği
+                          Column(
+                            children: [
+                              const SizedBox(height: 8),
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 0),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      theme.colorScheme.primary,
+                                      theme.colorScheme.primary.withOpacity(0.7),
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                  borderRadius: const BorderRadius.only(
+                                    bottomLeft: Radius.circular(32),
+                                    bottomRight: Radius.circular(32),
+                                  ),
+                                ),
+                                child: Column(
+                                  children: [
+                                    Stack(
+                                      alignment: Alignment.center,
+                                      children: [
+                                        CircleAvatar(
+                                          radius: 54,
+                                          backgroundColor: Colors.white,
+                                          child: CircleAvatar(
+                                            radius: 50,
+                                            backgroundImage: user.photoURL != null ? NetworkImage(user.photoURL!) : null,
+                                            child: user.photoURL == null ? Icon(Icons.person, size: 50, color: theme.colorScheme.primary) : null,
+                                          ),
+                                        ),
+                                        Positioned(
+                                          bottom: 0,
+                                          right: MediaQuery.of(context).size.width / 2 - 54 - 8,
+                                          child: Material(
+                                            color: theme.colorScheme.primary,
+                                            shape: const CircleBorder(),
+                                            child: InkWell(
+                                              customBorder: const CircleBorder(),
+                                              onTap: user == null
+                                                  ? null
+                                                  : () async {
+                                                      await showDialog(
+                                                        context: context,
+                                                        builder: (context) => EditProfileDialog(),
+                                                      );
+                                                    },
+                                              child: const Padding(
+                                                padding: EdgeInsets.all(8.0),
+                                                child: Icon(Icons.edit, color: Colors.white, size: 22),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 18),
+                                    Text(
+                                      user.displayName ?? '-',
+                                      style: const TextStyle(
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      user.email ?? '-',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.white.withOpacity(0.85),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          // Geri butonu
+                          Positioned(
+                            top: 0,
+                            left: 0,
+                            child: IconButton(
+                              icon: Icon(Icons.arrow_back, color: Colors.white, size: 28),
+                              onPressed: () {
+                                Navigator.of(context).maybePop();
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 32),
+                      // User Info Card
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Card(
+                          elevation: 8,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(Icons.person, color: theme.colorScheme.primary),
+                                    const SizedBox(width: 10),
+                                    Text('İsim:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                                    const SizedBox(width: 8),
+                                    Text(user.displayName ?? '-', style: TextStyle(fontSize: 16)),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+                                Row(
+                                  children: [
+                                    Icon(Icons.email, color: theme.colorScheme.primary),
+                                    const SizedBox(width: 10),
+                                    Text('Email:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                                    const SizedBox(width: 8),
+                                    Text(user.email ?? '-', style: TextStyle(fontSize: 16)),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                  SizedBox(height: 16),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                    ),
-                    onPressed: () async {
-                      final confirm = await showDialog<bool>(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: Text('Profili Sil'),
-                          content: Text('Profilinizi ve tüm verilerinizi silmek istediğinize emin misiniz? Bu işlem geri alınamaz.'),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.of(context).pop(false),
-                              child: Text('Vazgeç'),
+                      const SizedBox(height: 24),
+                      // Action Buttons
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Column(
+                          children: [
+                            Card(
+                              elevation: 6,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                              child: ListTile(
+                                leading: const Icon(Icons.logout, color: Colors.red),
+                                title: const Text('Çıkış Yap', style: TextStyle(fontWeight: FontWeight.w600)),
+                                onTap: () async {
+                                  await authProvider.signOut();
+                                  if (context.mounted) {
+                                    Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+                                  }
+                                },
+                              ),
                             ),
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                              onPressed: () => Navigator.of(context).pop(true),
-                              child: Text('Evet, Sil'),
+                            const SizedBox(height: 12),
+                            Card(
+                              elevation: 6,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                              child: ListTile(
+                                leading: const Icon(Icons.delete_forever, color: Colors.red),
+                                title: const Text('Profili Sil', style: TextStyle(fontWeight: FontWeight.w600)),
+                                onTap: () async {
+                                  final confirm = await showDialog<bool>(
+                                    context: context,
+                                    builder: (context) => AlertDialog(
+                                      title: const Text('Profili Sil'),
+                                      content: const Text('Profilinizi ve tüm verilerinizi silmek istediğinize emin misiniz? Bu işlem geri alınamaz.'),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Navigator.of(context).pop(false),
+                                          child: const Text('Vazgeç'),
+                                        ),
+                                        ElevatedButton(
+                                          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                                          onPressed: () => Navigator.of(context).pop(true),
+                                          child: const Text('Evet, Sil'),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                  if (confirm == true) {
+                                    await _deleteProfile(context);
+                                  }
+                                },
+                              ),
                             ),
                           ],
                         ),
-                      );
-                      if (confirm == true) {
-                        await _deleteProfile(context);
-                      }
-                    },
-                    child: Text('Profili Sil'),
+                      ),
+                      const SizedBox(height: 32),
+                    ],
                   ),
-                ],
-              ),
-            ),
+                ),
+        ),
+      ),
     );
   }
 }

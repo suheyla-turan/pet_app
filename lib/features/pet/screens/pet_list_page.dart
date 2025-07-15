@@ -556,8 +556,8 @@ class _PetListPageState extends State<PetListPage> with TickerProviderStateMixin
                         children: [
                           _buildStatusChip(
                             icon: Icons.restaurant,
-                            value: pet.hunger,
-                            label: 'Açlık',
+                            value: pet.satiety,
+                            label: 'Tokluk',
                             isDark: isDark,
                           ),
                           const SizedBox(width: 10),
@@ -592,28 +592,7 @@ class _PetListPageState extends State<PetListPage> with TickerProviderStateMixin
                     ],
                   ),
                 ),
-                
-                // Delete Button
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.red.withOpacity(0.2),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red, size: 22),
-                    onPressed: () => _removePet(pet.name),
-                    style: IconButton.styleFrom(
-                      padding: const EdgeInsets.all(12),
-                    ),
-                  ),
-                ),
+                // Sil butonu kaldırıldı
               ],
             ),
           ),

@@ -20,11 +20,11 @@ class _PetFormPageState extends State<PetFormPage> with TickerProviderStateMixin
   final TextEditingController _breedController = TextEditingController();
   String? _gender;
   DateTime? _birthDate;
-  int _hunger = 5;
+  int _satiety = 5;
   int _happiness = 5;
   int _energy = 5;
   int _care = 5;
-  int _hungerInterval = 60;
+  int _satietyInterval = 60;
   int _happinessInterval = 60;
   int _energyInterval = 60;
   int _careInterval = 1440;
@@ -54,11 +54,11 @@ class _PetFormPageState extends State<PetFormPage> with TickerProviderStateMixin
       _nameController.text = widget.pet!.name;
       _gender = widget.pet!.gender;
       _birthDate = widget.pet!.birthDate;
-      _hunger = widget.pet!.hunger;
+      _satiety = widget.pet!.satiety;
       _happiness = widget.pet!.happiness;
       _energy = widget.pet!.energy;
       _care = widget.pet!.care;
-      _hungerInterval = widget.pet!.hungerInterval;
+      _satietyInterval = widget.pet!.satietyInterval;
       _happinessInterval = widget.pet!.happinessInterval;
       _energyInterval = widget.pet!.energyInterval;
       _careInterval = widget.pet!.careInterval;
@@ -90,11 +90,11 @@ class _PetFormPageState extends State<PetFormPage> with TickerProviderStateMixin
         name: _nameController.text,
         gender: _gender!,
         birthDate: _birthDate!,
-        hunger: _hunger,
+        satiety: _satiety,
         happiness: _happiness,
         energy: _energy,
         care: _care,
-        hungerInterval: _hungerInterval,
+        satietyInterval: _satietyInterval,
         happinessInterval: _happinessInterval,
         energyInterval: _energyInterval,
         careInterval: _careInterval,
@@ -480,13 +480,13 @@ class _PetFormPageState extends State<PetFormPage> with TickerProviderStateMixin
                                     ),
                                     const SizedBox(height: 20),
                                     
-                                                                         _buildIntervalSlider(
-                                       label: 'Açlık Süresi',
-                                       value: _hungerInterval.toDouble(),
+                                     _buildIntervalSlider(
+                                       label: 'Tokluk Süresi',
+                                       value: _satietyInterval.toDouble(),
                                        min: 10,
                                        max: 300,
                                        icon: Icons.restaurant,
-                                       onChanged: (value) => setState(() => _hungerInterval = value.round()),
+                                       onChanged: (value) => setState(() => _satietyInterval = value.round()),
                                      ),
                                      
                                      const SizedBox(height: 16),

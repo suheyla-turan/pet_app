@@ -68,15 +68,15 @@ class AIProvider with ChangeNotifier {
 
   String _petInfoPrompt(Pet pet) {
     return '''Aşağıda evcil hayvanımın bilgileri var:
-- Adı: ${pet.name}
-- Türü: ${pet.type}
-- Cinsiyet: ${pet.gender}
-- Yaş: ${pet.age}
-- Doğum Tarihi: ${pet.birthDate.day}.${pet.birthDate.month}.${pet.birthDate.year}
-- Açlık: ${pet.hunger}/10
-- Mutluluk: ${pet.happiness}/10
-- Enerji: ${pet.energy}/10
-- Bakım: ${pet.care}/10
+- Adı:  {pet.name}
+- Türü:  {pet.type}
+- Cinsiyet:  {pet.gender}
+- Yaş:  {pet.age}
+- Doğum Tarihi:  {pet.birthDate.day}. {pet.birthDate.month}. {pet.birthDate.year}
+- Tokluk:  {pet.satiety}/10
+- Mutluluk:  {pet.happiness}/10
+- Enerji:  {pet.energy}/10
+- Bakım:  {pet.care}/10
 ''';
   }
 
