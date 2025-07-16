@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pet_app/l10n/app_localizations.dart';
 
 class FeedbackPage extends StatefulWidget {
   const FeedbackPage({super.key});
@@ -18,7 +19,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
     final isDark = theme.brightness == Brightness.dark;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Destek / Geri Bildirim'),
+        title: Text(AppLocalizations.of(context)!.support),
         backgroundColor: Colors.transparent,
         elevation: 0,
         iconTheme: IconThemeData(color: theme.colorScheme.primary),
@@ -42,7 +43,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                   children: [
                     const Icon(Icons.check_circle, color: Colors.green, size: 48),
                     const SizedBox(height: 16),
-                    const Text('Geri bildiriminiz için teşekkürler!', style: TextStyle(fontSize: 18)),
+                    Text(AppLocalizations.of(context)!.feedbackThanks, style: TextStyle(fontSize: 18)),
                   ],
                 ),
               )
@@ -52,18 +53,18 @@ class _FeedbackPageState extends State<FeedbackPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 20),
-                    const Text('Görüş, öneri veya yaşadığınız bir sorunu bizimle paylaşabilirsiniz.', style: TextStyle(fontSize: 16)),
+                    Text(AppLocalizations.of(context)!.feedbackDescription, style: TextStyle(fontSize: 16)),
                     const SizedBox(height: 24),
                     TextFormField(
                       controller: _controller,
                       maxLines: 6,
-                      decoration: const InputDecoration(
-                        labelText: 'Mesajınız',
-                        border: OutlineInputBorder(),
+                      decoration: InputDecoration(
+                        labelText: AppLocalizations.of(context)!.yourMessage,
+                        border: const OutlineInputBorder(),
                       ),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
-                          return 'Lütfen bir mesaj girin';
+                          return AppLocalizations.of(context)!.enterMessage;
                         }
                         return null;
                       },
@@ -73,7 +74,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                       width: double.infinity,
                       child: ElevatedButton.icon(
                         icon: const Icon(Icons.send),
-                        label: const Text('Gönder'),
+                        label: Text(AppLocalizations.of(context)!.send),
                         onPressed: () {
                           if (_formKey.currentState!.validate()) {
                             setState(() {

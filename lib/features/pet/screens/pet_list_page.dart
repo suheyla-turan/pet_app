@@ -7,6 +7,7 @@ import 'pet_form_page.dart';
 import 'settings_page.dart';
 import '../../../providers/pet_provider.dart';
 import '../../profile/profile_page.dart';
+import 'package:pet_app/l10n/app_localizations.dart';
 
 class PetListPage extends StatefulWidget {
   const PetListPage({super.key});
@@ -50,7 +51,7 @@ class _PetListPageState extends State<PetListPage> with TickerProviderStateMixin
     
     return Scaffold(
       appBar: AppBar(
-        title: Text('Evcil Hayvanlarım'),
+        title: Text(AppLocalizations.of(context)!.myPets),
         actions: [
           IconButton(
             icon: Icon(Icons.person),
@@ -127,7 +128,7 @@ class _PetListPageState extends State<PetListPage> with TickerProviderStateMixin
                               color: theme.colorScheme.primary,
                               size: 24,
                             ),
-                            tooltip: 'Ayarlar',
+                            tooltip: AppLocalizations.of(context)!.settings,
                             style: IconButton.styleFrom(
                               padding: const EdgeInsets.all(12),
                             ),
@@ -161,7 +162,7 @@ class _PetListPageState extends State<PetListPage> with TickerProviderStateMixin
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Hayvanlarım',
+                      AppLocalizations.of(context)!.myPets,
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 34,
@@ -172,7 +173,7 @@ class _PetListPageState extends State<PetListPage> with TickerProviderStateMixin
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      'Tüm sevimli dostlarını burada yönet',
+                      AppLocalizations.of(context)!.manageYourPets,
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 16,
@@ -230,7 +231,7 @@ class _PetListPageState extends State<PetListPage> with TickerProviderStateMixin
                             ),
                             const SizedBox(height: 20),
                             Text(
-                              'Hayvanlarınız yükleniyor...',
+                              AppLocalizations.of(context)!.petsLoading,
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w600,
@@ -277,7 +278,7 @@ class _PetListPageState extends State<PetListPage> with TickerProviderStateMixin
                                 ),
                                 const SizedBox(height: 24),
                                 Text(
-                                  'Henüz evcil hayvan eklemediniz',
+                                  AppLocalizations.of(context)!.noPetsAdded,
                                   style: TextStyle(
                                     fontSize: 24,
                                     fontWeight: FontWeight.w700,
@@ -286,7 +287,7 @@ class _PetListPageState extends State<PetListPage> with TickerProviderStateMixin
                                 ),
                                 const SizedBox(height: 12),
                                 Text(
-                                  'İlk evcil hayvanınızı eklemek için\nsağ alt köşedeki + butonuna tıklayın',
+                                  AppLocalizations.of(context)!.addPetHint,
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     fontSize: 16,
@@ -357,8 +358,8 @@ class _PetListPageState extends State<PetListPage> with TickerProviderStateMixin
             }
           },
           icon: const Icon(Icons.add, size: 24),
-          label: const Text(
-            'Hayvan Ekle',
+          label: Text(
+            AppLocalizations.of(context)!.addPet,
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -541,7 +542,7 @@ class _PetListPageState extends State<PetListPage> with TickerProviderStateMixin
                       const SizedBox(height: 6),
                       
                       Text(
-                        '${pet.type} • ${pet.age} yaşında • ${pet.gender}',
+                        '${getLocalizedPetType(pet.type, context)} • ${AppLocalizations.of(context)!.yearsOld(pet.age)} • ${getLocalizedGender(pet.gender, context)}',
                         style: TextStyle(
                           fontSize: 15,
                           color: isDark ? Colors.grey.shade300 : Colors.grey.shade600,
@@ -557,14 +558,14 @@ class _PetListPageState extends State<PetListPage> with TickerProviderStateMixin
                           _buildStatusChip(
                             icon: Icons.restaurant,
                             value: pet.satiety,
-                            label: 'Tokluk',
+                            label: AppLocalizations.of(context)!.hunger,
                             isDark: isDark,
                           ),
                           const SizedBox(width: 10),
                           _buildStatusChip(
                             icon: Icons.favorite,
                             value: pet.happiness,
-                            label: 'Mutluluk',
+                            label: AppLocalizations.of(context)!.happiness,
                             isDark: isDark,
                           ),
                         ],
@@ -577,14 +578,14 @@ class _PetListPageState extends State<PetListPage> with TickerProviderStateMixin
                           _buildStatusChip(
                             icon: Icons.battery_charging_full,
                             value: pet.energy,
-                            label: 'Enerji',
+                            label: AppLocalizations.of(context)!.energy,
                             isDark: isDark,
                           ),
                           const SizedBox(width: 10),
                           _buildStatusChip(
                             icon: Icons.healing,
                             value: pet.care,
-                            label: 'Bakım',
+                            label: AppLocalizations.of(context)!.maintenance,
                             isDark: isDark,
                           ),
                         ],
@@ -653,10 +654,52 @@ class _PetListPageState extends State<PetListPage> with TickerProviderStateMixin
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Hayvan silinirken hata oluştu: $e'),
+          content: Text(AppLocalizations.of(context)!.deletePetError(e.toString())),
           backgroundColor: Colors.red,
         ),
       );
+    }
+  }
+
+  String getLocalizedPetType(String type, BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
+    switch (type) {
+      case 'dog':
+      case 'Köpek':
+        return loc.dog;
+      case 'cat':
+      case 'Kedi':
+        return loc.cat;
+      case 'bird':
+      case 'Kuş':
+        return loc.bird;
+      case 'fish':
+      case 'Balık':
+        return loc.fish;
+      case 'hamster':
+        return loc.hamster;
+      case 'rabbit':
+      case 'Tavşan':
+        return loc.rabbit;
+      case 'other':
+      case 'Diğer':
+        return loc.other;
+      default:
+        return type;
+    }
+  }
+
+  String getLocalizedGender(String gender, BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
+    switch (gender) {
+      case 'male':
+      case 'Erkek':
+        return loc.male;
+      case 'female':
+      case 'Dişi':
+        return loc.female;
+      default:
+        return gender;
     }
   }
 } 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pet_app/l10n/app_localizations.dart';
 
 class StatusIndicator extends StatelessWidget {
   final IconData icon;
@@ -75,7 +76,7 @@ class StatusIndicator extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      _getLabel(),
+                      _getLabel(context),
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -130,7 +131,7 @@ class StatusIndicator extends StatelessWidget {
                 
                 // Status Text
                 Text(
-                  _getStatusText(),
+                  _getStatusText(context),
                   style: TextStyle(
                     fontSize: 12,
                     color: color.withOpacity(0.8),
@@ -145,32 +146,34 @@ class StatusIndicator extends StatelessWidget {
     );
   }
   
-  String _getLabel() {
+  String _getLabel(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     switch (icon) {
       case Icons.restaurant:
-        return 'Tokluk';
+        return loc.satiety;
       case Icons.favorite:
-        return 'Mutluluk';
+        return loc.happiness;
       case Icons.battery_charging_full:
-        return 'Enerji';
+        return loc.energy;
       case Icons.healing:
-        return 'Bakım';
+        return loc.maintenance;
       default:
-        return 'Durum';
+        return loc.statusInfo;
     }
   }
   
-  String _getStatusText() {
+  String _getStatusText(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     if (icon == Icons.restaurant) {
-      if (value <= 2) return 'Kritik'; // Tokluk düşükse kritik
-      if (value >= 8) return 'Mükemmel!'; // Tokluk yüksekse mükemmel
-      if (value >= 5) return 'İyi';
-      return 'Orta';
+      if (value <= 2) return loc.critical;
+      if (value >= 8) return loc.excellent;
+      if (value >= 5) return loc.good;
+      return loc.medium;
     }
-    if (value >= 9) return 'Mükemmel!';
-    if (value >= 7) return 'İyi';
-    if (value >= 5) return 'Orta';
-    if (value >= 3) return 'Düşük';
-    return 'Kritik';
+    if (value >= 9) return loc.excellent;
+    if (value >= 7) return loc.good;
+    if (value >= 5) return loc.medium;
+    if (value >= 3) return loc.low;
+    return loc.critical;
   }
 }

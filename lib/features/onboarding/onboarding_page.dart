@@ -3,6 +3,7 @@ import 'package:lottie/lottie.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import '../../providers/auth_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:pet_app/l10n/app_localizations.dart';
 
 class OnboardingPage extends StatefulWidget {
   const OnboardingPage({super.key});
@@ -38,31 +39,31 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 physics: const NeverScrollableScrollPhysics(),
                 children: [
                   _OnboardingInfo(
-                    title: 'Mini Pet Uygulamasına Hoşgeldiniz!',
-                    description: 'Evcil dostlarınızın bakımını kolayca takip edin.',
+                    title: AppLocalizations.of(context)!.onboardingWelcome,
+                    description: AppLocalizations.of(context)!.onboardingDescription,
                     lottieAsset: 'assets/golden.json',
-                    buttonText: 'İleri',
+                    buttonText: AppLocalizations.of(context)!.next,
                     onButton: () => _pageController.animateToPage(1, duration: Duration(milliseconds: 400), curve: Curves.ease),
                   ),
                   _OnboardingInfo(
-                    title: 'Evcil Hayvanlarını Ekle',
-                    description: 'Kedi, köpek veya diğer dostlarını uygulamaya ekle, bilgilerini kaydet.',
+                    title: AppLocalizations.of(context)!.addPet,
+                    description: AppLocalizations.of(context)!.addPetDescription,
                     lottieAsset: 'assets/golden.json',
-                    buttonText: 'İleri',
+                    buttonText: AppLocalizations.of(context)!.next,
                     onButton: () => _pageController.animateToPage(2, duration: Duration(milliseconds: 400), curve: Curves.ease),
                   ),
                   _OnboardingInfo(
-                    title: 'Aşı ve Bakım Takibi',
-                    description: 'Aşı, mama, sağlık ve bakım zamanlarını unutma, bildirim al.',
+                    title: AppLocalizations.of(context)!.vaccinationAndCare,
+                    description: AppLocalizations.of(context)!.vaccinationAndCareDescription,
                     lottieAsset: 'assets/golden.json',
-                    buttonText: 'İleri',
+                    buttonText: AppLocalizations.of(context)!.next,
                     onButton: () => _pageController.animateToPage(3, duration: Duration(milliseconds: 400), curve: Curves.ease),
                   ),
                   _OnboardingInfo(
-                    title: 'Profil ve Geçmiş',
-                    description: 'Tüm sağlık geçmişi ve profil bilgileri her zaman yanında.',
+                    title: AppLocalizations.of(context)!.profileAndHistory,
+                    description: AppLocalizations.of(context)!.profileAndHistoryDescription,
                     lottieAsset: 'assets/golden.json',
-                    buttonText: 'Başla',
+                    buttonText: AppLocalizations.of(context)!.start,
                     onButton: _goToAuth,
                   ),
                   // Auth ekranları
@@ -166,7 +167,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   String email = '', password = '';
   bool _obscure = true;
-  bool _resetLoading = false;
+  final bool _resetLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -181,22 +182,22 @@ class _LoginScreenState extends State<LoginScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text('Giriş Yap', style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+                Text(AppLocalizations.of(context)!.login, style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
                 SizedBox(height: 24),
                 TextFormField(
                   decoration: InputDecoration(
-                    labelText: 'Email',
+                    labelText: AppLocalizations.of(context)!.email,
                     prefixIcon: Icon(Icons.email_outlined),
                     border: OutlineInputBorder(),
                   ),
                   keyboardType: TextInputType.emailAddress,
                   onChanged: (v) => email = v,
-                  validator: (v) => v != null && v.contains('@') ? null : 'Geçerli email girin',
+                  validator: (v) => v != null && v.contains('@') ? null : AppLocalizations.of(context)!.validEmail,
                 ),
                 SizedBox(height: 16),
                 TextFormField(
                   decoration: InputDecoration(
-                    labelText: 'Şifre',
+                    labelText: AppLocalizations.of(context)!.password,
                     prefixIcon: Icon(Icons.lock_outline),
                     border: OutlineInputBorder(),
                     suffixIcon: IconButton(
@@ -206,7 +207,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   obscureText: _obscure,
                   onChanged: (v) => password = v,
-                  validator: (v) => v != null && v.length >= 6 ? null : 'En az 6 karakter',
+                  validator: (v) => v != null && v.length >= 6 ? null : AppLocalizations.of(context)!.min6Chars,
                 ),
                 SizedBox(height: 8),
                 Align(
@@ -217,7 +218,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         MaterialPageRoute(builder: (_) => const ResetPasswordScreen()),
                       );
                     },
-                    child: Text('Şifremi Unuttum?'),
+                    child: Text(AppLocalizations.of(context)!.forgotPassword),
                   ),
                 ),
                 if (_resetLoading)
@@ -256,12 +257,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   style: ElevatedButton.styleFrom(minimumSize: Size(160, 48)),
                   child: authProvider.isLoading
                       ? SizedBox(height: 24, width: 24, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                      : Text('Giriş Yap'),
+                      : Text(AppLocalizations.of(context)!.login),
                 ),
                 SizedBox(height: 12),
                 OutlinedButton(
                   onPressed: authProvider.isLoading ? null : widget.onRegisterTap,
-                  child: Text('Hesabınız yok mu? Kayıt Ol'),
+                  child: Text(AppLocalizations.of(context)!.noAccountRegister),
                 ),
               ],
             ),
@@ -298,32 +299,32 @@ class _RegisterScreenState extends State<RegisterScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text('Kayıt Ol', style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+                Text(AppLocalizations.of(context)!.register, style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
                 SizedBox(height: 24),
                 TextFormField(
                   decoration: InputDecoration(
-                    labelText: 'İsim',
+                    labelText: AppLocalizations.of(context)!.name,
                     prefixIcon: Icon(Icons.person_outline),
                     border: OutlineInputBorder(),
                   ),
                   onChanged: (v) => name = v,
-                  validator: (v) => v != null && v.length >= 2 ? null : 'İsim girin',
+                  validator: (v) => v != null && v.length >= 2 ? null : AppLocalizations.of(context)!.enterName,
                 ),
                 SizedBox(height: 16),
                 TextFormField(
                   decoration: InputDecoration(
-                    labelText: 'Email',
+                    labelText: AppLocalizations.of(context)!.email,
                     prefixIcon: Icon(Icons.email_outlined),
                     border: OutlineInputBorder(),
                   ),
                   keyboardType: TextInputType.emailAddress,
                   onChanged: (v) => email = v,
-                  validator: (v) => v != null && v.contains('@') ? null : 'Geçerli email girin',
+                  validator: (v) => v != null && v.contains('@') ? null : AppLocalizations.of(context)!.validEmail,
                 ),
                 SizedBox(height: 16),
                 TextFormField(
                   decoration: InputDecoration(
-                    labelText: 'Şifre',
+                    labelText: AppLocalizations.of(context)!.password,
                     prefixIcon: Icon(Icons.lock_outline),
                     border: OutlineInputBorder(),
                     suffixIcon: IconButton(
@@ -333,7 +334,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   obscureText: _obscure,
                   onChanged: (v) => password = v,
-                  validator: (v) => v != null && v.length >= 6 ? null : 'En az 6 karakter',
+                  validator: (v) => v != null && v.length >= 6 ? null : AppLocalizations.of(context)!.min6Chars,
                 ),
                 if (authProvider.errorMessage != null)
                   Container(
@@ -366,12 +367,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   style: ElevatedButton.styleFrom(minimumSize: Size(160, 48)),
                   child: authProvider.isLoading
                       ? SizedBox(height: 24, width: 24, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                      : Text('Kayıt Ol'),
+                      : Text(AppLocalizations.of(context)!.register),
                 ),
                 SizedBox(height: 12),
                 OutlinedButton(
                   onPressed: authProvider.isLoading ? null : widget.onLoginTap,
-                  child: Text('Zaten hesabınız var mı? Giriş Yap'),
+                  child: Text(AppLocalizations.of(context)!.alreadyAccountLogin),
                 ),
               ],
             ),
@@ -398,7 +399,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Şifre Yenile')),
+      appBar: AppBar(title: Text(AppLocalizations.of(context)!.resetPassword)),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Center(
@@ -421,21 +422,21 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                         children: [
                           Icon(Icons.check_circle, color: Colors.green[700]),
                           SizedBox(width: 8),
-                          Expanded(child: Text('Şifre sıfırlama maili gönderildi!', style: TextStyle(color: Colors.green[900]))),
+                          Expanded(child: Text(AppLocalizations.of(context)!.resetMailSent, style: TextStyle(color: Colors.green[900]))),
                         ],
                       ),
                     ),
-                  Text('Şifre Yenile', style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+                  Text(AppLocalizations.of(context)!.resetPassword, style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
                   SizedBox(height: 24),
                   TextFormField(
                     decoration: InputDecoration(
-                      labelText: 'Email',
+                      labelText: AppLocalizations.of(context)!.email,
                       prefixIcon: Icon(Icons.email_outlined),
                       border: OutlineInputBorder(),
                     ),
                     keyboardType: TextInputType.emailAddress,
                     onChanged: (v) => email = v,
-                    validator: (v) => v != null && v.contains('@') ? null : 'Geçerli email girin',
+                    validator: (v) => v != null && v.contains('@') ? null : AppLocalizations.of(context)!.validEmail,
                   ),
                   SizedBox(height: 24),
                   ElevatedButton(
@@ -455,7 +456,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                           },
                     child: _loading
                         ? SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                        : Text('Şifreyi Sıfırla'),
+                        : Text(AppLocalizations.of(context)!.resetPasswordButton),
                   ),
                 ],
               ),

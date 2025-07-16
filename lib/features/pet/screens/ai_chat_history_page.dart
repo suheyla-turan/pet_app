@@ -59,7 +59,7 @@ class _AIChatHistoryPageState extends State<AIChatHistoryPage> {
                       orElse: () => msgSnapshot.data!.first,
                     );
                     title = firstUserMsg.text.length > 30
-                      ? firstUserMsg.text.substring(0, 30) + '...'
+                      ? '${firstUserMsg.text.substring(0, 30)}...'
                       : firstUserMsg.text;
                   }
                   return ListTile(

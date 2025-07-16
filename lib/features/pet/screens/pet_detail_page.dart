@@ -15,9 +15,8 @@ import 'package:pet_app/services/firestore_service.dart';
 import 'package:pet_app/services/realtime_service.dart';
 import 'package:pet_app/providers/auth_provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:pet_app/features/pet/screens/ai_chat_history_page.dart';
-import 'package:pet_app/features/pet/models/ai_chat_message.dart';
 import 'package:pet_app/features/pet/screens/ai_chat_page.dart';
+import 'package:pet_app/l10n/app_localizations.dart';
 
 class PetDetailPage extends StatefulWidget {
   final Pet pet;
@@ -115,7 +114,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
     await provider.setPetFeedingTime(_pet.name, _feedingTime!);
     setState(() { _isSavingFeedingTime = false; });
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Beslenme zamanı kaydedildi!')),
+      SnackBar(content: Text(AppLocalizations.of(context)!.feedingTimeSaved)),
     );
   }
 
@@ -183,7 +182,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
         builder: (context, setDialogState) {
           return AlertDialog(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            title: const Text('Yapay Zekaya Soru Sor'),
+            title: Text(AppLocalizations.of(context)!.aiAskTitle),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -201,8 +200,8 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Tanınan Metin:',
+                        Text(
+                          AppLocalizations.of(context)!.recognizedText,
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 12,
@@ -221,8 +220,8 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                 // Metin girişi
                 TextField(
                   controller: controller,
-                  decoration: const InputDecoration(
-                    hintText: 'Sorunuzu yazın veya sesli sorun...',
+                  decoration: InputDecoration(
+                    hintText: AppLocalizations.of(context)!.askHint,
                     border: OutlineInputBorder(),
                   ),
                   maxLines: 3,
@@ -251,7 +250,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                           color: aiProvider.isListening ? Colors.white : null,
                         ),
                         label: Text(
-                          aiProvider.isListening ? 'Dinlemeyi Durdur' : 'Sesli Sor',
+                          aiProvider.isListening ? AppLocalizations.of(context)!.stopListening : AppLocalizations.of(context)!.voiceAsk,
                           style: TextStyle(
                             color: aiProvider.isListening ? Colors.white : null,
                           ),
@@ -266,17 +265,17 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                 
                 // Yükleme göstergesi
                 if (aiProvider.isLoading)
-                  const Padding(
-                    padding: EdgeInsets.only(top: 12),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12),
                     child: Row(
                       children: [
-                        SizedBox(
+                        const SizedBox(
                           width: 16,
                           height: 16,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         ),
-                        SizedBox(width: 8),
-                        Text('AI düşünüyor...'),
+                        const SizedBox(width: 8),
+                        Text(AppLocalizations.of(context)!.aiThinking),
                       ],
                     ),
                   ),
@@ -288,7 +287,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                   aiProvider.stopVoiceInput();
                   Navigator.pop(context);
                 },
-                child: const Text('İptal'),
+                child: Text(AppLocalizations.of(context)!.cancel),
               ),
               ElevatedButton(
                 onPressed: () async {
@@ -305,7 +304,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                     // Eski getSuggestion, getCurrentResponseForPet, clearResponseForPet fonksiyonlarına ait kalan kodları tamamen kaldır
                   }
                 },
-                child: const Text('Sor'),
+                child: Text(AppLocalizations.of(context)!.ask),
               ),
             ],
           );
@@ -319,19 +318,19 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
     final result = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Kullanıcı Ekle'),
+        title: Text(AppLocalizations.of(context)!.addUser),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(hintText: 'Kullanıcı e-posta adresi'),
+          decoration: InputDecoration(hintText: AppLocalizations.of(context)!.userEmailHint),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('İptal'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, controller.text.trim()),
-            child: const Text('Ekle'),
+            child: Text(AppLocalizations.of(context)!.add),
           ),
         ],
       ),
@@ -339,13 +338,13 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
     if (result != null && result.isNotEmpty) {
       if (_pet.id == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Pet ID bulunamadı!')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.petIdNotFound)),
         );
         return;
       }
       final success = await FirestoreService.addOwnerToPetByEmail(_pet.id!, result);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(success ? 'Kullanıcı eklendi!' : 'Kullanıcı bulunamadı!')),
+        SnackBar(content: Text(success ? AppLocalizations.of(context)!.userAdded : AppLocalizations.of(context)!.userNotFound)),
       );
     }
   }
@@ -359,7 +358,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
       // Creator kendini çıkaramaz
       if (uid == _pet.creator) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Ana kullanıcı kendini çıkaramaz!')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.mainUserCannotRemoveSelf)),
         );
         return;
       }
@@ -376,7 +375,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Sadece ana kullanıcı başkasını çıkarabilir!')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.onlyMainUserCanRemove)),
       );
     }
   }
@@ -446,20 +445,6 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                 padding: const EdgeInsets.all(20),
                 child: Row(
                   children: [
-                    IconButton(
-                      icon: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(
-                          Icons.arrow_back,
-                          color: theme.colorScheme.primary,
-                        ),
-                      ),
-                      onPressed: () => Navigator.pop(context),
-                    ),
                     Expanded(
                       child: Column(
                         children: [
@@ -539,11 +524,11 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                                       children: [
                                         const Icon(Icons.access_time, color: Colors.orange),
                                         const SizedBox(width: 8),
-                                        const Text('Beslenme Zamanı:', style: TextStyle(fontWeight: FontWeight.bold)),
+                                        Text(AppLocalizations.of(context)!.feedingTimeLabel, style: const TextStyle(fontWeight: FontWeight.bold)),
                                         const Spacer(),
                                         Text(_feedingTime != null
                                             ? DateFormat('HH:mm').format(_feedingTime!)
-                                            : 'Ayarlanmadı'),
+                                            : AppLocalizations.of(context)!.notSet),
                                         IconButton(
                                           icon: const Icon(Icons.edit),
                                           onPressed: () => _selectFeedingTime(context),
@@ -556,7 +541,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                                       icon: const Icon(Icons.save),
                                       label: _isSavingFeedingTime
                                           ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                                          : const Text('Kaydet'),
+                                          : Text(AppLocalizations.of(context)!.save),
                                     ),
                                   ],
                                 ),
@@ -673,11 +658,11 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                                     ),
                                   const SizedBox(height: 20),
                                   // Pet Info
-                                  _buildInfoRow('Tür', _pet.type, Icons.pets),
-                                  _buildInfoRow('Cins', _pet.breed?.isNotEmpty == true ? _pet.breed! : '-', Icons.label),
-                                  _buildInfoRow('Cinsiyet', _pet.gender, Icons.person),
-                                  _buildInfoRow('Doğum Tarihi', '${_pet.birthDate.day}.${_pet.birthDate.month}.${_pet.birthDate.year}', Icons.calendar_today),
-                                  _buildInfoRow('Yaş', '${_pet.age} yaşında', Icons.cake),
+                                  _buildInfoRow(AppLocalizations.of(context)!.petType, getLocalizedPetType(_pet.type, context), Icons.pets),
+                                  _buildInfoRow(AppLocalizations.of(context)!.breed, _pet.breed?.isNotEmpty == true ? _pet.breed! : '-', Icons.label),
+                                  _buildInfoRow(AppLocalizations.of(context)!.gender, getLocalizedGender(_pet.gender, context), Icons.person),
+                                  _buildInfoRow(AppLocalizations.of(context)!.birthDateLabel, '${_pet.birthDate.day}.${_pet.birthDate.month}.${_pet.birthDate.year}', Icons.calendar_today),
+                                  _buildInfoRow(AppLocalizations.of(context)!.age, AppLocalizations.of(context)!.yearsOld(_pet.age), Icons.cake),
                                 ],
                               ),
                             ),
@@ -690,7 +675,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                               Expanded(
                                 child: ElevatedButton.icon(
                                   icon: const Icon(Icons.event_available),
-                                  label: const Text('Yapılacak Aşılar'),
+                                  label: Text(AppLocalizations.of(context)!.vaccinesToBeTaken),
                                   style: ElevatedButton.styleFrom(
                                     padding: const EdgeInsets.symmetric(vertical: 16),
                                     backgroundColor: Colors.orange,
@@ -700,16 +685,22 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                                     ),
                                     elevation: 4,
                                   ),
-                                  onPressed: () {
-                                    Navigator.push(
+                                  onPressed: () async {
+                                    final result = await Navigator.push(
                                       context,
                                       MaterialPageRoute(
                                         builder: (_) => VaccinePage(
-                                          vaccines: _pet.vaccines.where((v) => !v.isDone).toList(),
+                                          vaccines: _pet.vaccines, // Tüm listeyi gönder
                                           showDone: false,
                                         ),
                                       ),
                                     );
+                                    if (result != null && result is List<Vaccine>) {
+                                      setState(() {
+                                        _pet.vaccines = result; // Güncel listeyi doğrudan ata
+                                      });
+                                      context.read<PetProvider>().updatePetValues(_pet);
+                                    }
                                   },
                                 ),
                               ),
@@ -717,7 +708,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                               Expanded(
                                 child: ElevatedButton.icon(
                                   icon: const Icon(Icons.verified),
-                                  label: const Text('Yapılmış Aşılar'),
+                                  label: Text(AppLocalizations.of(context)!.vaccinesTaken),
                                   style: ElevatedButton.styleFrom(
                                     padding: const EdgeInsets.symmetric(vertical: 16),
                                     backgroundColor: Colors.green,
@@ -727,16 +718,22 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                                     ),
                                     elevation: 4,
                                   ),
-                                  onPressed: () {
-                                    Navigator.push(
+                                  onPressed: () async {
+                                    final result = await Navigator.push(
                                       context,
                                       MaterialPageRoute(
                                         builder: (_) => VaccinePage(
-                                          vaccines: _pet.vaccines.where((v) => v.isDone).toList(),
+                                          vaccines: _pet.vaccines, // Tüm listeyi gönder
                                           showDone: true,
                                         ),
                                       ),
                                     );
+                                    if (result != null && result is List<Vaccine>) {
+                                      setState(() {
+                                        _pet.vaccines = result; // Güncel listeyi doğrudan ata
+                                      });
+                                      context.read<PetProvider>().updatePetValues(_pet);
+                                    }
                                   },
                                 ),
                               ),
@@ -778,7 +775,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          'Durum Bilgileri',
+                                          AppLocalizations.of(context)!.statusInfoTitle,
                                           style: TextStyle(
                                             fontSize: 18,
                                             fontWeight: FontWeight.w700,
@@ -827,7 +824,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      'Hızlı İşlemler',
+                                      AppLocalizations.of(context)!.quickActions,
                                       style: TextStyle(
                                         fontSize: 18,
                                         fontWeight: FontWeight.w700,
@@ -842,25 +839,25 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                                         _buildActionButton(
                                           onPressed: besle,
                                           icon: Icons.restaurant,
-                                          label: 'Besle',
+                                          label: AppLocalizations.of(context)!.feed,
                                           color: Colors.green,
                                         ),
                                         _buildActionButton(
                                           onPressed: sev,
                                           icon: Icons.favorite,
-                                          label: 'Sev',
+                                          label: AppLocalizations.of(context)!.pet,
                                           color: Colors.pink,
                                         ),
                                         _buildActionButton(
                                           onPressed: dinlendir,
                                           icon: Icons.battery_charging_full,
-                                          label: 'Dinlendir',
+                                          label: AppLocalizations.of(context)!.rest,
                                           color: Colors.blue,
                                         ),
                                         _buildActionButton(
                                           onPressed: bakim,
                                           icon: Icons.healing,
-                                          label: 'Bakım',
+                                          label: AppLocalizations.of(context)!.care,
                                           color: Colors.purple,
                                         ),
                                       ],
@@ -889,7 +886,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                                         );
                                       },
                                       icon: const Icon(Icons.psychology),
-                                      label: const Text('Soru Sor / Sohbet'),
+                                      label: Text(AppLocalizations.of(context)!.askQuestionChat),
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: Theme.of(context).colorScheme.primary,
                                         foregroundColor: Colors.white,
@@ -1016,7 +1013,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 8),
-        const Text('Sahipler:', style: TextStyle(fontWeight: FontWeight.bold)),
+        Text(AppLocalizations.of(context)!.owners, style: const TextStyle(fontWeight: FontWeight.bold)),
         ..._pet.owners.map((uid) => FutureBuilder<DocumentSnapshot>(
           future: FirebaseFirestore.instance.collection('profiller').doc(uid).get(),
           builder: (context, snapshot) {
@@ -1050,7 +1047,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
             child: ElevatedButton.icon(
               onPressed: _addOwnerDialog,
               icon: const Icon(Icons.group_add),
-              label: const Text('Kullanıcı Ekle'),
+              label: Text(AppLocalizations.of(context)!.addUser),
             ),
           ),
       ],
@@ -1067,7 +1064,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 24),
-        const Text('Günlük / Sohbet', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        Text(AppLocalizations.of(context)!.diaryChat, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
         Container(
           height: 250,
@@ -1080,14 +1077,14 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
             stream: realtime.getPetMessagesStream(_pet.id!),
             builder: (context, snapshot) {
               if (snapshot.hasError) {
-                return const Center(child: Text('Bir hata oluştu'));
+                return Center(child: Text(AppLocalizations.of(context)!.errorOccurred));
               }
               if (!snapshot.hasData) {
                 return const Center(child: CircularProgressIndicator());
               }
               final messages = snapshot.data ?? [];
               if (messages.isEmpty) {
-                return const Center(child: Text('Henüz mesaj yok.'));
+                return Center(child: Text(AppLocalizations.of(context)!.noMessages));
               }
               return ListView.builder(
                 itemCount: messages.length,
@@ -1132,7 +1129,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
             Expanded(
               child: TextField(
                 controller: _chatController,
-                decoration: const InputDecoration(hintText: 'Mesaj yaz...'),
+                decoration: InputDecoration(hintText: AppLocalizations.of(context)!.writeMessage),
               ),
             ),
             IconButton(
@@ -1150,6 +1147,48 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
       ],
     );
   }
+
+  String getLocalizedPetType(String type, BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
+    switch (type) {
+      case 'dog':
+      case 'Köpek':
+        return loc.dog;
+      case 'cat':
+      case 'Kedi':
+        return loc.cat;
+      case 'bird':
+      case 'Kuş':
+        return loc.bird;
+      case 'fish':
+      case 'Balık':
+        return loc.fish;
+      case 'hamster':
+        return loc.hamster;
+      case 'rabbit':
+      case 'Tavşan':
+        return loc.rabbit;
+      case 'other':
+      case 'Diğer':
+        return loc.other;
+      default:
+        return type;
+    }
+  }
+
+  String getLocalizedGender(String gender, BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
+    switch (gender) {
+      case 'male':
+      case 'Erkek':
+        return loc.male;
+      case 'female':
+      case 'Dişi':
+        return loc.female;
+      default:
+        return gender;
+    }
+  }
 }
 
 // Geçici placeholder (ileride gerçek sayfa ile değiştirilecek)
@@ -1159,7 +1198,7 @@ class AIChatHistoryPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Sohbet Geçmişi')),
+      appBar: AppBar(title: Text(AppLocalizations.of(context)!.chatHistory)),
       body: const Center(child: Text('Sohbet geçmişi burada görünecek.')),
     );
   }

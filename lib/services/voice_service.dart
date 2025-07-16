@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:pet_app/l10n/app_localizations.dart';
 
 class VoiceService {
   static final VoiceService _instance = VoiceService._internal();
@@ -65,7 +66,8 @@ class VoiceService {
       
       // Türkçe yoksa İngilizce kullan
       if (languages != null && !languages.contains("tr-TR")) {
-        print('⚠️ Türkçe TTS dili bulunamadı, İngilizce kullanılıyor');
+        // TODO: Inject localization here for TTS language not found
+        print('Turkish TTS language not found, using English instead');
         await _flutterTts.setLanguage("en-US");
       }
       
@@ -94,15 +96,17 @@ class VoiceService {
 
       print('✅ Sesli konuşma servisi başlatıldı');
     } catch (e) {
-      print('❌ Sesli konuşma servisi başlatılamadı: $e');
+      // TODO: Inject localization here for TTS service failed
+      print('Voice service could not be started: $e');
       _speechEnabled = false;
     }
   }
 
   Future<void> startListening() async {
     if (!_speechEnabled) {
-      print('❌ Konuşma tanıma etkin değil');
-      onSpeechError?.call('Konuşma tanıma etkin değil');
+      // TODO: Inject localization here for speech not enabled
+      print('Speech recognition is not enabled');
+      onSpeechError?.call('Speech recognition is not enabled');
       return;
     }
 

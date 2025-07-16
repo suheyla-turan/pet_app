@@ -9,7 +9,7 @@ class FirestoreService {
       if (user == null) throw Exception('Kullanıcı oturumu yok');
       final petMap = pet.toMap();
       // owners alanı yoksa ekle
-      if (!(petMap['owners'] is List) || (petMap['owners'] as List).isEmpty) {
+      if (petMap['owners'] is! List || (petMap['owners'] as List).isEmpty) {
         petMap['owners'] = [user.uid];
       } else if (!(petMap['owners'] as List).contains(user.uid)) {
         (petMap['owners'] as List).add(user.uid);

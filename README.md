@@ -7,6 +7,10 @@ Evcil hayvan bakım uygulaması - Flutter ile geliştirilmiş modern bir mobil u
 - 🐕 Evcil hayvan yönetimi (ekleme, düzenleme, silme)
 - 📊 Durum takibi (açlık, mutluluk, enerji, bakım)
 - 💉 **Aşı takibi**: Yapılacak ve yapılmış aşılar ayrı, geçmiş ve gelecek aşılar için ekleme ve filtreleme
+    - **Yapılacak Aşılar**: Sadece yapılmamış aşılar listelenir. Yeni aşı ekleyince sayfa kapanmaz, eklenen aşı anında görünür.
+    - **Yapılmış Aşılar**: Sadece yapılmış aşılar listelenir.
+    - **Aşıyı yaptırınca**: Yapılacak aşılar sayfasında tik atınca, aşı otomatik olarak yapılmışlara taşınır ve listeler anında güncellenir.
+    - **Aşı ekleme/işaretleme**: Her iki sayfada da ekleme yapılabilir, yapılan değişiklikler ana ekrana anında yansır.
 - ⏰ **Aşı hatırlatma bildirimi**: Yapılacak aşılar için seçilen tarihte otomatik bildirim
 - 🤖 **AI destekli çoklu mesajlı sohbet**: Her hayvan için AI ile çoklu mesajlı sohbet, sohbet geçmişi ve detayları
 - 🗣️ **Sesli yanıt (TTS)**: AI yanıtlarını ve sohbet mesajlarını sesli dinleyebilme (her mesaj için hoparlör butonu)
@@ -17,6 +21,7 @@ Evcil hayvan bakım uygulaması - Flutter ile geliştirilmiş modern bir mobil u
 - 🎨 Açık/Koyu tema desteği
 - ⚙️ Gelişmiş ayarlar (konuşma stili, ses seçimi, hız/perde, zamanlı bildirim)
 - 🔒 Güvenli API key yönetimi
+- 🌐 **Çoklu dil desteği (TR/EN)**: Tüm arayüzde dinamik olarak Türkçe/İngilizce dil seçimi ve anında değişim
 
 ## 🚀 Kurulum
 
@@ -77,10 +82,11 @@ flutter run
 - **Bakım**: Bakım seviyesini artırır (ve sesli olarak hayvan adıyla "Bakım zamanı, aferin ..." der)
 
 ### Aşı Takibi ve Bildirimler
-- **Yapılacak Aşılar**: Sadece gelecekteki bir tarih seçilerek eklenebilir, seçilen tarihte otomatik bildirim gelir
-- **Yapılmış Aşılar**: Geçmişte yaptırılan aşılar eklenebilir, ayrı listede görüntülenir
-- **Aşılar iki ayrı sayfada**: "Yapılacak Aşılar" ve "Yapılmış Aşılar" butonları ile erişim
-- **Aşıyı yaptırınca**: "Yapıldı" olarak işaretlenebilir, ilgili listeden diğerine taşınır
+- **Yapılacak Aşılar**: Sadece yapılmamış aşılar listelenir. Yeni aşı ekleyince sayfa kapanmaz, eklenen aşı anında görünür.
+- **Yapılmış Aşılar**: Sadece yapılmış aşılar listelenir.
+- **Aşıyı yaptırınca**: Yapılacak aşılar sayfasında tik atınca, aşı otomatik olarak yapılmışlara taşınır ve listeler anında güncellenir.
+- **Aşı ekleme/işaretleme**: Her iki sayfada da ekleme yapılabilir, yapılan değişiklikler ana ekrana anında yansır.
+- **Gelecekteki aşılar için bildirim**: Seçilen tarihte otomatik bildirim gelir.
 
 ### AI Sohbet Özellikleri
 - **Çoklu mesajlı sohbet**: Her hayvan için AI ile çoklu mesajlı sohbet ve sohbet geçmişi
@@ -109,6 +115,11 @@ flutter run
 - TTS ses seçimi, hız ve perde ayarı
 - Zamanlı bildirim saati seçimi
 
+### Çoklu Dil Desteği
+- **Tüm arayüzde tam çok dilli destek (Türkçe/İngilizce)**
+- Ayarlardan anında dil değişimi, tüm metinler ve dropdownlar otomatik güncellenir
+- Pet türleri, cinsiyetler, durumlar ve tüm butonlar lokalizasyon sistemine bağlıdır
+
 ## 🛠️ Teknik Detaylar
 
 - **Provider Pattern** ile merkezi state yönetimi
@@ -116,6 +127,7 @@ flutter run
 - **PetProvider**: Evcil hayvan yönetimi ve bakım
 - **NotificationService**: Zamanlı ve özel bildirimler, aşı hatırlatmaları
 - **Güvenli API key yönetimi** ve Firebase güvenlik kuralları
+- **Lokalizasyon**: ARB tabanlı, fonksiyonel anahtarlar ve dinamik çeviri desteği
 
 ## 📁 Proje Yapısı
 

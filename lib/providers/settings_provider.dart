@@ -2,14 +2,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart'; // Added for TimeOfDay
 
 enum ConversationStyle {
-  friendly('Dostane', 'Sıcak ve samimi bir ton kullanır'),
-  professional('Profesyonel', 'Resmi ve bilgilendirici bir ton kullanır'),
-  playful('Eğlenceli', 'Eğlenceli ve oyuncu bir ton kullanır'),
-  caring('Şefkatli', 'Şefkatli ve koruyucu bir ton kullanır');
-
-  const ConversationStyle(this.title, this.description);
-  final String title;
-  final String description;
+  friendly,
+  professional,
+  playful,
+  caring,
 }
 
 class SettingsProvider with ChangeNotifier {
@@ -25,6 +21,7 @@ class SettingsProvider with ChangeNotifier {
   String? _notificationSound;
   bool _scheduledNotificationsEnabled = false;
   TimeOfDay _scheduledNotificationTime = const TimeOfDay(hour: 9, minute: 0);
+  Locale? _locale;
 
   bool get notificationsEnabled => _notificationsEnabled;
   bool get soundEnabled => _soundEnabled;
@@ -38,6 +35,7 @@ class SettingsProvider with ChangeNotifier {
   String? get notificationSound => _notificationSound;
   bool get scheduledNotificationsEnabled => _scheduledNotificationsEnabled;
   TimeOfDay get scheduledNotificationTime => _scheduledNotificationTime;
+  Locale? get locale => _locale;
 
   SettingsProvider() {
     _loadSettings();
@@ -163,6 +161,11 @@ class SettingsProvider with ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('scheduled_notification_hour', time.hour);
     await prefs.setInt('scheduled_notification_minute', time.minute);
+    notifyListeners();
+  }
+
+  void setLocale(Locale? locale) {
+    _locale = locale;
     notifyListeners();
   }
 

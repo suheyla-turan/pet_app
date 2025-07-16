@@ -6,6 +6,7 @@ import '../../../services/voice_service.dart';
 import '../../profile/profile_page.dart';
 import 'about_page.dart';
 import 'feedback_page.dart';
+import 'package:pet_app/l10n/app_localizations.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -87,7 +88,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                       child: Column(
                         children: [
                           Text(
-                            'Ayarlar',
+                            AppLocalizations.of(context)!.settings,
                             style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.w800,
@@ -95,7 +96,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                             ),
                           ),
                           Text(
-                            'Uygulama tercihlerinizi yönetin',
+                            AppLocalizations.of(context)!.settingsDescription,
                             style: TextStyle(
                               fontSize: 16,
                               color: isDark ? Colors.grey.shade300 : Colors.grey.shade600,
@@ -118,7 +119,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                       children: [
                         // Theme Settings Card
                         _buildSettingsCard(
-                          title: 'Tema',
+                          title: AppLocalizations.of(context)!.theme,
                           icon: Icons.palette,
                           color: Colors.purple,
                           child: Consumer<ThemeProvider>(
@@ -126,24 +127,24 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                               return Column(
                                 children: [
                                   _buildThemeRadioTile(
-                                    title: 'Açık',
-                                    subtitle: 'Açık tema',
+                                    title: AppLocalizations.of(context)!.themeLight,
+                                    subtitle: AppLocalizations.of(context)!.themeLightDesc,
                                     value: ThemeMode.light,
                                     groupValue: themeProvider.themeMode,
                                     onChanged: (mode) => themeProvider.setThemeMode(mode!),
                                     icon: Icons.light_mode,
                                   ),
                                   _buildThemeRadioTile(
-                                    title: 'Karanlık',
-                                    subtitle: 'Karanlık tema',
+                                    title: AppLocalizations.of(context)!.themeDark,
+                                    subtitle: AppLocalizations.of(context)!.themeDarkDesc,
                                     value: ThemeMode.dark,
                                     groupValue: themeProvider.themeMode,
                                     onChanged: (mode) => themeProvider.setThemeMode(mode!),
                                     icon: Icons.dark_mode,
                                   ),
                                   _buildThemeRadioTile(
-                                    title: 'Sistem Varsayılanı',
-                                    subtitle: 'Cihazın tema ayarını kullan',
+                                    title: AppLocalizations.of(context)!.themeSystem,
+                                    subtitle: AppLocalizations.of(context)!.themeSystemDesc,
                                     value: ThemeMode.system,
                                     groupValue: themeProvider.themeMode,
                                     onChanged: (mode) => themeProvider.setThemeMode(mode!),
@@ -154,22 +155,74 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                             },
                           ),
                         ),
-                        
+                        const SizedBox(height: 20),
+                        // DİL SEÇİCİ KARTI
+                        _buildSettingsCard(
+                          title: AppLocalizations.of(context)!.language,
+                          icon: Icons.language,
+                          color: Colors.teal,
+                          child: Consumer<SettingsProvider>(
+                            builder: (context, settingsProvider, child) {
+                              return DropdownButtonFormField<Locale>(
+                                value: settingsProvider.locale ?? const Locale('tr'),
+                                items: const [
+                                  DropdownMenuItem(
+                                    value: Locale('tr'),
+                                    child: Text('Türkçe'),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: Locale('en'),
+                                    child: Text('English'),
+                                  ),
+                                ],
+                                onChanged: (locale) {
+                                  settingsProvider.setLocale(locale);
+                                },
+                                decoration: InputDecoration(
+                                  labelText: AppLocalizations.of(context)!.appLanguage,
+                                  border: OutlineInputBorder(),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
                         const SizedBox(height: 20),
                         
                         // AI Conversation Style Card
                         _buildSettingsCard(
-                          title: 'AI Konuşma Stili',
+                          title: AppLocalizations.of(context)!.aiConversationStyle,
                           icon: Icons.psychology,
                           color: Colors.blue,
-                          subtitle: 'AI asistanın size nasıl yanıt vereceğini seçin',
+                          subtitle: AppLocalizations.of(context)!.aiConversationStyleDesc,
                           child: Consumer<SettingsProvider>(
                             builder: (context, settingsProvider, child) {
                               return Column(
                                 children: ConversationStyle.values.map((style) {
                                   return _buildRadioTile(
-                                    title: style.title,
-                                    subtitle: style.description,
+                                    title: () {
+                                      switch (style) {
+                                        case ConversationStyle.friendly:
+                                          return AppLocalizations.of(context)!.aiFriendly;
+                                        case ConversationStyle.professional:
+                                          return AppLocalizations.of(context)!.aiProfessional;
+                                        case ConversationStyle.playful:
+                                          return AppLocalizations.of(context)!.aiFun;
+                                        case ConversationStyle.caring:
+                                          return AppLocalizations.of(context)!.aiCompassionate;
+                                      }
+                                    }(),
+                                    subtitle: () {
+                                      switch (style) {
+                                        case ConversationStyle.friendly:
+                                          return AppLocalizations.of(context)!.aiFriendlyDesc;
+                                        case ConversationStyle.professional:
+                                          return AppLocalizations.of(context)!.aiProfessionalDesc;
+                                        case ConversationStyle.playful:
+                                          return AppLocalizations.of(context)!.aiFunDesc;
+                                        case ConversationStyle.caring:
+                                          return AppLocalizations.of(context)!.aiCompassionateDesc;
+                                      }
+                                    }(),
                                     value: style,
                                     groupValue: settingsProvider.conversationStyle,
                                     onChanged: (value) {
@@ -188,17 +241,17 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                         
                         // Voice Settings Card
                         _buildSettingsCard(
-                          title: 'Sesli Konuşma',
+                          title: AppLocalizations.of(context)!.voiceSettings,
                           icon: Icons.volume_up,
                           color: Colors.green,
-                          subtitle: 'AI ile sesli konuşma özelliklerini yönetin',
+                          subtitle: AppLocalizations.of(context)!.voiceSettingsDesc,
                           child: Consumer<SettingsProvider>(
                             builder: (context, settingsProvider, child) {
                               return Column(
                                 children: [
                                   _buildSwitchTile(
-                                    title: 'Otomatik Sesli Yanıt',
-                                    subtitle: 'AI cevaplarını otomatik olarak sesli oku',
+                                    title: AppLocalizations.of(context)!.voiceAuto,
+                                    subtitle: AppLocalizations.of(context)!.voiceAutoDesc,
                                     value: settingsProvider.voiceResponseEnabled,
                                     onChanged: (value) => settingsProvider.setVoiceResponseEnabled(value),
                                     icon: Icons.auto_awesome,
@@ -223,7 +276,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                                             ),
                                             const SizedBox(width: 8),
                                             Text(
-                                              'Sesli Dinleme Özelliği',
+                                              AppLocalizations.of(context)!.voiceListenFeature,
                                               style: TextStyle(
                                                 fontWeight: FontWeight.bold,
                                                 fontSize: 14,
@@ -234,9 +287,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                                         ),
                                         const SizedBox(height: 8),
                                         Text(
-                                          '• Her AI yanıtının altında "Sesli Dinle" butonu bulunur\n'
-                                          '• Bu buton ile istediğiniz zaman cevabı sesli dinleyebilirsiniz\n'
-                                          '• Otomatik sesli yanıt kapalı olsa bile manuel olarak dinleyebilirsiniz',
+                                          AppLocalizations.of(context)!.voiceListenFeatureDesc,
                                           style: TextStyle(
                                             fontSize: 12,
                                             color: isDark ? Colors.grey.shade300 : Colors.grey.shade700,
@@ -256,7 +307,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                         
                         // TTS Ayarları Card
                         _buildSettingsCard(
-                          title: 'Sesli Yanıt (TTS)',
+                          title: AppLocalizations.of(context)!.voiceTTS,
                           icon: Icons.record_voice_over,
                           color: Colors.deepPurple,
                           child: Consumer<SettingsProvider>(
@@ -268,10 +319,9 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                                   // Only unique voice names
                                   final voiceNames = <String>{};
                                   final voiceItems = [
-                                    const DropdownMenuItem<String>(
-                                      value: null,
-                                      child: Text('Varsayılan Ses'),
-                                    ),
+                                    // TODO: Add 'voiceDefaultVoice' to localization if needed
+                                    // label: AppLocalizations.of(context)!.voiceDefaultVoice,
+                                    // value: 'default',
                                     ...voices
                                         .where((v) => v is Map && v['name'] != null)
                                         .map((v) => v['name'] as String)
@@ -294,14 +344,14 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                                         value: selectedVoice,
                                         items: voiceItems,
                                         onChanged: (voice) => settingsProvider.setTtsVoice(voice),
-                                        decoration: const InputDecoration(
-                                          labelText: 'Konuşmacı (Ses)',
-                                          border: OutlineInputBorder(),
+                                        decoration: InputDecoration(
+                                          labelText: AppLocalizations.of(context)!.voiceSpeaker,
+                                          border: const OutlineInputBorder(),
                                         ),
                                       ),
                                       const SizedBox(height: 16),
                                       // Rate Slider
-                                      Text('Konuşma Hızı: ${settingsProvider.ttsRate.toStringAsFixed(2)}'),
+                                      Text('${AppLocalizations.of(context)!.voiceRate}: ${settingsProvider.ttsRate.toStringAsFixed(2)}'),
                                       Slider(
                                         value: settingsProvider.ttsRate,
                                         min: 0.1,
@@ -312,7 +362,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                                       ),
                                       const SizedBox(height: 8),
                                       // Pitch Slider
-                                      Text('Ses Perdesi: ${settingsProvider.ttsPitch.toStringAsFixed(2)}'),
+                                      Text('${AppLocalizations.of(context)!.voicePitch}: ${settingsProvider.ttsPitch.toStringAsFixed(2)}'),
                                       Slider(
                                         value: settingsProvider.ttsPitch,
                                         min: 0.5,
@@ -332,7 +382,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                         
                         // Notification Settings Card
                         _buildSettingsCard(
-                          title: 'Bildirimler',
+                          title: AppLocalizations.of(context)!.notifications,
                           icon: Icons.notifications,
                           color: Colors.orange,
                           child: Consumer<SettingsProvider>(
@@ -340,15 +390,15 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                               return Column(
                                 children: [
                                   _buildSwitchTile(
-                                    title: 'Bildirimleri Etkinleştir',
-                                    subtitle: 'Evcil hayvan bakım bildirimleri',
+                                    title: AppLocalizations.of(context)!.enableNotifications,
+                                    subtitle: AppLocalizations.of(context)!.petCareNotifications,
                                     value: settingsProvider.notificationsEnabled,
                                     onChanged: (value) => settingsProvider.setNotificationsEnabled(value),
                                     icon: Icons.notifications_active,
                                   ),
                                   _buildSwitchTile(
-                                    title: 'Ses Efektleri',
-                                    subtitle: 'Etkileşim seslerini çal',
+                                    title: AppLocalizations.of(context)!.soundEffects,
+                                    subtitle: AppLocalizations.of(context)!.playInteractionSounds,
                                     value: settingsProvider.soundEnabled,
                                     onChanged: (value) => settingsProvider.setSoundEnabled(value),
                                     icon: Icons.volume_up,
@@ -363,7 +413,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                         
                         // Gelişmiş Bildirimler Card
                         _buildSettingsCard(
-                          title: 'Gelişmiş Bildirimler',
+                          title: AppLocalizations.of(context)!.advancedNotifications,
                           icon: Icons.notifications_active,
                           color: Colors.indigo,
                           child: Consumer<SettingsProvider>(
@@ -375,38 +425,38 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                                   DropdownButtonFormField<String>(
                                     value: settingsProvider.notificationSound,
                                     items: [
-                                      const DropdownMenuItem<String>(
+                                      DropdownMenuItem<String>(
                                         value: null,
-                                        child: Text('Varsayılan Ses'),
+                                        child: Text(AppLocalizations.of(context)!.notificationsDefault),
                                       ),
-                                      const DropdownMenuItem<String>(
+                                      DropdownMenuItem<String>(
                                         value: 'notification_sound',
-                                        child: Text('Özel Bildirim Sesi'),
+                                        child: Text(AppLocalizations.of(context)!.notificationsCustom),
                                       ),
-                                      const DropdownMenuItem<String>(
+                                      DropdownMenuItem<String>(
                                         value: 'bell_sound',
-                                        child: Text('Zil Sesi'),
+                                        child: Text(AppLocalizations.of(context)!.notificationsBell),
                                       ),
-                                      const DropdownMenuItem<String>(
+                                      DropdownMenuItem<String>(
                                         value: 'chime_sound',
-                                        child: Text('Çan Sesi'),
+                                        child: Text(AppLocalizations.of(context)!.notificationsChime),
                                       ),
-                                      const DropdownMenuItem<String>(
+                                      DropdownMenuItem<String>(
                                         value: 'alert_sound',
-                                        child: Text('Uyarı Sesi'),
+                                        child: Text(AppLocalizations.of(context)!.notificationsAlert),
                                       ),
                                     ],
                                     onChanged: (sound) => settingsProvider.setNotificationSound(sound),
-                                    decoration: const InputDecoration(
-                                      labelText: 'Bildirim Sesi',
-                                      border: OutlineInputBorder(),
+                                    decoration: InputDecoration(
+                                      labelText: AppLocalizations.of(context)!.notificationsSound,
+                                      border: const OutlineInputBorder(),
                                     ),
                                   ),
                                   const SizedBox(height: 16),
                                   // Zamanlı Bildirimler
                                   _buildSwitchTile(
-                                    title: 'Zamanlı Bildirimler',
-                                    subtitle: 'Günlük hatırlatıcı bildirimleri',
+                                    title: AppLocalizations.of(context)!.scheduledNotifications,
+                                    subtitle: AppLocalizations.of(context)!.scheduledNotificationsDesc,
                                     value: settingsProvider.scheduledNotificationsEnabled,
                                     onChanged: (value) => settingsProvider.setScheduledNotificationsEnabled(value),
                                     icon: Icons.schedule,
@@ -478,7 +528,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                         
                         // Update Settings Card
                         _buildSettingsCard(
-                          title: 'Güncelleme',
+                          title: AppLocalizations.of(context)!.update,
                           icon: Icons.update,
                           color: Colors.teal,
                           child: Consumer<SettingsProvider>(
@@ -486,15 +536,15 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                               return Column(
                                 children: [
                                   _buildSwitchTile(
-                                    title: 'Otomatik Güncelleme',
-                                    subtitle: 'Hayvan durumlarını otomatik güncelle',
+                                    title: AppLocalizations.of(context)!.autoUpdate,
+                                    subtitle: AppLocalizations.of(context)!.autoUpdateDesc,
                                     value: settingsProvider.autoUpdateEnabled,
                                     onChanged: (value) => settingsProvider.setAutoUpdateEnabled(value),
                                     icon: Icons.auto_awesome,
                                   ),
                                   _buildListTile(
-                                    title: 'Güncelleme Aralığı',
-                                    subtitle: '${settingsProvider.updateInterval} dakika',
+                                    title: AppLocalizations.of(context)!.updateInterval,
+                                    subtitle: '${settingsProvider.updateInterval} ${AppLocalizations.of(context)!.minutes}',
                                     icon: Icons.timer,
                                     onTap: () => _showUpdateIntervalDialog(context, settingsProvider),
                                   ),
@@ -507,14 +557,14 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                         // --- YENİ MODERN GRUP ---
                         const SizedBox(height: 32),
                         _buildSettingsCard(
-                          title: 'Bilgi & Destek',
+                          title: AppLocalizations.of(context)!.infoSupport,
                           icon: Icons.info_outline,
                           color: Colors.indigo,
                           child: Column(
                             children: [
                               ListTile(
                                 leading: Icon(Icons.person, color: Theme.of(context).colorScheme.primary),
-                                title: const Text('Profilim'),
+                                title: Text(AppLocalizations.of(context)!.profile),
                                 onTap: () {
                                   Navigator.of(context).push(
                                     MaterialPageRoute(builder: (_) => ProfilePage()),
@@ -524,7 +574,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                               const Divider(indent: 16, endIndent: 16, height: 0),
                               ListTile(
                                 leading: Icon(Icons.info_outline, color: Theme.of(context).colorScheme.primary),
-                                title: const Text('Hakkında'),
+                                title: Text(AppLocalizations.of(context)!.about),
                                 onTap: () {
                                   Navigator.of(context).push(
                                     MaterialPageRoute(builder: (_) => AboutPage()),
@@ -534,7 +584,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                               const Divider(indent: 16, endIndent: 16, height: 0),
                               ListTile(
                                 leading: Icon(Icons.support_agent, color: Theme.of(context).colorScheme.primary),
-                                title: const Text('Destek / Geri Bildirim'),
+                                title: Text(AppLocalizations.of(context)!.support),
                                 onTap: () {
                                   Navigator.of(context).push(
                                     MaterialPageRoute(builder: (_) => FeedbackPage()),
@@ -885,18 +935,18 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Güncelleme Aralığı'),
+        title: Text(AppLocalizations.of(context)!.updateInterval),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Hayvan durumlarının güncellenme sıklığını seçin'),
+            Text(AppLocalizations.of(context)!.updateIntervalDescription),
             const SizedBox(height: 20),
             Slider(
               value: settingsProvider.updateInterval.toDouble(),
               min: 1,
               max: 60,
               divisions: 59,
-              label: '${settingsProvider.updateInterval} dakika',
+              label: '${settingsProvider.updateInterval} ${AppLocalizations.of(context)!.minutes}',
               onChanged: (value) {
                 settingsProvider.setUpdateInterval(value.round());
               },
@@ -906,7 +956,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Tamam'),
+            child: Text(AppLocalizations.of(context)!.ok),
           ),
         ],
       ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pet_app/l10n/app_localizations.dart';
 
 class AboutPage extends StatelessWidget {
   const AboutPage({super.key});
@@ -9,7 +10,7 @@ class AboutPage extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Uygulama Hakkında'),
+        title: Text(AppLocalizations.of(context)!.aboutApp),
         backgroundColor: Colors.transparent,
         elevation: 0,
         iconTheme: IconThemeData(color: theme.colorScheme.primary),
@@ -35,24 +36,27 @@ class AboutPage extends StatelessWidget {
                 Icon(Icons.pets, color: theme.colorScheme.primary, size: 32),
                 const SizedBox(width: 12),
                 Text(
-                  'Mini Pet',
+                  AppLocalizations.of(context)!.appTitle,
                   style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: theme.colorScheme.primary),
                 ),
               ],
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Bu uygulama, evcil hayvanlarınızın bakımını kolaylaştırmak, aşı takibini yapmak, günlük notlar almak ve yapay zeka ile sohbet edebilmek için geliştirilmiştir.',
+            Text(
+              AppLocalizations.of(context)!.aboutDescription,
               style: TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 24),
-            const Text('Sürüm: 1.0.0', style: TextStyle(fontSize: 14, color: Colors.grey)),
+            // TODO: Add 'version' key to localization files and use here
+            // Text(AppLocalizations.of(context)!.version, style: TextStyle(fontSize: 14, color: Colors.grey)),
             const SizedBox(height: 8),
-            const Text('Geliştirici: Mini Pet Takımı', style: TextStyle(fontSize: 14, color: Colors.grey)),
+            // TODO: Add 'developer' key to localization files and use here
+            // Text(AppLocalizations.of(context)!.developer, style: TextStyle(fontSize: 14, color: Colors.grey)),
             const Spacer(),
-            Center(
-              child: Text('© 2024 Mini Pet', style: TextStyle(color: Colors.grey.shade400)),
-            ),
+            // TODO: Add 'copyright' key to localization files and use here
+            // Center(
+            //   child: Text(AppLocalizations.of(context)!.copyright, style: TextStyle(color: Colors.grey.shade400)),
+            // ),
           ],
         ),
       ),

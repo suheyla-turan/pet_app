@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/pet.dart';
 import 'package:pet_app/services/notification_service.dart';
+import 'package:pet_app/l10n/app_localizations.dart';
 
 class VaccinePage extends StatefulWidget {
   final List<Vaccine> vaccines;
@@ -21,12 +22,13 @@ class _VaccinePageState extends State<VaccinePage> {
       if (!vaccine.isDone && vaccine.date.isAfter(DateTime.now())) {
         NotificationService.scheduleNotification(
           id: vaccine.name.hashCode ^ vaccine.date.hashCode,
-          title: 'Aşı Zamanı',
-          body: '${vaccine.name} aşısı için randevu zamanı geldi!',
+          title: AppLocalizations.of(context)!.vaccineTime,
+          body: '${vaccine.name} ${AppLocalizations.of(context)!.vaccineTime} geldi!',
           scheduledTime: vaccine.date,
         );
       }
     });
+    // Sayfa kapanmasın, Navigator.pop kaldırıldı
   }
 
   void _showAddDialog() {
@@ -36,12 +38,12 @@ class _VaccinePageState extends State<VaccinePage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(widget.showDone ? 'Yapılmış Aşı Ekle' : 'Yapılacak Aşı Ekle'),
+        title: Text(widget.showDone ? AppLocalizations.of(context)!.doneVaccineAdd : AppLocalizations.of(context)!.vaccineAdd),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
-              decoration: const InputDecoration(labelText: 'Aşı Adı'),
+              decoration: InputDecoration(labelText: AppLocalizations.of(context)!.vaccineName),
               onChanged: (value) => name = value,
             ),
             const SizedBox(height: 12),
@@ -51,18 +53,18 @@ class _VaccinePageState extends State<VaccinePage> {
                   context: context,
                   initialDate: DateTime.now().add(widget.showDone ? Duration.zero : const Duration(days: 1)),
                   firstDate: widget.showDone ? DateTime(2000) : DateTime.now().add(const Duration(days: 1)),
-                  lastDate: DateTime(2100),
+                  lastDate: widget.showDone ? DateTime.now() : DateTime(2100),
                 );
                 if (picked != null) {
                   selectedDate = picked;
                 }
               },
-              child: const Text('Tarih Seç'),
+              child: Text(AppLocalizations.of(context)!.selectDate),
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('İptal')),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(AppLocalizations.of(context)!.cancel)),
           ElevatedButton(
             onPressed: () {
               if (name.isNotEmpty && selectedDate != null) {
@@ -70,7 +72,7 @@ class _VaccinePageState extends State<VaccinePage> {
                 Navigator.pop(context);
               }
             },
-            child: const Text('Ekle'),
+            child: Text(AppLocalizations.of(context)!.add),
           ),
         ],
       ),
@@ -79,47 +81,63 @@ class _VaccinePageState extends State<VaccinePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(widget.showDone ? 'Yapılmış Aşılar' : 'Yapılacak Aşılar')),
-      body: widget.vaccines.isEmpty
-          ? Center(child: Text(widget.showDone ? 'Henüz yapılmış aşı yok.' : 'Henüz yapılacak aşı yok.'))
-          : ListView.builder(
-              itemCount: widget.vaccines.length,
-              itemBuilder: (context, index) {
-                final vaccine = widget.vaccines[index];
-                return ListTile(
-                  leading: Icon(widget.showDone ? Icons.check : Icons.vaccines, color: widget.showDone ? Colors.green : Colors.orange),
-                  title: Text(vaccine.name),
-                  subtitle: Text('Tarih: ${vaccine.date.toLocal().toString().split(' ')[0]}'),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (!widget.showDone)
+    // Filtrelenmiş listeyi göster
+    List<Vaccine> filteredVaccines = widget.vaccines.where((v) => v.isDone == widget.showDone).toList();
+    return WillPopScope(
+      onWillPop: () async {
+        Navigator.pop(context, widget.vaccines); // Geri tuşuna basınca güncel listeyi döndür
+        return false;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(widget.showDone ? AppLocalizations.of(context)!.doneVaccines : AppLocalizations.of(context)!.vaccines),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () {
+              Navigator.pop(context, widget.vaccines); // AppBar geri butonunda da güncel listeyi döndür
+            },
+          ),
+        ),
+        body: filteredVaccines.isEmpty
+            ? Center(child: Text(AppLocalizations.of(context)!.noVaccines(widget.showDone.toString())))
+            : ListView.builder(
+                itemCount: filteredVaccines.length,
+                itemBuilder: (context, index) {
+                  final vaccine = filteredVaccines[index];
+                  return ListTile(
+                    leading: Icon(widget.showDone ? Icons.check : Icons.vaccines, color: widget.showDone ? Colors.green : Colors.orange),
+                    title: Text(vaccine.name),
+                    subtitle: Text(AppLocalizations.of(context)!.date(vaccine.date.toString())),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (!widget.showDone)
+                          IconButton(
+                            icon: const Icon(Icons.check_circle, color: Colors.green),
+                            tooltip: 'Mark as Done',
+                            onPressed: () async {
+                              setState(() {
+                                vaccine.isDone = true;
+                              });
+                            },
+                          ),
                         IconButton(
-                          icon: const Icon(Icons.check_circle, color: Colors.green),
-                          tooltip: 'Yapıldı olarak işaretle',
-                          onPressed: () async {
+                          icon: const Icon(Icons.delete, color: Colors.red),
+                          onPressed: () {
                             setState(() {
-                              vaccine.isDone = true;
+                              widget.vaccines.remove(vaccine);
                             });
                           },
                         ),
-                      IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () {
-                          setState(() {
-                            widget.vaccines.remove(vaccine);
-                          });
-                        },
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showAddDialog,
-        child: const Icon(Icons.add),
+                      ],
+                    ),
+                  );
+                },
+              ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: _showAddDialog,
+          child: const Icon(Icons.add),
+        ),
       ),
     );
   }

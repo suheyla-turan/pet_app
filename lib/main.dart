@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'features/pet/screens/pet_list_page.dart';
 import 'services/notification_service.dart';
-import 'services/firebase_config.dart';
 import 'providers/pet_provider.dart';
 import 'providers/ai_provider.dart';
 import 'providers/theme_provider.dart';
@@ -12,7 +11,9 @@ import 'features/onboarding/onboarding_page.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:pet_app/l10n/app_localizations.dart';
+// import 'generated/l10n.dart'; // Otomatik oluşturulacak
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -52,15 +53,25 @@ class MiniPetApp extends StatelessWidget {
         ),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
       ],
-      child: Consumer<ThemeProvider>(
-        builder: (context, themeProvider, child) {
+      child: Consumer2<ThemeProvider, SettingsProvider>(
+        builder: (context, themeProvider, settingsProvider, child) {
           return MaterialApp(
+            key: ValueKey(settingsProvider.locale?.languageCode ?? 'system'),
             title: 'Mini Pet',
             theme: themeProvider.lightTheme,
             darkTheme: themeProvider.darkTheme,
             themeMode: themeProvider.themeMode,
             home: const RootPage(),
             debugShowCheckedModeBanner: false,
+            locale: settingsProvider.locale,
+            localizationsDelegates: [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: AppLocalizations.supportedLocales,
+            // supportedLocales: S.delegate.supportedLocales, // l10n dosyası oluşunca açılacak
           );
         },
       ),

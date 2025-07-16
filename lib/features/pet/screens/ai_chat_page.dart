@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:pet_app/features/pet/models/pet.dart';
 import 'package:pet_app/providers/ai_provider.dart';
 import 'ai_chat_history_page.dart';
+import 'package:pet_app/l10n/app_localizations.dart';
 
 class AIChatPage extends StatefulWidget {
   final Pet pet;
@@ -46,7 +47,7 @@ class _AIChatPageState extends State<AIChatPage> {
     final aiProvider = Provider.of<AIProvider>(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text('${widget.pet.name} - AI Sohbet'),
+        title: Text('${widget.pet.name} - ${AppLocalizations.of(context)!.aiChat}'),
         actions: [
           PopupMenuButton<String>(
             onSelected: (value) async {
@@ -67,8 +68,8 @@ class _AIChatPageState extends State<AIChatPage> {
               }
             },
             itemBuilder: (context) => [
-              const PopupMenuItem(value: 'new', child: Text('Yeni Sohbet')),
-              const PopupMenuItem(value: 'history', child: Text('Geçmiş Sohbetler')),
+              PopupMenuItem(value: 'new', child: Text(AppLocalizations.of(context)!.newChat)),
+              PopupMenuItem(value: 'history', child: Text(AppLocalizations.of(context)!.chatHistory)),
             ],
           ),
         ],
@@ -77,7 +78,7 @@ class _AIChatPageState extends State<AIChatPage> {
         children: [
           Expanded(
             child: aiProvider.activeMessages.isEmpty
-                ? const Center(child: Text('Henüz mesaj yok.'))
+                ? Center(child: Text(AppLocalizations.of(context)!.noMessages))
                 : ListView.builder(
                     itemCount: aiProvider.activeMessages.length,
                     itemBuilder: (context, i) {
@@ -119,13 +120,13 @@ class _AIChatPageState extends State<AIChatPage> {
                   ),
           ),
           if (aiProvider.isLoading)
-            const Padding(
-              padding: EdgeInsets.all(8),
+            Padding(
+              padding: const EdgeInsets.all(8),
               child: Row(
                 children: [
                   SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
                   SizedBox(width: 8),
-                  Text('AI düşünüyor...'),
+                  Text(AppLocalizations.of(context)!.aiThinking),
                 ],
               ),
             ),
@@ -136,7 +137,7 @@ class _AIChatPageState extends State<AIChatPage> {
                   aiProvider.isListening ? Icons.stop : Icons.mic,
                   color: aiProvider.isListening ? Colors.red : null,
                 ),
-                tooltip: aiProvider.isListening ? 'Dinlemeyi Durdur' : 'Sesli Soru Sor',
+                tooltip: aiProvider.isListening ? AppLocalizations.of(context)!.stopListening : AppLocalizations.of(context)!.speakQuestion,
                 onPressed: aiProvider.isLoading
                     ? null
                     : () async {
@@ -151,7 +152,7 @@ class _AIChatPageState extends State<AIChatPage> {
                 child: TextField(
                   controller: _chatController,
                   enabled: !aiProvider.isLoading,
-                  decoration: const InputDecoration(hintText: 'Mesajınızı yazın veya sesli sorun...'),
+                  decoration: InputDecoration(hintText: AppLocalizations.of(context)!.chatHint),
                   onSubmitted: (val) async {
                     if (val.trim().isNotEmpty && !aiProvider.isLoading) {
                       await aiProvider.sendMessageAndGetAIResponse(

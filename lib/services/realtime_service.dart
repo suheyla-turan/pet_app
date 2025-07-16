@@ -48,7 +48,7 @@ extension PetChatRealtime on RealtimeService {
       .map((event) {
         final data = event.snapshot.value;
         if (data == null || data is! Map) return [];
-        final mapData = data as Map;
+        final mapData = data;
         if (mapData.isEmpty) return [];
         return mapData.entries.map((e) => PetMessage.fromMap(e.value)).toList()
           ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
@@ -71,7 +71,7 @@ extension PetStatusRealtime on RealtimeService {
     return _db.child('pet_status').child(petId).onValue.map((event) {
       final data = event.snapshot.value;
       if (data == null || data is! Map) return null;
-      return Map<String, dynamic>.from(data as Map);
+      return Map<String, dynamic>.from(data);
     });
   }
 }
@@ -95,7 +95,7 @@ extension AIChatRealtime on RealtimeService {
       .map((event) {
         final data = event.snapshot.value;
         if (data == null || data is! Map) return [];
-        final mapData = data as Map;
+        final mapData = data;
         if (mapData.isEmpty) return [];
         return mapData.entries.map((e) => AIChatMessage.fromMap(e.value)).toList()
           ..sort((a, b) => a.timestamp.compareTo(b.timestamp));

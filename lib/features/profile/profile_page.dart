@@ -4,6 +4,7 @@ import '../../providers/auth_provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:pet_app/l10n/app_localizations.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -27,7 +28,7 @@ class ProfilePage extends StatelessWidget {
         ),
         child: SafeArea(
           child: user == null
-              ? Center(child: Text('Kullanıcı bulunamadı'))
+              ? Center(child: Text(AppLocalizations.of(context)!.userNotFound))
               : SingleChildScrollView(
                   child: Column(
                     children: [
@@ -146,7 +147,7 @@ class ProfilePage extends StatelessWidget {
                                   children: [
                                     Icon(Icons.person, color: theme.colorScheme.primary),
                                     const SizedBox(width: 10),
-                                    Text('İsim:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                                    Text(AppLocalizations.of(context)!.nameLabel, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                                     const SizedBox(width: 8),
                                     Text(user.displayName ?? '-', style: TextStyle(fontSize: 16)),
                                   ],
@@ -156,7 +157,7 @@ class ProfilePage extends StatelessWidget {
                                   children: [
                                     Icon(Icons.email, color: theme.colorScheme.primary),
                                     const SizedBox(width: 10),
-                                    Text('Email:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                                    Text(AppLocalizations.of(context)!.emailLabel, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                                     const SizedBox(width: 8),
                                     Text(user.email ?? '-', style: TextStyle(fontSize: 16)),
                                   ],
@@ -177,7 +178,7 @@ class ProfilePage extends StatelessWidget {
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                               child: ListTile(
                                 leading: const Icon(Icons.logout, color: Colors.red),
-                                title: const Text('Çıkış Yap', style: TextStyle(fontWeight: FontWeight.w600)),
+                                title: Text(AppLocalizations.of(context)!.logout, style: TextStyle(fontWeight: FontWeight.w600)),
                                 onTap: () async {
                                   await authProvider.signOut();
                                   if (context.mounted) {
@@ -192,22 +193,22 @@ class ProfilePage extends StatelessWidget {
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                               child: ListTile(
                                 leading: const Icon(Icons.delete_forever, color: Colors.red),
-                                title: const Text('Profili Sil', style: TextStyle(fontWeight: FontWeight.w600)),
+                                title: Text(AppLocalizations.of(context)!.deleteProfile, style: TextStyle(fontWeight: FontWeight.w600)),
                                 onTap: () async {
                                   final confirm = await showDialog<bool>(
                                     context: context,
                                     builder: (context) => AlertDialog(
-                                      title: const Text('Profili Sil'),
-                                      content: const Text('Profilinizi ve tüm verilerinizi silmek istediğinize emin misiniz? Bu işlem geri alınamaz.'),
+                                      title: Text(AppLocalizations.of(context)!.deleteProfile),
+                                      content: Text(AppLocalizations.of(context)!.deleteProfileConfirm),
                                       actions: [
                                         TextButton(
                                           onPressed: () => Navigator.of(context).pop(false),
-                                          child: const Text('Vazgeç'),
+                                          child: Text(AppLocalizations.of(context)!.cancel),
                                         ),
                                         ElevatedButton(
                                           style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                                           onPressed: () => Navigator.of(context).pop(true),
-                                          child: const Text('Evet, Sil'),
+                                          child: Text(AppLocalizations.of(context)!.delete),
                                         ),
                                       ],
                                     ),
@@ -249,7 +250,7 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final user = authProvider.user;
     return AlertDialog(
-      title: Text('Profili Düzenle'),
+      title: Text(AppLocalizations.of(context)!.editProfile),
       content: SingleChildScrollView(
         child: Form(
           key: _formKey,
@@ -278,9 +279,9 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
               SizedBox(height: 16),
               TextFormField(
                 initialValue: user?.displayName ?? '',
-                decoration: InputDecoration(labelText: 'İsim'),
+                decoration: InputDecoration(labelText: AppLocalizations.of(context)!.name),
                 onChanged: (v) => _name = v,
-                validator: (v) => v != null && v.trim().length >= 2 ? null : 'İsim en az 2 karakter olmalı',
+                validator: (v) => v != null && v.trim().length >= 2 ? null : AppLocalizations.of(context)!.nameMinLengthError,
               ),
             ],
           ),
@@ -289,7 +290,7 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
       actions: [
         TextButton(
           onPressed: _loading ? null : () => Navigator.of(context).pop(),
-          child: Text('İptal'),
+          child: Text(AppLocalizations.of(context)!.cancel),
         ),
         ElevatedButton(
           onPressed: _loading
@@ -304,7 +305,7 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
                     if (context.mounted) Navigator.of(context).pop();
                   }
                 },
-          child: _loading ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : Text('Kaydet'),
+          child: _loading ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : Text(AppLocalizations.of(context)!.save),
         ),
       ],
     );
@@ -324,7 +325,7 @@ Future<void> _deleteProfile(BuildContext context) async {
     await authProvider.signOut();
   } catch (e) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Profil silinirken hata oluştu: $e')),
+      SnackBar(content: Text(AppLocalizations.of(context)!.deleteProfileError(e.toString()))),
     );
   }
 } 

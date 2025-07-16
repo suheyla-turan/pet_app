@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 
 import 'package:pet_app/features/pet/models/pet.dart';
 import 'package:pet_app/providers/pet_provider.dart';
+import 'package:pet_app/l10n/app_localizations.dart';
 
 class PetFormPage extends StatefulWidget {
   final Pet? pet;
@@ -33,9 +34,51 @@ class _PetFormPageState extends State<PetFormPage> with TickerProviderStateMixin
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
-  final List<String> _petTypes = [
-    'Köpek', 'Kedi', 'Kuş', 'Balık', 'Hamster', 'Tavşan', 'Diğer'
+  List<String> get _petTypes => [
+    'dog', 'cat', 'bird', 'fish', 'hamster', 'rabbit', 'other'
   ];
+
+  String getLocalizedPetType(String type, BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
+    switch (type) {
+      case 'dog':
+      case 'Köpek':
+        return loc.dog;
+      case 'cat':
+      case 'Kedi':
+        return loc.cat;
+      case 'bird':
+      case 'Kuş':
+        return loc.bird;
+      case 'fish':
+      case 'Balık':
+        return loc.fish;
+      case 'hamster':
+        return loc.hamster;
+      case 'rabbit':
+      case 'Tavşan':
+        return loc.rabbit;
+      case 'other':
+      case 'Diğer':
+        return loc.other;
+      default:
+        return type;
+    }
+  }
+
+  String getLocalizedGender(String gender, BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
+    switch (gender) {
+      case 'male':
+      case 'Erkek':
+        return loc.male;
+      case 'female':
+      case 'Dişi':
+        return loc.female;
+      default:
+        return gender;
+    }
+  }
 
   @override
   void initState() {
@@ -116,7 +159,7 @@ class _PetFormPageState extends State<PetFormPage> with TickerProviderStateMixin
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Hata: $e'),
+            content: Text(AppLocalizations.of(context)!.error(e.toString())),
             backgroundColor: Colors.red,
           ),
         );
@@ -174,7 +217,7 @@ class _PetFormPageState extends State<PetFormPage> with TickerProviderStateMixin
                       child: Column(
                         children: [
                           Text(
-                            widget.pet == null ? 'Yeni Evcil Hayvan' : 'Bilgileri Düzenle',
+                            widget.pet == null ? AppLocalizations.of(context)!.addPet : AppLocalizations.of(context)!.editPet,
                             style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.w800,
@@ -182,7 +225,7 @@ class _PetFormPageState extends State<PetFormPage> with TickerProviderStateMixin
                             ),
                           ),
                           Text(
-                            'Sevimli dostunuzun bilgilerini girin',
+                            AppLocalizations.of(context)!.enterPetInfo,
                             style: TextStyle(
                               fontSize: 16,
                               color: isDark ? Colors.grey.shade300 : Colors.grey.shade600,
@@ -231,7 +274,7 @@ class _PetFormPageState extends State<PetFormPage> with TickerProviderStateMixin
                                 child: Column(
                                   children: [
                                     Text(
-                                      'Fotoğraf',
+                                      AppLocalizations.of(context)!.photo,
                                       style: TextStyle(
                                         fontSize: 18,
                                         fontWeight: FontWeight.w700,
@@ -285,7 +328,7 @@ class _PetFormPageState extends State<PetFormPage> with TickerProviderStateMixin
                                                       ),
                                                       const SizedBox(height: 8),
                                                       Text(
-                                                        'Fotoğraf Ekle',
+                                                        AppLocalizations.of(context)!.addPhoto,
                                                         style: TextStyle(
                                                           fontSize: 12,
                                                           color: theme.colorScheme.primary,
@@ -333,7 +376,7 @@ class _PetFormPageState extends State<PetFormPage> with TickerProviderStateMixin
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      'Temel Bilgiler',
+                                      AppLocalizations.of(context)!.basicInfo,
                                       style: TextStyle(
                                         fontSize: 18,
                                         fontWeight: FontWeight.w700,
@@ -345,37 +388,37 @@ class _PetFormPageState extends State<PetFormPage> with TickerProviderStateMixin
                                     // Pet Type
                                     DropdownButtonFormField<String>(
                                       value: _type,
-                                      decoration: const InputDecoration(
-                                        labelText: 'Tür',
-                                        prefixIcon: Icon(Icons.pets),
+                                      decoration: InputDecoration(
+                                        labelText: AppLocalizations.of(context)!.petType,
+                                        prefixIcon: const Icon(Icons.pets),
                                       ),
-                                      items: _petTypes.map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
+                                      items: _petTypes.map((t) => DropdownMenuItem(value: t, child: Text(getLocalizedPetType(t, context)))).toList(),
                                       onChanged: (value) => setState(() => _type = value),
-                                      validator: (value) => value == null ? 'Tür seçiniz' : null,
+                                      validator: (value) => value == null ? AppLocalizations.of(context)!.selectPetType : null,
                                     ),
                                     const SizedBox(height: 16),
                                     
                                     // Pet Name
                                     TextFormField(
                                       controller: _nameController,
-                                      decoration: const InputDecoration(
-                                        labelText: 'İsim',
-                                        prefixIcon: Icon(Icons.edit),
+                                      decoration: InputDecoration(
+                                        labelText: AppLocalizations.of(context)!.name,
+                                        prefixIcon: const Icon(Icons.edit),
                                       ),
-                                      validator: (value) => value == null || value.isEmpty ? 'İsim giriniz' : null,
+                                      validator: (value) => value == null || value.isEmpty ? AppLocalizations.of(context)!.enterName : null,
                                     ),
                                     const SizedBox(height: 16),
                                     
                                     // Breed
                                     TextFormField(
                                       controller: _breedController,
-                                      decoration: const InputDecoration(
-                                        labelText: 'Cinsi',
-                                        border: OutlineInputBorder(),
+                                      decoration: InputDecoration(
+                                        labelText: AppLocalizations.of(context)!.breed,
+                                        border: const OutlineInputBorder(),
                                       ),
                                       validator: (value) {
                                         if (value == null || value.trim().isEmpty) {
-                                          return 'Cinsi zorunlu';
+                                          return AppLocalizations.of(context)!.enterBreed;
                                         }
                                         return null;
                                       },
@@ -385,16 +428,16 @@ class _PetFormPageState extends State<PetFormPage> with TickerProviderStateMixin
                                     // Gender
                                     DropdownButtonFormField<String>(
                                       value: _gender,
-                                      decoration: const InputDecoration(
-                                        labelText: 'Cinsiyet',
-                                        prefixIcon: Icon(Icons.person),
+                                      decoration: InputDecoration(
+                                        labelText: AppLocalizations.of(context)!.gender,
+                                        prefixIcon: const Icon(Icons.person),
                                       ),
-                                      items: const [
-                                        DropdownMenuItem(value: 'Dişi', child: Text('Dişi')),
-                                        DropdownMenuItem(value: 'Erkek', child: Text('Erkek')),
+                                      items: [
+                                        DropdownMenuItem(value: 'male', child: Text(AppLocalizations.of(context)!.male)),
+                                        DropdownMenuItem(value: 'female', child: Text(AppLocalizations.of(context)!.female)),
                                       ],
                                       onChanged: (value) => setState(() => _gender = value),
-                                      validator: (value) => value == null ? 'Cinsiyet seçiniz' : null,
+                                      validator: (value) => value == null ? AppLocalizations.of(context)!.selectGender : null,
                                     ),
                                     const SizedBox(height: 16),
                                     
@@ -425,8 +468,11 @@ class _PetFormPageState extends State<PetFormPage> with TickerProviderStateMixin
                                             Expanded(
                                               child: Text(
                                                 _birthDate == null
-                                                    ? 'Doğum Tarihi Seçiniz'
-                                                    : 'Doğum Tarihi: ${_birthDate!.day}.${_birthDate!.month}.${_birthDate!.year}',
+                                                    ? AppLocalizations.of(context)!.selectBirthDate
+                                                    : AppLocalizations.of(context)!.birthDate(
+                                                        _birthDate!.day,
+                                                        _birthDate!.month,
+                                                        _birthDate!.year),
                                                 style: TextStyle(
                                                   color: _birthDate == null ? Colors.grey.shade500 : null,
                                                 ),
@@ -471,7 +517,7 @@ class _PetFormPageState extends State<PetFormPage> with TickerProviderStateMixin
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      'Süre Ayarları (Dakika)',
+                                      AppLocalizations.of(context)!.intervalSettings,
                                       style: TextStyle(
                                         fontSize: 18,
                                         fontWeight: FontWeight.w700,
@@ -481,7 +527,7 @@ class _PetFormPageState extends State<PetFormPage> with TickerProviderStateMixin
                                     const SizedBox(height: 20),
                                     
                                      _buildIntervalSlider(
-                                       label: 'Tokluk Süresi',
+                                       label: AppLocalizations.of(context)!.satietyInterval,
                                        value: _satietyInterval.toDouble(),
                                        min: 10,
                                        max: 300,
@@ -492,7 +538,7 @@ class _PetFormPageState extends State<PetFormPage> with TickerProviderStateMixin
                                      const SizedBox(height: 16),
                                      
                                      _buildIntervalSlider(
-                                       label: 'Mutluluk Süresi',
+                                       label: AppLocalizations.of(context)!.happinessInterval,
                                        value: _happinessInterval.toDouble(),
                                        min: 10,
                                        max: 300,
@@ -503,7 +549,7 @@ class _PetFormPageState extends State<PetFormPage> with TickerProviderStateMixin
                                      const SizedBox(height: 16),
                                      
                                      _buildIntervalSlider(
-                                       label: 'Enerji Süresi',
+                                       label: AppLocalizations.of(context)!.energyInterval,
                                        value: _energyInterval.toDouble(),
                                        min: 10,
                                        max: 300,
@@ -514,7 +560,7 @@ class _PetFormPageState extends State<PetFormPage> with TickerProviderStateMixin
                                      const SizedBox(height: 16),
                                      
                                      _buildIntervalSlider(
-                                       label: 'Bakım Süresi',
+                                       label: AppLocalizations.of(context)!.careInterval,
                                        value: _careInterval.toDouble(),
                                        min: 60,
                                        max: 2880,
@@ -545,7 +591,7 @@ class _PetFormPageState extends State<PetFormPage> with TickerProviderStateMixin
                                 ),
                               ),
                               child: Text(
-                                widget.pet == null ? 'Hayvan Ekle' : 'Güncelle',
+                                AppLocalizations.of(context)!.save,
                                 style: const TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w700,
@@ -602,7 +648,7 @@ class _PetFormPageState extends State<PetFormPage> with TickerProviderStateMixin
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
-                '${value.round()} dk',
+                '${value.round()} ${AppLocalizations.of(context)!.minutes}',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
