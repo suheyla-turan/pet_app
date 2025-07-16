@@ -8,9 +8,13 @@ Evcil hayvan bakım uygulaması - Flutter ile geliştirilmiş modern bir mobil u
 - 📊 Durum takibi (açlık, mutluluk, enerji, bakım)
 - 💉 Aşı takibi ve hatırlatmaları
 - 🤖 AI destekli bakım önerileri (Gemini API)
-- 🔔 Akıllı bildirimler
+- �� Akıllı bildirimler (doğum günü, zamanlı, özel bildirimler)
+- 🗣️ Sesli yanıt (TTS) ve sesli soru sorma (STT)
+- 🗨️ Günlük/Sohbet özelliği (pet ile anlık mesajlaşma)
+- 👥 Çoklu kullanıcı/sahip ekleme ve yönetimi
+- 🏁 Onboarding (ilk kurulum ve kullanıcıya rehberlik)
 - 🎨 Açık/Koyu tema desteği
-- ⚙️ Kapsamlı ayarlar
+- ⚙️ Gelişmiş ayarlar (konuşma stili, ses seçimi, hız/perde, zamanlı bildirim)
 - 🔒 Güvenli API key yönetimi
 
 ## 🚀 Kurulum
@@ -93,16 +97,40 @@ service cloud.firestore {
 4. Kaydet'e tıklayın
 
 ### Bakım İşlemleri
-- **Besle**: Açlık seviyesini azaltır
-- **Sev**: Mutluluk seviyesini artırır
-- **Dinlendir**: Enerji seviyesini artırır
-- **Bakım**: Bakım seviyesini artırır
+- **Besle**: Açlık seviyesini azaltır (ve sesli olarak hayvan adıyla "Afiyet olsun ..." der)
+- **Sev**: Mutluluk seviyesini artırır (ve sesli olarak hayvan adıyla "Sen harika bir dostsun ..." der)
+- **Dinlendir**: Enerji seviyesini artırır (ve sesli olarak hayvan adıyla "İyi uykular ..." der)
+- **Bakım**: Bakım seviyesini artırır (ve sesli olarak hayvan adıyla "Bakım zamanı, aferin ..." der)
 
 ### AI Önerileri
 - Mama önerileri
 - Oyun önerileri
 - Bakım önerileri
-- Özel sorular sorabilme
+- Özel sorular sorabilme (yazılı veya sesli)
+
+### Sesli Özellikler
+- **Sesli Yanıt (TTS):** AI yanıtlarını ve bakım işlemlerini sesli dinleyebilirsiniz. Ayarlardan ses, hız ve perde seçebilirsiniz.
+- **Sesli Soru Sorma (STT):** Mikrofona basarak AI'ya sesli soru sorabilirsiniz.
+
+### Bildirimler
+- **Doğum günü bildirimi:** Hayvanın doğum gününde otomatik bildirim ve sesli kutlama
+- **Zamanlı bildirimler:** Belirli saatte hatırlatma
+- **Özel bildirimler:** Kendi bildirim sesinizi seçebilirsiniz
+
+### Çoklu Kullanıcı
+- Her hayvana birden fazla sahip ekleyebilir, sahipleri yönetebilirsiniz.
+- Ana kullanıcı (creator) ve diğer sahipler ayrımı
+
+### Günlük/Sohbet
+- Her hayvan için günlük mesajlaşma ve sohbet paneli
+
+### Onboarding
+- Uygulamayı ilk açan kullanıcıya rehberlik eden onboarding ekranı
+
+### Gelişmiş Ayarlar
+- Konuşma stili (dostane, profesyonel, eğlenceli, şefkatli)
+- TTS ses seçimi, hız ve perde ayarı
+- Zamanlı bildirim saati seçimi
 
 ## 🛠️ Teknik Detaylar
 

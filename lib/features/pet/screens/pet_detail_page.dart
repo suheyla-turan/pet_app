@@ -137,7 +137,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
     });
     await FirestoreService.hayvanGuncelle(_pet.id!, _pet);
     context.read<PetProvider>().updatePetValues(_pet);
-    speak('Afiyet olsun  {_pet.name}!');
+    speak('Afiyet olsun ${_pet.name}!');
   }
 
   void sev() async {
@@ -146,7 +146,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
     });
     await FirestoreService.hayvanGuncelle(_pet.id!, _pet);
     context.read<PetProvider>().updatePetValues(_pet);
-    speak('Sen harika bir dostsun  {_pet.name}!');
+    speak('Sen harika bir dostsun ${_pet.name}!');
   }
 
   void dinlendir() async {
@@ -155,7 +155,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
     });
     await FirestoreService.hayvanGuncelle(_pet.id!, _pet);
     context.read<PetProvider>().updatePetValues(_pet);
-    speak('İyi uykular  {_pet.name}!');
+    speak('İyi uykular ${_pet.name}!');
   }
 
   void bakim() async {
@@ -164,7 +164,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
     });
     await FirestoreService.hayvanGuncelle(_pet.id!, _pet);
     context.read<PetProvider>().updatePetValues(_pet);
-    speak('Bakım zamanı, aferin  {_pet.name}!');
+    speak('Bakım zamanı, aferin ${_pet.name}!');
   }
 
   Future<void> soruSorDialog() async {
