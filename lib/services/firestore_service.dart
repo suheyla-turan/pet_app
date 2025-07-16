@@ -120,4 +120,19 @@ class FirestoreService {
       return false;
     }
   }
+
+  static Future<void> sendFeedbackMessage(String message, {String? userId, String? userEmail}) async {
+    try {
+      final now = DateTime.now();
+      await FirebaseFirestore.instance.collection('feedback').add({
+        'message': message,
+        'timestamp': now.toIso8601String(),
+        if (userId != null) 'userId': userId,
+        if (userEmail != null) 'userEmail': userEmail,
+      });
+      print('✅ Feedback mesajı Firestore\'a kaydedildi.');
+    } catch (e) {
+      print('❌ HATA - Feedback mesajı kaydedilemedi: $e');
+    }
+  }
 }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pet_app/l10n/app_localizations.dart';
+import 'package:pet_app/services/firestore_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class FeedbackPage extends StatefulWidget {
   const FeedbackPage({super.key});
@@ -75,12 +77,17 @@ class _FeedbackPageState extends State<FeedbackPage> {
                       child: ElevatedButton.icon(
                         icon: const Icon(Icons.send),
                         label: Text(AppLocalizations.of(context)!.send),
-                        onPressed: () {
+                        onPressed: () async {
                           if (_formKey.currentState!.validate()) {
+                            final user = FirebaseAuth.instance.currentUser;
+                            await FirestoreService.sendFeedbackMessage(
+                              _controller.text.trim(),
+                              userId: user?.uid,
+                              userEmail: user?.email,
+                            );
                             setState(() {
                               _sent = true;
                             });
-                            // Burada backend veya e-posta ile gönderim yapılabilir
                           }
                         },
                       ),
