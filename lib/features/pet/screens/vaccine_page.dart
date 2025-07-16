@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import '../models/pet.dart';
+import 'package:pet_app/services/notification_service.dart';
 
 class VaccinePage extends StatefulWidget {
   final List<Vaccine> vaccines;
+  final bool showDone; // true: yapılmış, false: yapılacak
 
-  const VaccinePage({super.key, required this.vaccines});
+  const VaccinePage({super.key, required this.vaccines, required this.showDone});
 
   @override
   State<VaccinePage> createState() => _VaccinePageState();
@@ -13,7 +15,17 @@ class VaccinePage extends StatefulWidget {
 class _VaccinePageState extends State<VaccinePage> {
   void _addVaccine(String name, DateTime date) {
     setState(() {
-      widget.vaccines.add(Vaccine(name: name, date: date));
+      final vaccine = Vaccine(name: name, date: date, isDone: widget.showDone);
+      widget.vaccines.add(vaccine);
+      // Eğer yapılacak ve tarihi bugünden sonraysa bildirim planla
+      if (!vaccine.isDone && vaccine.date.isAfter(DateTime.now())) {
+        NotificationService.scheduleNotification(
+          id: vaccine.name.hashCode ^ vaccine.date.hashCode,
+          title: 'Aşı Zamanı',
+          body: '${vaccine.name} aşısı için randevu zamanı geldi!',
+          scheduledTime: vaccine.date,
+        );
+      }
     });
   }
 
@@ -24,7 +36,7 @@ class _VaccinePageState extends State<VaccinePage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Aşı Ekle'),
+        title: Text(widget.showDone ? 'Yapılmış Aşı Ekle' : 'Yapılacak Aşı Ekle'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -37,9 +49,9 @@ class _VaccinePageState extends State<VaccinePage> {
               onPressed: () async {
                 final picked = await showDatePicker(
                   context: context,
-                  initialDate: DateTime.now(),
-                  firstDate: DateTime(2000),
-                  lastDate: DateTime.now(),
+                  initialDate: DateTime.now().add(widget.showDone ? Duration.zero : const Duration(days: 1)),
+                  firstDate: widget.showDone ? DateTime(2000) : DateTime.now().add(const Duration(days: 1)),
+                  lastDate: DateTime(2100),
                 );
                 if (picked != null) {
                   selectedDate = picked;
@@ -68,24 +80,39 @@ class _VaccinePageState extends State<VaccinePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Aşı Takvimi')),
+      appBar: AppBar(title: Text(widget.showDone ? 'Yapılmış Aşılar' : 'Yapılacak Aşılar')),
       body: widget.vaccines.isEmpty
-          ? const Center(child: Text('Henüz aşı girilmedi.'))
+          ? Center(child: Text(widget.showDone ? 'Henüz yapılmış aşı yok.' : 'Henüz yapılacak aşı yok.'))
           : ListView.builder(
               itemCount: widget.vaccines.length,
               itemBuilder: (context, index) {
                 final vaccine = widget.vaccines[index];
                 return ListTile(
-                  leading: const Icon(Icons.vaccines),
+                  leading: Icon(widget.showDone ? Icons.check : Icons.vaccines, color: widget.showDone ? Colors.green : Colors.orange),
                   title: Text(vaccine.name),
                   subtitle: Text('Tarih: ${vaccine.date.toLocal().toString().split(' ')[0]}'),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
-                    onPressed: () {
-                      setState(() {
-                        widget.vaccines.removeAt(index);
-                      });
-                    },
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (!widget.showDone)
+                        IconButton(
+                          icon: const Icon(Icons.check_circle, color: Colors.green),
+                          tooltip: 'Yapıldı olarak işaretle',
+                          onPressed: () async {
+                            setState(() {
+                              vaccine.isDone = true;
+                            });
+                          },
+                        ),
+                      IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        onPressed: () {
+                          setState(() {
+                            widget.vaccines.remove(vaccine);
+                          });
+                        },
+                      ),
+                    ],
                   ),
                 );
               },

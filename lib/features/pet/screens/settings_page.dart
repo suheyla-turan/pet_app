@@ -4,6 +4,8 @@ import '../../../providers/settings_provider.dart';
 import '../../../providers/theme_provider.dart';
 import '../../../services/voice_service.dart';
 import '../../profile/profile_page.dart';
+import 'about_page.dart';
+import 'feedback_page.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -502,15 +504,45 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                           ),
                         ),
                         
-                        const SizedBox(height: 20),
-                        ListTile(
-                          leading: Icon(Icons.person),
-                          title: Text('Profilim'),
-                          onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(builder: (_) => ProfilePage()),
-                            );
-                          },
+                        // --- YENİ MODERN GRUP ---
+                        const SizedBox(height: 32),
+                        _buildSettingsCard(
+                          title: 'Bilgi & Destek',
+                          icon: Icons.info_outline,
+                          color: Colors.indigo,
+                          child: Column(
+                            children: [
+                              ListTile(
+                                leading: Icon(Icons.person, color: Theme.of(context).colorScheme.primary),
+                                title: const Text('Profilim'),
+                                onTap: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(builder: (_) => ProfilePage()),
+                                  );
+                                },
+                              ),
+                              const Divider(indent: 16, endIndent: 16, height: 0),
+                              ListTile(
+                                leading: Icon(Icons.info_outline, color: Theme.of(context).colorScheme.primary),
+                                title: const Text('Hakkında'),
+                                onTap: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(builder: (_) => AboutPage()),
+                                  );
+                                },
+                              ),
+                              const Divider(indent: 16, endIndent: 16, height: 0),
+                              ListTile(
+                                leading: Icon(Icons.support_agent, color: Theme.of(context).colorScheme.primary),
+                                title: const Text('Destek / Geri Bildirim'),
+                                onTap: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(builder: (_) => FeedbackPage()),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),

@@ -1,4 +1,5 @@
 import 'package:firebase_database/firebase_database.dart';
+import 'package:pet_app/features/pet/models/ai_chat_message.dart';
 
 class RealtimeService {
   final DatabaseReference _db = FirebaseDatabase.instance.ref();
@@ -72,5 +73,55 @@ extension PetStatusRealtime on RealtimeService {
       if (data == null || data is! Map) return null;
       return Map<String, dynamic>.from(data as Map);
     });
+  }
+}
+
+extension AIChatRealtime on RealtimeService {
+  Future<String> startNewAIChat(String petId) async {
+    final chatRef = _db.child('ai_chats').child(petId).push();
+    await chatRef.set({'createdAt': DateTime.now().millisecondsSinceEpoch});
+    return chatRef.key!;
+  }
+
+  Future<void> addAIChatMessage(String petId, String chatId, AIChatMessage message) async {
+    final msgRef = _db.child('ai_chats').child(petId).child(chatId).child('messages').push();
+    await msgRef.set(message.toMap());
+  }
+
+  Stream<List<AIChatMessage>> getAIChatMessagesStream(String petId, String chatId) {
+    return _db.child('ai_chats').child(petId).child(chatId).child('messages')
+      .orderByChild('timestamp')
+      .onValue
+      .map((event) {
+        final data = event.snapshot.value;
+        if (data == null || data is! Map) return [];
+        final mapData = data as Map;
+        if (mapData.isEmpty) return [];
+        return mapData.entries.map((e) => AIChatMessage.fromMap(e.value)).toList()
+          ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
+      });
+  }
+
+  Future<List<Map<String, dynamic>>> getAIChatList(String petId) async {
+    final snapshot = await _db.child('ai_chats').child(petId).get();
+    if (snapshot.value == null || snapshot.value is! Map) return [];
+    final mapData = snapshot.value as Map;
+    List<Map<String, dynamic>> result = [];
+    for (final entry in mapData.entries) {
+      final chatId = entry.key;
+      final chatData = entry.value as Map;
+      // Sadece mesajı olan sohbetleri döndür
+      if (chatData.containsKey('messages') && (chatData['messages'] as Map).isNotEmpty) {
+        result.add({
+          'chatId': chatId,
+          'createdAt': chatData['createdAt'] ?? 0,
+        });
+      }
+    }
+    return result..sort((a, b) => (b['createdAt'] as int).compareTo(a['createdAt'] as int));
+  }
+
+  Future<void> deleteAIChat(String petId, String chatId) async {
+    await _db.child('ai_chats').child(petId).child(chatId).remove();
   }
 } 

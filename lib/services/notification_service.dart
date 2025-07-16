@@ -111,9 +111,8 @@ class NotificationService {
       body,
       tz.TZDateTime.from(scheduledTime, tz.local),
       details,
-      androidAllowWhileIdle: true,
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-      // matchDateTimeComponents: DateTimeComponents.time, // Bunu kaldır!
     );
   }
 

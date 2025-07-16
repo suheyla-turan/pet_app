@@ -1,8 +1,21 @@
 class Vaccine {
   String name;
   DateTime date;
+  bool isDone;
 
-  Vaccine({required this.name, required this.date});
+  Vaccine({required this.name, required this.date, this.isDone = false});
+
+  Map<String, dynamic> toMap() => {
+    'name': name,
+    'date': date.toIso8601String(),
+    'isDone': isDone,
+  };
+
+  factory Vaccine.fromMap(Map map) => Vaccine(
+    name: map['name'] ?? '',
+    date: DateTime.parse(map['date']),
+    isDone: map['isDone'] ?? false,
+  );
 }
 
 class Pet {
@@ -99,7 +112,7 @@ class Pet {
       'happinessInterval': happinessInterval,
       'energyInterval': energyInterval,
       'careInterval': careInterval,
-      'vaccines': vaccines.map((v) => {'name': v.name, 'date': v.date.toIso8601String()}).toList(),
+      'vaccines': vaccines.map((v) => v.toMap()).toList(),
       'type': type,
       'breed': breed,
       'imagePath': imagePath,
@@ -112,8 +125,8 @@ class Pet {
 
   factory Pet.fromMap(Map<String, dynamic> map) {
     return Pet(
-      name: map['name'],
-      gender: map['gender'],
+      name: map['name'] ?? '',
+      gender: map['gender'] ?? '',
       birthDate: DateTime.parse(map['birthDate']),
       satiety: map['satiety'] ?? 5,
       happiness: map['happiness'] ?? 5,
@@ -123,12 +136,12 @@ class Pet {
       happinessInterval: map['happinessInterval'] ?? 60,
       energyInterval: map['energyInterval'] ?? 60,
       careInterval: map['careInterval'] ?? 1440,
-      vaccines: (map['vaccines'] as List?)?.map((v) => Vaccine(name: v['name'], date: DateTime.parse(v['date']))).toList() ?? [],
+      vaccines: (map['vaccines'] as List? ?? []).map((v) => Vaccine.fromMap(v)).toList(),
       type: map['type'] ?? 'Köpek',
       breed: map['breed'],
       imagePath: map['imagePath'],
-      lastUpdate: map['lastUpdate'] != null ? DateTime.parse(map['lastUpdate']) : null,
-      owners: (map['owners'] as List?)?.map((e) => e.toString()).toList() ?? [],
+      lastUpdate: map['lastUpdate'] != null ? DateTime.parse(map['lastUpdate']) : DateTime.now(),
+      owners: (map['owners'] as List? ?? []).map((e) => e.toString()).toList(),
       id: map['id'],
       creator: map['creator'],
     );

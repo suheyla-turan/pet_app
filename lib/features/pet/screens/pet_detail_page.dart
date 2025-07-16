@@ -15,6 +15,9 @@ import 'package:pet_app/services/firestore_service.dart';
 import 'package:pet_app/services/realtime_service.dart';
 import 'package:pet_app/providers/auth_provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:pet_app/features/pet/screens/ai_chat_history_page.dart';
+import 'package:pet_app/features/pet/models/ai_chat_message.dart';
+import 'package:pet_app/features/pet/screens/ai_chat_page.dart';
 
 class PetDetailPage extends StatefulWidget {
   final Pet pet;
@@ -299,7 +302,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                   if (question.isNotEmpty) {
                     aiProvider.stopVoiceInput();
                     Navigator.pop(context);
-                    await aiProvider.getSuggestion(question, pet: _pet);
+                    // Eski getSuggestion, getCurrentResponseForPet, clearResponseForPet fonksiyonlarına ait kalan kodları tamamen kaldır
                   }
                 },
                 child: const Text('Sor'),
@@ -682,32 +685,62 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
 
                           // SABİT AŞILARI GÖRÜNTÜLE BUTONU
                           const SizedBox(height: 16),
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton.icon(
-                              icon: const Icon(Icons.vaccines),
-                              label: const Text(
-                                'Aşıları Görüntüle',
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 16),
-                                backgroundColor: theme.colorScheme.primary,
-                                foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                elevation: 4,
-                              ),
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => VaccinePage(vaccines: _pet.vaccines),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  icon: const Icon(Icons.event_available),
+                                  label: const Text('Yapılacak Aşılar'),
+                                  style: ElevatedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(vertical: 16),
+                                    backgroundColor: Colors.orange,
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    elevation: 4,
                                   ),
-                                );
-                              },
-                            ),
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => VaccinePage(
+                                          vaccines: _pet.vaccines.where((v) => !v.isDone).toList(),
+                                          showDone: false,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  icon: const Icon(Icons.verified),
+                                  label: const Text('Yapılmış Aşılar'),
+                                  style: ElevatedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(vertical: 16),
+                                    backgroundColor: Colors.green,
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    elevation: 4,
+                                  ),
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => VaccinePage(
+                                          vaccines: _pet.vaccines.where((v) => v.isDone).toList(),
+                                          showDone: true,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 20),
                           
@@ -840,169 +873,44 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                           
                           const SizedBox(height: 20),
                           
-                          // AI Suggestions Card
-                          Card(
-                            elevation: 8,
-                            shadowColor: theme.colorScheme.primary.withOpacity(0.2),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(20),
-                                gradient: LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: isDark
-                                      ? [
-                                          Colors.grey.shade800,
-                                          Colors.grey.shade700,
-                                        ]
-                                      : [
-                                          Colors.white,
-                                          Colors.grey.shade50,
-                                        ],
-                                ),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(20),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'AI Önerileri',
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w700,
-                                        color: isDark ? Colors.white : const Color(0xFF2D3748),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Wrap(
-                                      spacing: 12,
-                                      runSpacing: 12,
-                                      children: [
-                                        _buildActionButton(
-                                          onPressed: () => context.read<AIProvider>().getMamaOnerisi(_pet),
-                                          icon: Icons.restaurant,
-                                          label: 'Mama Önerisi',
-                                          color: Colors.orange,
-                                        ),
-                                        _buildActionButton(
-                                          onPressed: () => context.read<AIProvider>().getOyunOnerisi(_pet),
-                                          icon: Icons.sports_esports,
-                                          label: 'Oyun Önerisi',
-                                          color: Colors.indigo,
-                                        ),
-                                        _buildActionButton(
-                                          onPressed: () => context.read<AIProvider>().getBakimOnerisi(_pet),
-                                          icon: Icons.auto_awesome,
-                                          label: 'Bakım Önerisi',
-                                          color: Colors.teal,
-                                        ),
-                                        _buildActionButton(
-                                          onPressed: () => soruSorDialog(),
-                                          icon: Icons.question_answer,
-                                          label: 'Soru Sor',
-                                          color: theme.colorScheme.primary,
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                          
-                          const SizedBox(height: 20),
-                          
-                          // AI Response
+                          // AI Sohbet ve Sohbet Geçmişi Butonu
                           Consumer<AIProvider>(
                             builder: (context, aiProvider, child) {
-                              final aiResponse = aiProvider.getCurrentResponseForPet(_pet.name);
-                              if (aiProvider.isLoading) {
-                                return Card(
-                                  elevation: 8,
-                                  child: Container(
-                                    padding: const EdgeInsets.all(20),
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(20),
-                                      color: isDark ? Colors.grey.shade800 : Colors.white,
-                                    ),
-                                    child: const Row(
-                                      children: [
-                                        CircularProgressIndicator(),
-                                        SizedBox(width: 16),
-                                        Text('AI düşünüyor...'),
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              }
-                              if (aiResponse != null && aiResponse.isNotEmpty) {
-                                return Card(
-                                  elevation: 8,
-                                  child: Container(
-                                    padding: const EdgeInsets.all(20),
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(20),
-                                      color: isDark ? Colors.grey.shade800 : Colors.white,
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'AI Yanıtı:',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 14,
-                                            color: theme.colorScheme.primary,
+                              return Row(
+                                children: [
+                                  Expanded(
+                                    child: ElevatedButton.icon(
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => AIChatPage(pet: _pet),
                                           ),
-                                        ),
-                                        const SizedBox(height: 8),
-                                        Text(
-                                          aiResponse,
-                                          style: const TextStyle(fontSize: 15),
-                                        ),
-                                        const SizedBox(height: 12),
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: ElevatedButton.icon(
-                                                onPressed: aiProvider.isSpeaking
-                                                    ? () => aiProvider.stopSpeaking()
-                                                    : () async {
-                                                        if (aiResponse.isNotEmpty) {
-                                                          await aiProvider.speakResponse(aiResponse);
-                                                        }
-                                                      },
-                                                icon: Icon(
-                                                  aiProvider.isSpeaking ? Icons.stop : Icons.volume_up,
-                                                  size: 18,
-                                                ),
-                                                label: Text(
-                                                  aiProvider.isSpeaking ? 'Durdur' : 'Sesli Dinle',
-                                                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                                                ),
-                                              ),
-                                            ),
-                                            const SizedBox(width: 8),
-                                            TextButton.icon(
-                                              onPressed: () => aiProvider.clearResponseForPet(_pet.name),
-                                              icon: const Icon(Icons.clear, size: 16),
-                                              label: const Text('Temizle'),
-                                              style: TextButton.styleFrom(foregroundColor: Colors.grey),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
+                                        );
+                                      },
+                                      icon: const Icon(Icons.psychology),
+                                      label: const Text('Soru Sor / Sohbet'),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Theme.of(context).colorScheme.primary,
+                                        foregroundColor: Colors.white,
+                                      ),
                                     ),
                                   ),
-                                );
-                              }
-                              return const SizedBox.shrink();
+                                ],
+                              );
                             },
                           ),
                           
                           const SizedBox(height: 20),
+                          
+                          // Günlük Notları (Pet Chat) kısmı tekrar eklendi
                           _buildPetChat(),
+                          
+                          const SizedBox(height: 20),
+                          
+                          // AI Response
+                          // Eski tek mesajlık AI yanıtı gösteren blok ve fonksiyonlar kaldırıldı
+                          // ... existing code ...
                         ],
                       ),
                     ),
@@ -1185,6 +1093,11 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                 itemCount: messages.length,
                 itemBuilder: (context, i) {
                   final msg = messages[i];
+                  // Sadece günlük mesajları göster (AI mesajı değil)
+                  // PetMessage modelinde sender alanı user uid olmalı, 'ai' veya benzeri olmamalı
+                  final user = Provider.of<AuthProvider>(context, listen: false).user;
+                  final isAI = msg.sender == 'ai';
+                  if (isAI) return const SizedBox.shrink();
                   final isMe = user?.uid == msg.sender;
                   return Align(
                     alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
@@ -1235,6 +1148,19 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
           ],
         ),
       ],
+    );
+  }
+}
+
+// Geçici placeholder (ileride gerçek sayfa ile değiştirilecek)
+class AIChatHistoryPage extends StatelessWidget {
+  final Pet pet;
+  const AIChatHistoryPage({super.key, required this.pet});
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Sohbet Geçmişi')),
+      body: const Center(child: Text('Sohbet geçmişi burada görünecek.')),
     );
   }
 }
