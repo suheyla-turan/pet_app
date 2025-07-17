@@ -26,7 +26,20 @@ class _VoiceCommandWidgetState extends State<VoiceCommandWidget> {
 
   void _listen() async {
     if (!_isListening) {
-      bool available = await _speech.initialize();
+      bool available = await _speech.initialize(
+        onError: (error) {
+          if (error.errorMsg == 'error_speech_timeout') {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Konuşma algılanamadı, lütfen tekrar deneyin.')),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Sesli tanıma hatası: \\${error.errorMsg}')),
+            );
+          }
+          setState(() => _isListening = false);
+        },
+      );
       if (available) {
         setState(() => _isListening = true);
         _speech.listen(
