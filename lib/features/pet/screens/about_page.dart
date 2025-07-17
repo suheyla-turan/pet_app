@@ -10,7 +10,7 @@ class AboutPage extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.aboutApp),
+        title: const Text('Patizeka'),
         backgroundColor: Colors.transparent,
         elevation: 0,
         iconTheme: IconThemeData(color: theme.colorScheme.primary),

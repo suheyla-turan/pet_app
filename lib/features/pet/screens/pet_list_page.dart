@@ -8,6 +8,9 @@ import 'settings_page.dart';
 import '../../../providers/pet_provider.dart';
 import '../../profile/profile_page.dart';
 import 'package:pet_app/l10n/app_localizations.dart';
+import 'package:pet_app/features/pet/widgets/voice_command_widget.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:pet_app/services/realtime_service.dart';
 
 class PetListPage extends StatefulWidget {
   const PetListPage({super.key});
@@ -20,6 +23,12 @@ class _PetListPageState extends State<PetListPage> with TickerProviderStateMixin
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
+  // Sesli komut için eklenenler
+  late stt.SpeechToText _speech;
+  bool _isListening = false;
+  String _command = '';
+  final realtimeService = RealtimeService();
+
   @override
   void initState() {
     super.initState();
@@ -31,8 +40,7 @@ class _PetListPageState extends State<PetListPage> with TickerProviderStateMixin
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
     _animationController.forward();
-    
-    // Provider'dan hayvanları yükle
+    _speech = stt.SpeechToText();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<PetProvider>().loadPets();
     });
@@ -44,77 +52,188 @@ class _PetListPageState extends State<PetListPage> with TickerProviderStateMixin
     super.dispose();
   }
 
+  void _startListening() async {
+    if (!_isListening) {
+      bool available = await _speech.initialize(
+        onStatus: (status) => print('Speech status: $status'),
+        onError: (error) => print('Speech error: $error'),
+      );
+      if (available) {
+        setState(() => _isListening = true);
+        _speech.listen(
+          localeId: 'tr_TR', // Türkçe için
+          onResult: (val) async {
+            setState(() {
+              _command = val.recognizedWords;
+            });
+            if (val.hasConfidenceRating && val.confidence > 0) {
+              _speech.stop();
+              setState(() => _isListening = false);
+              await _handleVoiceCommand(_command);
+            }
+          },
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Dinleniyor...')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Mikrofon izni verilmedi veya cihaz desteklemiyor!')),
+        );
+      }
+    } else {
+      _speech.stop();
+      setState(() => _isListening = false);
+    }
+  }
+
+  Future<void> _handleVoiceCommand(String command) async {
+    final intentData = await getIntentFromAI(command);
+    final petProvider = context.read<PetProvider>();
+    Pet? pet;
+    if (intentData['petId'] != null) {
+      try {
+        pet = petProvider.pets.firstWhere(
+          (p) => p.id == intentData['petId'] || p.name == intentData['petId'],
+        );
+      } catch (e) {
+        pet = null;
+      }
+    }
+    switch (intentData['intent']) {
+      case 'feed':
+        if (pet != null) {
+          await realtimeService.setFeedingTime(pet.id ?? pet.name, DateTime.now());
+          await realtimeService.updatePetStatus(pet.id ?? pet.name, satiety: 100);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('${pet.name} beslendi!')),
+          );
+        }
+        break;
+      case 'sleep':
+        if (pet != null) {
+          await realtimeService.updatePetStatus(pet.id ?? pet.name, energy: 100);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('${pet.name} uyutuldu!')),
+          );
+        }
+        break;
+      case 'care':
+        if (pet != null) {
+          await realtimeService.updatePetStatus(pet.id ?? pet.name, happiness: 100);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('${pet.name} bakımı yapıldı!')),
+          );
+        }
+        break;
+      case 'go_to_profile':
+        if (pet != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => PetDetailPage(pet: pet!),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Hayvan bulunamadı!')),
+          );
+        }
+        break;
+      default:
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Komut anlaşılamadı: $command')),
+        );
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     
     return Scaffold(
-      appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.myPets),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.person),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => ProfilePage()),
-              );
-            },
-          ),
-        ],
-      ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isDark 
-              ? [
-                  const Color(0xFF1A202C),
-                  const Color(0xFF2D3748),
-                  const Color(0xFF4A5568),
-                ]
-              : [
-                  const Color(0xFFF7FAFC),
-                  const Color(0xFFEDF2F7),
-                  const Color(0xFFE2E8F0),
-                ],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // Beautiful Header
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 32, 24, 16),
+      body: Column(
+        children: [
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: isDark 
+                    ? [
+                        const Color(0xFF1A202C),
+                        const Color(0xFF2D3748),
+                        const Color(0xFF4A5568),
+                      ]
+                    : [
+                        const Color(0xFFF7FAFC),
+                        const Color(0xFFEDF2F7),
+                        const Color(0xFFE2E8F0),
+                      ],
+                ),
+              ),
+              child: SafeArea(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
+                    // Uygulama adı en üstte
+                    const SizedBox(height: 24),
+                    Text(
+                      'Patizeka',
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.2,
+                        color: Color(0xFF4A5568),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // Profil, ayarlar, mikrofon ikonları
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // 'Evcil' yazısı kaldırıldı
-                            ],
-                          ),
-                        ),
-                        // Settings Button
+                        // Profil butonu
                         Container(
-                          margin: const EdgeInsets.only(right: 12),
                           decoration: BoxDecoration(
                             color: isDark ? Colors.grey.shade700 : Colors.white,
                             borderRadius: BorderRadius.circular(12),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.1),
+                                color: Colors.black.withOpacity(0.08),
                                 blurRadius: 8,
                                 offset: const Offset(0, 4),
                               ),
                             ],
                           ),
                           child: IconButton(
+                            icon: const Icon(Icons.person, color: Colors.deepPurple),
+                            tooltip: 'Profil',
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => ProfilePage()),
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        // Ayarlar butonu
+                        Container(
+                          decoration: BoxDecoration(
+                            color: isDark ? Colors.grey.shade700 : Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.08),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: IconButton(
+                            icon: Icon(Icons.settings, color: theme.colorScheme.primary, size: 24),
+                            tooltip: AppLocalizations.of(context)!.settings,
                             onPressed: () {
                               Navigator.push(
                                 context,
@@ -123,49 +242,37 @@ class _PetListPageState extends State<PetListPage> with TickerProviderStateMixin
                                 ),
                               );
                             },
-                            icon: Icon(
-                              Icons.settings,
-                              color: theme.colorScheme.primary,
-                              size: 24,
-                            ),
-                            tooltip: AppLocalizations.of(context)!.settings,
-                            style: IconButton.styleFrom(
-                              padding: const EdgeInsets.all(12),
-                            ),
                           ),
                         ),
+                        const SizedBox(width: 16),
+                        // Mikrofon butonu
                         Container(
-                          padding: const EdgeInsets.all(14),
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                theme.colorScheme.primary,
-                                theme.colorScheme.primary.withOpacity(0.7),
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(18),
+                            color: isDark ? Colors.grey.shade700 : Colors.white,
+                            borderRadius: BorderRadius.circular(12),
                             boxShadow: [
                               BoxShadow(
-                                color: theme.colorScheme.primary.withOpacity(0.25),
-                                blurRadius: 16,
-                                offset: const Offset(0, 8),
+                                color: Colors.black.withOpacity(0.08),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
                               ),
                             ],
                           ),
-                          child: const Icon(
-                            Icons.pets,
-                            color: Colors.white,
-                            size: 32,
+                          child: IconButton(
+                            icon: Icon(_isListening ? Icons.mic : Icons.mic_none, color: Colors.deepPurple),
+                            tooltip: 'Sesli Komut',
+                            onPressed: _startListening,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 24),
+                    // Büyük başlık ve açıklama
                     Text(
                       AppLocalizations.of(context)!.myPets,
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontSize: 34,
+                        fontSize: 28,
                         fontWeight: FontWeight.w900,
                         color: isDark ? Colors.white : const Color(0xFF2D3748),
                         letterSpacing: 1.2,
@@ -196,145 +303,145 @@ class _PetListPageState extends State<PetListPage> with TickerProviderStateMixin
                         ),
                       ),
                     ),
-                  ],
-                ),
-              ),
-              
-              // Pet List
-              Expanded(
-                child: Consumer<PetProvider>(
-                  builder: (context, petProvider, child) {
-                    if (petProvider.isLoading) {
-                      return Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(24),
-                              decoration: BoxDecoration(
-                                color: isDark ? Colors.grey.shade800 : Colors.white,
-                                borderRadius: BorderRadius.circular(24),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.1),
-                                    blurRadius: 15,
-                                    offset: const Offset(0, 8),
+                    
+                    // Pet List
+                    Expanded(
+                      child: Consumer<PetProvider>(
+                        builder: (context, petProvider, child) {
+                          if (petProvider.isLoading) {
+                            return Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(24),
+                                    decoration: BoxDecoration(
+                                      color: isDark ? Colors.grey.shade800 : Colors.white,
+                                      borderRadius: BorderRadius.circular(24),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(alpha: 0.1),
+                                          blurRadius: 15,
+                                          offset: const Offset(0, 8),
+                                        ),
+                                      ],
+                                    ),
+                                    child: CircularProgressIndicator(
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        theme.colorScheme.primary,
+                                      ),
+                                      strokeWidth: 3,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 20),
+                                  Text(
+                                    AppLocalizations.of(context)!.petsLoading,
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
+                                      color: isDark ? Colors.grey.shade300 : Colors.grey.shade600,
+                                    ),
                                   ),
                                 ],
                               ),
-                              child: CircularProgressIndicator(
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  theme.colorScheme.primary,
-                                ),
-                                strokeWidth: 3,
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-                            Text(
-                              AppLocalizations.of(context)!.petsLoading,
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                                color: isDark ? Colors.grey.shade300 : Colors.grey.shade600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }
-                    
-                    if (petProvider.pets.isEmpty) {
-                      return Center(
-                        child: FadeTransition(
-                          opacity: _fadeAnimation,
-                          child: Container(
-                            padding: const EdgeInsets.all(40),
-                            margin: const EdgeInsets.all(24),
-                            decoration: BoxDecoration(
-                              color: isDark ? Colors.grey.shade800 : Colors.white,
-                              borderRadius: BorderRadius.circular(28),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.1),
-                                  blurRadius: 20,
-                                  offset: const Offset(0, 10),
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(24),
+                            );
+                          }
+                          
+                          if (petProvider.pets.isEmpty) {
+                            return Center(
+                              child: FadeTransition(
+                                opacity: _fadeAnimation,
+                                child: Container(
+                                  padding: const EdgeInsets.all(40),
+                                  margin: const EdgeInsets.all(24),
                                   decoration: BoxDecoration(
-                                    color: theme.colorScheme.primary.withOpacity(0.1),
-                                    shape: BoxShape.circle,
+                                    color: isDark ? Colors.grey.shade800 : Colors.white,
+                                    borderRadius: BorderRadius.circular(28),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.1),
+                                        blurRadius: 20,
+                                        offset: const Offset(0, 10),
+                                      ),
+                                    ],
                                   ),
-                                  child: Icon(
-                                    Icons.pets,
-                                    size: 80,
-                                    color: theme.colorScheme.primary,
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(24),
+                                        decoration: BoxDecoration(
+                                          color: theme.colorScheme.primary.withOpacity(0.1),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Icon(
+                                          Icons.pets,
+                                          size: 80,
+                                          color: theme.colorScheme.primary,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 24),
+                                      Text(
+                                        AppLocalizations.of(context)!.noPetsAdded,
+                                        style: TextStyle(
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.w700,
+                                          color: isDark ? Colors.white : const Color(0xFF2D3748),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Text(
+                                        AppLocalizations.of(context)!.addPetHint,
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          color: isDark ? Colors.grey.shade300 : Colors.grey.shade600,
+                                          height: 1.5,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                                const SizedBox(height: 24),
-                                Text(
-                                  AppLocalizations.of(context)!.noPetsAdded,
-                                  style: TextStyle(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.w700,
-                                    color: isDark ? Colors.white : const Color(0xFF2D3748),
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
-                                Text(
-                                  AppLocalizations.of(context)!.addPetHint,
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: isDark ? Colors.grey.shade300 : Colors.grey.shade600,
-                                    height: 1.5,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    }
-                    
-                    return ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      itemCount: petProvider.pets.length,
-                      itemBuilder: (context, index) {
-                        final pet = petProvider.pets[index];
-                        return FadeTransition(
-                          opacity: _fadeAnimation,
-                          child: SlideTransition(
-                            position: Tween<Offset>(
-                              begin: const Offset(0, 0.3),
-                              end: Offset.zero,
-                            ).animate(CurvedAnimation(
-                              parent: _animationController,
-                              curve: Interval(
-                                index * 0.1,
-                                1.0,
-                                curve: Curves.easeOutCubic,
                               ),
-                            )),
-                            child: Container(
-                              margin: const EdgeInsets.only(bottom: 20),
-                              child: _buildPetCard(pet, isDark, theme),
-                            ),
-                          ),
-                        );
-                      },
-                    );
-                  },
+                            );
+                          }
+                          
+                          return ListView.builder(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            itemCount: petProvider.pets.length,
+                            itemBuilder: (context, index) {
+                              final pet = petProvider.pets[index];
+                              return FadeTransition(
+                                opacity: _fadeAnimation,
+                                child: SlideTransition(
+                                  position: Tween<Offset>(
+                                    begin: const Offset(0, 0.3),
+                                    end: Offset.zero,
+                                  ).animate(CurvedAnimation(
+                                    parent: _animationController,
+                                    curve: Interval(
+                                      index * 0.1,
+                                      1.0,
+                                      curve: Curves.easeOutCubic,
+                                    ),
+                                  )),
+                                  child: Container(
+                                    margin: const EdgeInsets.only(bottom: 20),
+                                    child: _buildPetCard(pet, isDark, theme),
+                                  ),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
       floatingActionButton: Container(
         decoration: BoxDecoration(

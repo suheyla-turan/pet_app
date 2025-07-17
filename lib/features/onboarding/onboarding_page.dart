@@ -399,7 +399,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
     return Scaffold(
-      appBar: AppBar(title: Text(AppLocalizations.of(context)!.resetPassword)),
+      appBar: AppBar(title: const Text('Patizeka')),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Center(

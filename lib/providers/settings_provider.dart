@@ -1,5 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart'; // Added for TimeOfDay
+import 'dart:ui'; // Locale için
 
 enum ConversationStyle {
   friendly,
@@ -65,6 +66,19 @@ class SettingsProvider with ChangeNotifier {
       final minute = prefs.getInt('scheduled_notification_minute') ?? 0;
       _scheduledNotificationTime = TimeOfDay(hour: hour, minute: minute);
       
+      // Locale yükle
+      final localeCode = prefs.getString('locale');
+      if (localeCode != null) {
+        _locale = Locale(localeCode);
+      } else {
+        // İlk açılışta cihaz dili Türkçe ise otomatik Türkçe yap
+        final deviceLocale = window.locale.languageCode;
+        if (deviceLocale == 'tr') {
+          _locale = const Locale('tr');
+        } else {
+          _locale = null;
+        }
+      }
       notifyListeners();
     } catch (e) {
       print('❌ HATA - Ayarlar yüklenemedi: $e');
@@ -164,8 +178,14 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void setLocale(Locale? locale) {
+  void setLocale(Locale? locale) async {
     _locale = locale;
+    final prefs = await SharedPreferences.getInstance();
+    if (locale == null) {
+      await prefs.remove('locale');
+    } else {
+      await prefs.setString('locale', locale.languageCode);
+    }
     notifyListeners();
   }
 

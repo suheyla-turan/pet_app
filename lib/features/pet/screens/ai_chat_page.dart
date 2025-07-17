@@ -47,7 +47,7 @@ class _AIChatPageState extends State<AIChatPage> {
     final aiProvider = Provider.of<AIProvider>(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text('${widget.pet.name} - ${AppLocalizations.of(context)!.aiChat}'),
+        title: const Text('Patizeka'),
         actions: [
           PopupMenuButton<String>(
             onSelected: (value) async {

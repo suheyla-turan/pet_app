@@ -17,6 +17,8 @@ import 'package:pet_app/providers/auth_provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:pet_app/features/pet/screens/ai_chat_page.dart';
 import 'package:pet_app/l10n/app_localizations.dart';
+import 'package:pet_app/features/pet/widgets/voice_command_widget.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 class PetDetailPage extends StatefulWidget {
   final Pet pet;
@@ -37,6 +39,11 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
   bool _isSavingFeedingTime = false;
   final TextEditingController _chatController = TextEditingController();
   String? _creatorName;
+  // Sesli komut için eklenenler
+  late stt.SpeechToText _speech;
+  bool _isListening = false;
+  String _command = '';
+  final realtimeService = RealtimeService();
 
   Future<void> speak(String text) async {
     await flutterTts.speak(text);
@@ -72,6 +79,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
     }
     _loadFeedingTime();
     _loadCreatorName();
+    _speech = stt.SpeechToText();
   }
 
   @override
@@ -391,6 +399,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        title: const Text('Patizeka'),
         leading: IconButton(
           icon: Container(
             padding: const EdgeInsets.all(8),
@@ -406,6 +415,11 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
+          IconButton(
+            icon: Icon(_isListening ? Icons.mic : Icons.mic_none),
+            tooltip: 'Sesli Komut',
+            onPressed: _startListening,
+          ),
           if (isCreator)
             IconButton(
               icon: const Icon(Icons.delete, color: Colors.red),
@@ -1133,6 +1147,45 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
               ),
             ),
             IconButton(
+              icon: Icon(_isListening ? Icons.mic : Icons.mic_none),
+              tooltip: 'Sesli Mesaj',
+              onPressed: () async {
+                if (!_isListening) {
+                  bool available = await _speech.initialize(
+                    onStatus: (status) => print('Speech status: $status'),
+                    onError: (error) => print('Speech error: $error'),
+                  );
+                  if (available) {
+                    setState(() => _isListening = true);
+                    _speech.listen(
+                      localeId: 'tr_TR',
+                      onResult: (val) {
+                        setState(() {
+                          _chatController.text = val.recognizedWords;
+                        });
+                        if (val.hasConfidenceRating && val.confidence > 0) {
+                          _speech.stop();
+                          setState(() => _isListening = false);
+                          // Otomatik gönderme isterseniz:
+                          // _sendMessage();
+                        }
+                      },
+                    );
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Dinleniyor...')),
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Mikrofon izni verilmedi veya cihaz desteklemiyor!')),
+                    );
+                  }
+                } else {
+                  _speech.stop();
+                  setState(() => _isListening = false);
+                }
+              },
+            ),
+            IconButton(
               icon: const Icon(Icons.send),
               onPressed: () async {
                 final text = _chatController.text.trim();
@@ -1187,6 +1240,109 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
         return loc.female;
       default:
         return gender;
+    }
+  }
+
+  void _startListening() async {
+    if (!_isListening) {
+      bool available = await _speech.initialize(
+        onStatus: (status) => print('Speech status: $status'),
+        onError: (error) {
+          debugPrint('Speech initialize error: ${error.errorMsg} (permanent: ${error.permanent})');
+          if (error.errorMsg == 'error_network') {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('İnternet bağlantısı yok veya Google servislerine erişilemiyor.')),
+            );
+          } else if (error.errorMsg == 'error_speech_timeout') {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Konuşma algılanamadı, lütfen tekrar deneyin.')),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Sesli tanıma hatası: ${error.errorMsg}')),
+            );
+          }
+        },
+      );
+      if (available) {
+        setState(() => _isListening = true);
+        _speech.listen(
+          localeId: 'tr_TR', // Türkçe için
+          listenFor: Duration(seconds: 10),
+          onResult: (val) async {
+            setState(() {
+              _command = val.recognizedWords;
+            });
+            if (val.hasConfidenceRating && val.confidence > 0) {
+              _speech.stop();
+              setState(() => _isListening = false);
+              await _handleVoiceCommand(_command);
+            }
+          },
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Dinleniyor...')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Mikrofon izni verilmedi veya cihaz desteklemiyor!')),
+        );
+      }
+    } else {
+      _speech.stop();
+      setState(() => _isListening = false);
+    }
+  }
+
+  Future<void> _handleVoiceCommand(String command) async {
+    final intentData = await getIntentFromAI(command);
+    final petProvider = context.read<PetProvider>();
+    Pet? pet;
+    if (intentData['petId'] != null) {
+      try {
+        pet = petProvider.pets.firstWhere(
+          (p) => p.id == intentData['petId'] || p.name == intentData['petId'],
+        );
+      } catch (e) {
+        pet = null;
+      }
+    } else {
+      pet = _pet;
+    }
+    switch (intentData['intent']) {
+      case 'feed':
+        if (pet != null) {
+          await realtimeService.setFeedingTime(pet.id ?? pet.name, DateTime.now());
+          await realtimeService.updatePetStatus(pet.id ?? pet.name, satiety: 100);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('${pet.name} beslendi!')),
+          );
+        }
+        break;
+      case 'sleep':
+        if (pet != null) {
+          await realtimeService.updatePetStatus(pet.id ?? pet.name, energy: 100);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('${pet.name} uyutuldu!')),
+          );
+        }
+        break;
+      case 'care':
+        if (pet != null) {
+          await realtimeService.updatePetStatus(pet.id ?? pet.name, happiness: 100);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('${pet.name} bakımı yapıldı!')),
+          );
+        }
+        break;
+      case 'go_to_profile':
+        // Zaten profildeyiz, gerekirse başka bir işlem yapılabilir
+        break;
+      default:
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Komut anlaşılamadı: $command')),
+        );
+        break;
     }
   }
 }

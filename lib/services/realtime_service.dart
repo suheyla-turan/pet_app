@@ -1,5 +1,10 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:pet_app/features/pet/models/ai_chat_message.dart';
+import 'package:flutter/material.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'dart:convert'; // Added for jsonDecode
+import 'package:http/http.dart' as http; // Added for http
+// PetProfilePage ve widget importlarını kaldırdım
 
 class RealtimeService {
   final DatabaseReference _db = FirebaseDatabase.instance.ref();
@@ -123,5 +128,43 @@ extension AIChatRealtime on RealtimeService {
 
   Future<void> deleteAIChat(String petId, String chatId) async {
     await _db.child('ai_chats').child(petId).child(chatId).remove();
+  }
+}
+
+// Widget ve context işlemlerini kaldırıyorum
+
+Future<Map<String, dynamic>> getIntentFromAI(String command) async {
+  // Burada kendi backend veya AI API'nı çağırmalısın
+  // Örnek response: { "intent": "feed", "petId": "golden123" }
+  final response = await http.post(
+    Uri.parse('https://senin-backend.com/ai-intent'),
+    body: {'command': command},
+  );
+  return jsonDecode(response.body);
+}
+
+final realtimeService = RealtimeService();
+
+void handleVoiceCommand(String command) async {
+  final intentData = await getIntentFromAI(command);
+
+  switch (intentData['intent']) {
+    case 'feed':
+      await realtimeService.setFeedingTime(intentData['petId'], DateTime.now());
+      await realtimeService.updatePetStatus(intentData['petId'], satiety: 100);
+      break;
+    case 'sleep':
+      await realtimeService.updatePetStatus(intentData['petId'], energy: 100);
+      break;
+    case 'go_to_profile':
+      // context'i parametre olarak geçirmen gerekebilir
+      // Navigator.push(context, MaterialPageRoute(
+      //   builder: (_) => PetProfilePage(petId: intentData['petId']),
+      // ));
+      break;
+    // Diğer komutlar...
+    default:
+      // Bilinmeyen komut
+      break;
   }
 } 

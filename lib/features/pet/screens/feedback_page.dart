@@ -21,7 +21,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
     final isDark = theme.brightness == Brightness.dark;
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.support),
+        title: const Text('Patizeka'),
         backgroundColor: Colors.transparent,
         elevation: 0,
         iconTheme: IconThemeData(color: theme.colorScheme.primary),

@@ -90,7 +90,7 @@ class _VaccinePageState extends State<VaccinePage> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text(widget.showDone ? AppLocalizations.of(context)!.doneVaccines : AppLocalizations.of(context)!.vaccines),
+          title: const Text('Patizeka'),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () {

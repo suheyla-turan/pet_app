@@ -33,7 +33,7 @@ class _AIChatHistoryPageState extends State<AIChatHistoryPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Sohbet Geçmişi')),
+      appBar: AppBar(title: const Text('Patizeka')),
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: _futureChats,
         builder: (context, snapshot) {
@@ -120,7 +120,7 @@ class AIChatDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Sohbet Detayı')),
+      appBar: AppBar(title: const Text('Patizeka')),
       body: Column(
         children: [
           Expanded(
