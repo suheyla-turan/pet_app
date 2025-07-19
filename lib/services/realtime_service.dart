@@ -1,7 +1,6 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:pet_app/features/pet/models/ai_chat_message.dart';
 import 'package:flutter/material.dart';
-import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'dart:convert'; // Added for jsonDecode
 import 'package:http/http.dart' as http; // Added for http
 // PetProfilePage ve widget importlarını kaldırdım

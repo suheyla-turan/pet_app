@@ -132,22 +132,8 @@ class _AIChatPageState extends State<AIChatPage> {
             ),
           Row(
             children: [
-              IconButton(
-                icon: Icon(
-                  aiProvider.isListening ? Icons.stop : Icons.mic,
-                  color: aiProvider.isListening ? Colors.red : null,
-                ),
-                tooltip: aiProvider.isListening ? AppLocalizations.of(context)!.stopListening : AppLocalizations.of(context)!.speakQuestion,
-                onPressed: aiProvider.isLoading
-                    ? null
-                    : () async {
-                        if (aiProvider.isListening) {
-                          await aiProvider.stopVoiceInput();
-                        } else {
-                          await aiProvider.startVoiceInput();
-                        }
-                      },
-              ),
+              // Mikrofon butonunu ve aiProvider.isListening ile ilgili kodları kaldır
+              // Sadece yazılı mesaj gönderme ve TTS (speak) fonksiyonları kalsın
               Expanded(
                 child: TextField(
                   controller: _chatController,

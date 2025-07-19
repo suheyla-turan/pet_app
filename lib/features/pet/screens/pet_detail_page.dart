@@ -18,7 +18,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:pet_app/features/pet/screens/ai_chat_page.dart';
 import 'package:pet_app/l10n/app_localizations.dart';
 import 'package:pet_app/features/pet/widgets/voice_command_widget.dart';
-import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:pet_app/widgets/ai_fab.dart';
 
 class PetDetailPage extends StatefulWidget {
   final Pet pet;
@@ -40,10 +40,13 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
   final TextEditingController _chatController = TextEditingController();
   String? _creatorName;
   // Sesli komut için eklenenler
-  late stt.SpeechToText _speech;
-  bool _isListening = false;
-  String _command = '';
+  // late stt.SpeechToText _speech; // KALDIRILDI
+  // bool _isListening = false; // KALDIRILDI
+  // String _command = ''; // KALDIRILDI
   final realtimeService = RealtimeService();
+  bool isAssistantOpen = false;
+  void openAssistant() => setState(() => isAssistantOpen = true);
+  void closeAssistant() => setState(() => isAssistantOpen = false);
 
   Future<void> speak(String text) async {
     await flutterTts.speak(text);
@@ -79,7 +82,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
     }
     _loadFeedingTime();
     _loadCreatorName();
-    _speech = stt.SpeechToText();
+    // _speech = stt.SpeechToText(); // KALDIRILDI
   }
 
   @override
@@ -180,10 +183,8 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
   Future<void> soruSorDialog() async {
     final controller = TextEditingController();
     final aiProvider = context.read<AIProvider>();
-    
     // AI Provider'ı başlat
     await aiProvider.initializeVoiceService();
-    
     return showDialog<void>(
       context: context,
       builder: (context) => StatefulBuilder(
@@ -238,39 +239,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                 
                 const SizedBox(height: 12),
                 
-                // Sesli konuşma butonu
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: aiProvider.isLoading
-                            ? null
-                            : () {
-                                if (aiProvider.isListening) {
-                                  aiProvider.stopVoiceInput();
-                                } else {
-                                  aiProvider.startVoiceInput();
-                                }
-                                setDialogState(() {});
-                              },
-                        icon: Icon(
-                          aiProvider.isListening ? Icons.stop : Icons.mic,
-                          color: aiProvider.isListening ? Colors.white : null,
-                        ),
-                        label: Text(
-                          aiProvider.isListening ? AppLocalizations.of(context)!.stopListening : AppLocalizations.of(context)!.voiceAsk,
-                          style: TextStyle(
-                            color: aiProvider.isListening ? Colors.white : null,
-                          ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: aiProvider.isListening ? Colors.red : null,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                
+                // Sesli konuşma butonu kaldırıldı
                 // Yükleme göstergesi
                 if (aiProvider.isLoading)
                   Padding(
@@ -292,7 +261,6 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
             actions: [
               TextButton(
                 onPressed: () {
-                  aiProvider.stopVoiceInput();
                   Navigator.pop(context);
                 },
                 child: Text(AppLocalizations.of(context)!.cancel),
@@ -307,7 +275,6 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                   }
                   
                   if (question.isNotEmpty) {
-                    aiProvider.stopVoiceInput();
                     Navigator.pop(context);
                     // Eski getSuggestion, getCurrentResponseForPet, clearResponseForPet fonksiyonlarına ait kalan kodları tamamen kaldır
                   }
@@ -395,375 +362,421 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
     final user = Provider.of<AuthProvider>(context, listen: false).user;
     final isCreator = user?.uid == _pet.creator;
     
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: const Text('Patizeka'),
-        leading: IconButton(
-          icon: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              Icons.arrow_back,
-              color: theme.colorScheme.primary,
-            ),
-          ),
-          onPressed: () => Navigator.pop(context),
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(_isListening ? Icons.mic : Icons.mic_none),
-            tooltip: 'Sesli Komut',
-            onPressed: _startListening,
-          ),
-          if (isCreator)
-            IconButton(
-              icon: const Icon(Icons.delete, color: Colors.red),
-              tooltip: 'Hayvanı Sil',
-              onPressed: () async {
-                if (_pet.id != null) {
-                  await FirestoreService.hayvanSil(_pet.id!);
-                  Navigator.pop(context);
-                }
-              },
-            ),
-        ],
-      ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isDark 
-              ? [
-                  const Color(0xFF1A202C),
-                  const Color(0xFF2D3748),
-                  const Color(0xFF4A5568),
-                ]
-              : [
-                  const Color(0xFFF7FAFC),
-                  const Color(0xFFEDF2F7),
-                  const Color(0xFFE2E8F0),
-                ],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // Beautiful Header
-              Container(
-                padding: const EdgeInsets.all(20),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        children: [
-                          Text(
-                            _pet.name,
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w800,
-                              color: isDark ? Colors.white : const Color(0xFF2D3748),
-                            ),
-                          ),
-                          Text(
-                            'Detaylar',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: isDark ? Colors.grey.shade300 : Colors.grey.shade600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      icon: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(
-                          Icons.edit,
-                          color: theme.colorScheme.primary,
-                        ),
-                      ),
-                      onPressed: () async {
-                        final result = await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => PetFormPage(pet: _pet),
-                          ),
-                        );
-                        if (result != null) {
-                          setState(() {
-                            _pet = result;
-                          });
-                          context.read<PetProvider>().updatePetValues(_pet);
-                        }
-                      },
-                    ),
-                  ],
+    return Stack(
+      children: [
+        Scaffold(
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            title: const Text('Patizeka'),
+            leading: IconButton(
+              icon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.arrow_back,
+                  color: theme.colorScheme.primary,
                 ),
               ),
-              
-              // Content
-              Expanded(
-                child: FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: SlideTransition(
-                    position: _slideAnimation,
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Column(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                            child: _buildOwnersList(),
-                          ),
-                          // FEEDING TIME CARD (moved here)
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
-                            child: Card(
-                              child: Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        const Icon(Icons.access_time, color: Colors.orange),
-                                        const SizedBox(width: 8),
-                                        Text(AppLocalizations.of(context)!.feedingTimeLabel, style: const TextStyle(fontWeight: FontWeight.bold)),
-                                        const Spacer(),
-                                        Text(_feedingTime != null
-                                            ? DateFormat('HH:mm').format(_feedingTime!)
-                                            : AppLocalizations.of(context)!.notSet),
-                                        IconButton(
-                                          icon: const Icon(Icons.edit),
-                                          onPressed: () => _selectFeedingTime(context),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 8),
-                                    ElevatedButton.icon(
-                                      onPressed: _isSavingFeedingTime ? null : _saveFeedingTime,
-                                      icon: const Icon(Icons.save),
-                                      label: _isSavingFeedingTime
-                                          ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                                          : Text(AppLocalizations.of(context)!.save),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                          // Doğum günü mesajı
-                          if (_pet.isBirthday)
-                            Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(20),
-                              margin: const EdgeInsets.only(bottom: 20),
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [Colors.pink, Colors.purple, Colors.blue],
-                                ),
-                                borderRadius: BorderRadius.circular(20),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.pink.withOpacity(0.3),
-                                    blurRadius: 15,
-                                    offset: const Offset(0, 8),
-                                  ),
-                                ],
-                              ),
-                              child: const Column(
-                                children: [
-                                  Icon(Icons.cake, color: Colors.white, size: 40),
-                                  SizedBox(height: 12),
-                                  Text(
-                                    '🎉 Doğum Günün Kutlu Olsun! 🎉',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          
-                          // Pet Image and Info Card
-                          Card(
-                            elevation: 12,
-                            shadowColor: theme.colorScheme.primary.withOpacity(0.3),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(20),
-                                gradient: LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: isDark
-                                      ? [
-                                          Colors.grey.shade800,
-                                          Colors.grey.shade700,
-                                        ]
-                                      : [
-                                          Colors.white,
-                                          Colors.grey.shade50,
-                                        ],
-                                ),
-                              ),
-                              padding: const EdgeInsets.all(24),
-                              child: Column(
-                                children: [
-                                  // Pet Image
-                                  if (_pet.imagePath != null)
-                                    Container(
-                                      width: 120,
-                                      height: 120,
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(20),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withOpacity(0.2),
-                                            blurRadius: 15,
-                                            offset: const Offset(0, 8),
-                                          ),
-                                        ],
-                                      ),
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(20),
-                                        child: Image.file(
-                                          File(_pet.imagePath!),
-                                          fit: BoxFit.cover,
-                                        ),
-                                      ),
-                                    )
-                                  else
-                                    Container(
-                                      width: 120,
-                                      height: 120,
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(20),
-                                        gradient: LinearGradient(
-                                          colors: [
-                                            theme.colorScheme.primary,
-                                            theme.colorScheme.primary.withOpacity(0.7),
-                                          ],
-                                        ),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: theme.colorScheme.primary.withOpacity(0.3),
-                                            blurRadius: 15,
-                                            offset: const Offset(0, 8),
-                                          ),
-                                        ],
-                                      ),
-                                      child: const Icon(
-                                        Icons.pets,
-                                        color: Colors.white,
-                                        size: 60,
-                                      ),
-                                    ),
-                                  const SizedBox(height: 20),
-                                  // Pet Info
-                                  _buildInfoRow(AppLocalizations.of(context)!.petType, getLocalizedPetType(_pet.type, context), Icons.pets),
-                                  _buildInfoRow(AppLocalizations.of(context)!.breed, _pet.breed?.isNotEmpty == true ? _pet.breed! : '-', Icons.label),
-                                  _buildInfoRow(AppLocalizations.of(context)!.gender, getLocalizedGender(_pet.gender, context), Icons.person),
-                                  _buildInfoRow(AppLocalizations.of(context)!.birthDateLabel, '${_pet.birthDate.day}.${_pet.birthDate.month}.${_pet.birthDate.year}', Icons.calendar_today),
-                                  _buildInfoRow(AppLocalizations.of(context)!.age, AppLocalizations.of(context)!.yearsOld(_pet.age), Icons.cake),
-                                ],
-                              ),
-                            ),
-                          ),
-
-                          // SABİT AŞILARI GÖRÜNTÜLE BUTONU
-                          const SizedBox(height: 16),
-                          Row(
+              onPressed: () => Navigator.pop(context),
+            ),
+            actions: [
+              if (isCreator)
+                IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.red),
+                  tooltip: 'Hayvanı Sil',
+                  onPressed: () async {
+                    if (_pet.id != null) {
+                      await FirestoreService.hayvanSil(_pet.id!);
+                      Navigator.pop(context);
+                    }
+                  },
+                ),
+            ],
+          ),
+          body: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: isDark 
+                  ? [
+                      const Color(0xFF1A202C),
+                      const Color(0xFF2D3748),
+                      const Color(0xFF4A5568),
+                    ]
+                  : [
+                      const Color(0xFFF7FAFC),
+                      const Color(0xFFEDF2F7),
+                      const Color(0xFFE2E8F0),
+                    ],
+              ),
+            ),
+            child: SafeArea(
+              child: Column(
+                children: [
+                  // Beautiful Header
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
                             children: [
-                              Expanded(
-                                child: ElevatedButton.icon(
-                                  icon: const Icon(Icons.event_available),
-                                  label: Text(AppLocalizations.of(context)!.vaccinesToBeTaken),
-                                  style: ElevatedButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(vertical: 16),
-                                    backgroundColor: Colors.orange,
-                                    foregroundColor: Colors.white,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                    elevation: 4,
-                                  ),
-                                  onPressed: () async {
-                                    final result = await Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => VaccinePage(
-                                          vaccines: _pet.vaccines, // Tüm listeyi gönder
-                                          showDone: false,
-                                        ),
-                                      ),
-                                    );
-                                    if (result != null && result is List<Vaccine>) {
-                                      setState(() {
-                                        _pet.vaccines = result; // Güncel listeyi doğrudan ata
-                                      });
-                                      context.read<PetProvider>().updatePetValues(_pet);
-                                    }
-                                  },
+                              Text(
+                                _pet.name,
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w800,
+                                  color: isDark ? Colors.white : const Color(0xFF2D3748),
                                 ),
                               ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: ElevatedButton.icon(
-                                  icon: const Icon(Icons.verified),
-                                  label: Text(AppLocalizations.of(context)!.vaccinesTaken),
-                                  style: ElevatedButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(vertical: 16),
-                                    backgroundColor: Colors.green,
-                                    foregroundColor: Colors.white,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                    elevation: 4,
-                                  ),
-                                  onPressed: () async {
-                                    final result = await Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => VaccinePage(
-                                          vaccines: _pet.vaccines, // Tüm listeyi gönder
-                                          showDone: true,
-                                        ),
-                                      ),
-                                    );
-                                    if (result != null && result is List<Vaccine>) {
-                                      setState(() {
-                                        _pet.vaccines = result; // Güncel listeyi doğrudan ata
-                                      });
-                                      context.read<PetProvider>().updatePetValues(_pet);
-                                    }
-                                  },
+                              Text(
+                                'Detaylar',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: isDark ? Colors.grey.shade300 : Colors.grey.shade600,
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 20),
-                          
-                          // Status Indicators Card
-                          StreamBuilder<Map<String, dynamic>?>(
-                            stream: RealtimeService().getPetStatusStream(_pet.id ?? _pet.name),
-                            builder: (context, snapshot) {
-                              final status = snapshot.data;
-                              final satiety = status?['satiety'] ?? _pet.satiety;
-                              final happiness = status?['happiness'] ?? _pet.happiness;
-                              final energy = status?['energy'] ?? _pet.energy;
-                              return Card(
+                        ),
+                        IconButton(
+                          icon: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primary.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              Icons.edit,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                          onPressed: () async {
+                            final result = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => PetFormPage(pet: _pet),
+                              ),
+                            );
+                            if (result != null) {
+                              setState(() {
+                                _pet = result;
+                              });
+                              context.read<PetProvider>().updatePetValues(_pet);
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  // Content
+                  Expanded(
+                    child: FadeTransition(
+                      opacity: _fadeAnimation,
+                      child: SlideTransition(
+                        position: _slideAnimation,
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Column(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                                child: _buildOwnersList(),
+                              ),
+                              // FEEDING TIME CARD (moved here)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
+                                child: Card(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(16.0),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            const Icon(Icons.access_time, color: Colors.orange),
+                                            const SizedBox(width: 8),
+                                            Text(AppLocalizations.of(context)!.feedingTimeLabel, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                            const Spacer(),
+                                            Text(_feedingTime != null
+                                                ? DateFormat('HH:mm').format(_feedingTime!)
+                                                : AppLocalizations.of(context)!.notSet),
+                                            IconButton(
+                                              icon: const Icon(Icons.edit),
+                                              onPressed: () => _selectFeedingTime(context),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 8),
+                                        ElevatedButton.icon(
+                                          onPressed: _isSavingFeedingTime ? null : _saveFeedingTime,
+                                          icon: const Icon(Icons.save),
+                                          label: _isSavingFeedingTime
+                                              ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                                              : Text(AppLocalizations.of(context)!.save),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              // Doğum günü mesajı
+                              if (_pet.isBirthday)
+                                Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.all(20),
+                                  margin: const EdgeInsets.only(bottom: 20),
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [Colors.pink, Colors.purple, Colors.blue],
+                                    ),
+                                    borderRadius: BorderRadius.circular(20),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.pink.withOpacity(0.3),
+                                        blurRadius: 15,
+                                        offset: const Offset(0, 8),
+                                      ),
+                                    ],
+                                  ),
+                                  child: const Column(
+                                    children: [
+                                      Icon(Icons.cake, color: Colors.white, size: 40),
+                                      SizedBox(height: 12),
+                                      Text(
+                                        '🎉 Doğum Günün Kutlu Olsun! 🎉',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              
+                              // Pet Image and Info Card
+                              Card(
+                                elevation: 12,
+                                shadowColor: theme.colorScheme.primary.withOpacity(0.3),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(20),
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: isDark
+                                          ? [
+                                              Colors.grey.shade800,
+                                              Colors.grey.shade700,
+                                            ]
+                                          : [
+                                              Colors.white,
+                                              Colors.grey.shade50,
+                                            ],
+                                    ),
+                                  ),
+                                  padding: const EdgeInsets.all(24),
+                                  child: Column(
+                                    children: [
+                                      // Pet Image
+                                      if (_pet.imagePath != null)
+                                        Container(
+                                          width: 120,
+                                          height: 120,
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(20),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withOpacity(0.2),
+                                                blurRadius: 15,
+                                                offset: const Offset(0, 8),
+                                              ),
+                                            ],
+                                          ),
+                                          child: ClipRRect(
+                                            borderRadius: BorderRadius.circular(20),
+                                            child: Image.file(
+                                              File(_pet.imagePath!),
+                                              fit: BoxFit.cover,
+                                            ),
+                                          ),
+                                        )
+                                      else
+                                        Container(
+                                          width: 120,
+                                          height: 120,
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(20),
+                                            gradient: LinearGradient(
+                                              colors: [
+                                                theme.colorScheme.primary,
+                                                theme.colorScheme.primary.withOpacity(0.7),
+                                              ],
+                                            ),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: theme.colorScheme.primary.withOpacity(0.3),
+                                                blurRadius: 15,
+                                                offset: const Offset(0, 8),
+                                              ),
+                                            ],
+                                          ),
+                                          child: const Icon(
+                                            Icons.pets,
+                                            color: Colors.white,
+                                            size: 60,
+                                          ),
+                                        ),
+                                      const SizedBox(height: 20),
+                                      // Pet Info
+                                      _buildInfoRow(AppLocalizations.of(context)!.petType, getLocalizedPetType(_pet.type, context), Icons.pets),
+                                      _buildInfoRow(AppLocalizations.of(context)!.breed, _pet.breed?.isNotEmpty == true ? _pet.breed! : '-', Icons.label),
+                                      _buildInfoRow(AppLocalizations.of(context)!.gender, getLocalizedGender(_pet.gender, context), Icons.person),
+                                      _buildInfoRow(AppLocalizations.of(context)!.birthDateLabel, '${_pet.birthDate.day}.${_pet.birthDate.month}.${_pet.birthDate.year}', Icons.calendar_today),
+                                      _buildInfoRow(AppLocalizations.of(context)!.age, AppLocalizations.of(context)!.yearsOld(_pet.age), Icons.cake),
+                                    ],
+                                  ),
+                                ),
+                              ),
+
+                              // SABİT AŞILARI GÖRÜNTÜLE BUTONU
+                              const SizedBox(height: 16),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: ElevatedButton.icon(
+                                      icon: const Icon(Icons.event_available),
+                                      label: Text(AppLocalizations.of(context)!.vaccinesToBeTaken),
+                                      style: ElevatedButton.styleFrom(
+                                        padding: const EdgeInsets.symmetric(vertical: 16),
+                                        backgroundColor: Colors.orange,
+                                        foregroundColor: Colors.white,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(16),
+                                        ),
+                                        elevation: 4,
+                                      ),
+                                      onPressed: () async {
+                                        final result = await Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => VaccinePage(
+                                              vaccines: _pet.vaccines, // Tüm listeyi gönder
+                                              showDone: false,
+                                            ),
+                                          ),
+                                        );
+                                        if (result != null && result is List<Vaccine>) {
+                                          setState(() {
+                                            _pet.vaccines = result; // Güncel listeyi doğrudan ata
+                                          });
+                                          context.read<PetProvider>().updatePetValues(_pet);
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: ElevatedButton.icon(
+                                      icon: const Icon(Icons.verified),
+                                      label: Text(AppLocalizations.of(context)!.vaccinesTaken),
+                                      style: ElevatedButton.styleFrom(
+                                        padding: const EdgeInsets.symmetric(vertical: 16),
+                                        backgroundColor: Colors.green,
+                                        foregroundColor: Colors.white,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(16),
+                                        ),
+                                        elevation: 4,
+                                      ),
+                                      onPressed: () async {
+                                        final result = await Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => VaccinePage(
+                                              vaccines: _pet.vaccines, // Tüm listeyi gönder
+                                              showDone: true,
+                                            ),
+                                          ),
+                                        );
+                                        if (result != null && result is List<Vaccine>) {
+                                          setState(() {
+                                            _pet.vaccines = result; // Güncel listeyi doğrudan ata
+                                          });
+                                          context.read<PetProvider>().updatePetValues(_pet);
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 20),
+                              
+                              // Status Indicators Card
+                              StreamBuilder<Map<String, dynamic>?>(
+                                stream: RealtimeService().getPetStatusStream(_pet.id ?? _pet.name),
+                                builder: (context, snapshot) {
+                                  final status = snapshot.data;
+                                  final satiety = status?['satiety'] ?? _pet.satiety;
+                                  final happiness = status?['happiness'] ?? _pet.happiness;
+                                  final energy = status?['energy'] ?? _pet.energy;
+                                  return Card(
+                                    elevation: 8,
+                                    shadowColor: theme.colorScheme.primary.withOpacity(0.2),
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(20),
+                                        gradient: LinearGradient(
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                          colors: isDark
+                                              ? [
+                                                  Colors.grey.shade800,
+                                                  Colors.grey.shade700,
+                                                ]
+                                              : [
+                                                  Colors.white,
+                                                  Colors.grey.shade50,
+                                                ],
+                                        ),
+                                      ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(20),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              AppLocalizations.of(context)!.statusInfoTitle,
+                                              style: TextStyle(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.w700,
+                                                color: isDark ? Colors.white : const Color(0xFF2D3748),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 16),
+                                            StatusIndicator(icon: Icons.restaurant, value: satiety),
+                                            StatusIndicator(icon: Icons.favorite, value: happiness),
+                                            StatusIndicator(icon: Icons.battery_charging_full, value: energy),
+                                            StatusIndicator(icon: Icons.healing, value: _pet.care),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                              
+                              const SizedBox(height: 20),
+                              
+                              // Action Buttons Card
+                              Card(
                                 elevation: 8,
                                 shadowColor: theme.colorScheme.primary.withOpacity(0.2),
                                 child: Container(
@@ -789,7 +802,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          AppLocalizations.of(context)!.statusInfoTitle,
+                                          AppLocalizations.of(context)!.quickActions,
                                           style: TextStyle(
                                             fontSize: 18,
                                             fontWeight: FontWeight.w700,
@@ -797,141 +810,136 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                                           ),
                                         ),
                                         const SizedBox(height: 16),
-                                        StatusIndicator(icon: Icons.restaurant, value: satiety),
-                                        StatusIndicator(icon: Icons.favorite, value: happiness),
-                                        StatusIndicator(icon: Icons.battery_charging_full, value: energy),
-                                        StatusIndicator(icon: Icons.healing, value: _pet.care),
+                                        Wrap(
+                                          spacing: 12,
+                                          runSpacing: 12,
+                                          children: [
+                                            _buildActionButton(
+                                              onPressed: besle,
+                                              icon: Icons.restaurant,
+                                              label: AppLocalizations.of(context)!.feed,
+                                              color: Colors.green,
+                                            ),
+                                            _buildActionButton(
+                                              onPressed: sev,
+                                              icon: Icons.favorite,
+                                              label: AppLocalizations.of(context)!.pet,
+                                              color: Colors.pink,
+                                            ),
+                                            _buildActionButton(
+                                              onPressed: dinlendir,
+                                              icon: Icons.battery_charging_full,
+                                              label: AppLocalizations.of(context)!.rest,
+                                              color: Colors.blue,
+                                            ),
+                                            _buildActionButton(
+                                              onPressed: bakim,
+                                              icon: Icons.healing,
+                                              label: AppLocalizations.of(context)!.care,
+                                              color: Colors.purple,
+                                            ),
+                                          ],
+                                        ),
                                       ],
                                     ),
                                   ),
                                 ),
-                              );
-                            },
-                          ),
-                          
-                          const SizedBox(height: 20),
-                          
-                          // Action Buttons Card
-                          Card(
-                            elevation: 8,
-                            shadowColor: theme.colorScheme.primary.withOpacity(0.2),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(20),
-                                gradient: LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: isDark
-                                      ? [
-                                          Colors.grey.shade800,
-                                          Colors.grey.shade700,
-                                        ]
-                                      : [
-                                          Colors.white,
-                                          Colors.grey.shade50,
-                                        ],
-                                ),
                               ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(20),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      AppLocalizations.of(context)!.quickActions,
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w700,
-                                        color: isDark ? Colors.white : const Color(0xFF2D3748),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Wrap(
-                                      spacing: 12,
-                                      runSpacing: 12,
-                                      children: [
-                                        _buildActionButton(
-                                          onPressed: besle,
-                                          icon: Icons.restaurant,
-                                          label: AppLocalizations.of(context)!.feed,
-                                          color: Colors.green,
-                                        ),
-                                        _buildActionButton(
-                                          onPressed: sev,
-                                          icon: Icons.favorite,
-                                          label: AppLocalizations.of(context)!.pet,
-                                          color: Colors.pink,
-                                        ),
-                                        _buildActionButton(
-                                          onPressed: dinlendir,
-                                          icon: Icons.battery_charging_full,
-                                          label: AppLocalizations.of(context)!.rest,
-                                          color: Colors.blue,
-                                        ),
-                                        _buildActionButton(
-                                          onPressed: bakim,
-                                          icon: Icons.healing,
-                                          label: AppLocalizations.of(context)!.care,
-                                          color: Colors.purple,
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                          
-                          const SizedBox(height: 20),
-                          
-                          // AI Sohbet ve Sohbet Geçmişi Butonu
-                          Consumer<AIProvider>(
-                            builder: (context, aiProvider, child) {
-                              return Row(
-                                children: [
-                                  Expanded(
-                                    child: ElevatedButton.icon(
-                                      onPressed: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) => AIChatPage(pet: _pet),
+                              
+                              const SizedBox(height: 20),
+                              
+                              // AI Sohbet ve Sohbet Geçmişi Butonu
+                              Consumer<AIProvider>(
+                                builder: (context, aiProvider, child) {
+                                  return Row(
+                                    children: [
+                                      Expanded(
+                                        child: ElevatedButton.icon(
+                                          onPressed: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (_) => AIChatPage(pet: _pet),
+                                              ),
+                                            );
+                                          },
+                                          icon: const Icon(Icons.psychology),
+                                          label: Text(AppLocalizations.of(context)!.askQuestionChat),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Theme.of(context).colorScheme.primary,
+                                            foregroundColor: Colors.white,
                                           ),
-                                        );
-                                      },
-                                      icon: const Icon(Icons.psychology),
-                                      label: Text(AppLocalizations.of(context)!.askQuestionChat),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Theme.of(context).colorScheme.primary,
-                                        foregroundColor: Colors.white,
+                                        ),
                                       ),
-                                    ),
-                                  ),
-                                ],
-                              );
-                            },
+                                    ],
+                                  );
+                                },
+                              ),
+                              
+                              const SizedBox(height: 20),
+                              
+                              // Günlük Notları (Pet Chat) kısmı tekrar eklendi
+                              _buildPetChat(),
+                              
+                              const SizedBox(height: 20),
+                              
+                              // AI Response
+                              // Eski tek mesajlık AI yanıtı gösteren blok ve fonksiyonlar kaldırıldı
+                              // ... existing code ...
+                            ],
                           ),
-                          
-                          const SizedBox(height: 20),
-                          
-                          // Günlük Notları (Pet Chat) kısmı tekrar eklendi
-                          _buildPetChat(),
-                          
-                          const SizedBox(height: 20),
-                          
-                          // AI Response
-                          // Eski tek mesajlık AI yanıtı gösteren blok ve fonksiyonlar kaldırıldı
-                          // ... existing code ...
-                        ],
+                        ),
                       ),
                     ),
                   ),
-                ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
-      ),
+        DraggableAIFab(onTap: openAssistant),
+        if (isAssistantOpen)
+          Positioned.fill(
+            child: Material(
+              color: Colors.black.withOpacity(0.15),
+              child: Stack(
+                children: [
+                  Center(
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.08),
+                            blurRadius: 24,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 8),
+                        child: VoiceCommandWidget(
+                          key: ValueKey(isAssistantOpen),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: 36,
+                    right: 36,
+                    child: IconButton(
+                      icon: const Icon(Icons.close, size: 32, color: Colors.black54),
+                      tooltip: 'Kapat',
+                      onPressed: closeAssistant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+      ],
     );
   }
 
@@ -1147,45 +1155,6 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
               ),
             ),
             IconButton(
-              icon: Icon(_isListening ? Icons.mic : Icons.mic_none),
-              tooltip: 'Sesli Mesaj',
-              onPressed: () async {
-                if (!_isListening) {
-                  bool available = await _speech.initialize(
-                    onStatus: (status) => print('Speech status: $status'),
-                    onError: (error) => print('Speech error: $error'),
-                  );
-                  if (available) {
-                    setState(() => _isListening = true);
-                    _speech.listen(
-                      localeId: 'tr_TR',
-                      onResult: (val) {
-                        setState(() {
-                          _chatController.text = val.recognizedWords;
-                        });
-                        if (val.hasConfidenceRating && val.confidence > 0) {
-                          _speech.stop();
-                          setState(() => _isListening = false);
-                          // Otomatik gönderme isterseniz:
-                          // _sendMessage();
-                        }
-                      },
-                    );
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Dinleniyor...')),
-                    );
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Mikrofon izni verilmedi veya cihaz desteklemiyor!')),
-                    );
-                  }
-                } else {
-                  _speech.stop();
-                  setState(() => _isListening = false);
-                }
-              },
-            ),
-            IconButton(
               icon: const Icon(Icons.send),
               onPressed: () async {
                 final text = _chatController.text.trim();
@@ -1243,56 +1212,57 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
     }
   }
 
-  void _startListening() async {
-    if (!_isListening) {
-      bool available = await _speech.initialize(
-        onStatus: (status) => print('Speech status: $status'),
-        onError: (error) {
-          debugPrint('Speech initialize error: ${error.errorMsg} (permanent: ${error.permanent})');
-          if (error.errorMsg == 'error_network') {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('İnternet bağlantısı yok veya Google servislerine erişilemiyor.')),
-            );
-          } else if (error.errorMsg == 'error_speech_timeout') {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Konuşma algılanamadı, lütfen tekrar deneyin.')),
-            );
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Sesli tanıma hatası: ${error.errorMsg}')),
-            );
-          }
-        },
-      );
-      if (available) {
-        setState(() => _isListening = true);
-        _speech.listen(
-          localeId: 'tr_TR', // Türkçe için
-          listenFor: Duration(seconds: 10),
-          onResult: (val) async {
-            setState(() {
-              _command = val.recognizedWords;
-            });
-            if (val.hasConfidenceRating && val.confidence > 0) {
-              _speech.stop();
-              setState(() => _isListening = false);
-              await _handleVoiceCommand(_command);
-            }
-          },
-        );
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Dinleniyor...')),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Mikrofon izni verilmedi veya cihaz desteklemiyor!')),
-        );
-      }
-    } else {
-      _speech.stop();
-      setState(() => _isListening = false);
-    }
-  }
+  // _startListening fonksiyonu kaldırıldı
+  // void _startListening() async {
+  //   if (!_isListening) {
+  //     bool available = await _speech.initialize(
+  //       onStatus: (status) => print('Speech status: $status'),
+  //       onError: (error) {
+  //         debugPrint('Speech initialize error: ${error.errorMsg} (permanent: ${error.permanent})');
+  //         if (error.errorMsg == 'error_network') {
+  //           ScaffoldMessenger.of(context).showSnackBar(
+  //             const SnackBar(content: Text('İnternet bağlantısı yok veya Google servislerine erişilemiyor.')),
+  //           );
+  //         } else if (error.errorMsg == 'error_speech_timeout') {
+  //           ScaffoldMessenger.of(context).showSnackBar(
+  //             const SnackBar(content: Text('Konuşma algılanamadı, lütfen tekrar deneyin.')),
+  //           );
+  //         } else {
+  //           ScaffoldMessenger.of(context).showSnackBar(
+  //             SnackBar(content: Text('Sesli tanıma hatası: ${error.errorMsg}')),
+  //           );
+  //         }
+  //       },
+  //     );
+  //     if (available) {
+  //       setState(() => _isListening = true);
+  //       _speech.listen(
+  //         localeId: 'tr_TR', // Türkçe için
+  //         listenFor: Duration(seconds: 10),
+  //         onResult: (val) async {
+  //           setState(() {
+  //             _command = val.recognizedWords;
+  //           });
+  //           if (val.hasConfidenceRating && val.confidence > 0) {
+  //             _speech.stop();
+  //             setState(() => _isListening = false);
+  //             await _handleVoiceCommand(_command);
+  //           }
+  //         },
+  //       );
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         const SnackBar(content: Text('Dinleniyor...')),
+  //       );
+  //     } else {
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         const SnackBar(content: Text('Mikrofon izni verilmedi veya cihaz desteklemiyor!')),
+  //       );
+  //     }
+  //   } else {
+  //     _speech.stop();
+  //     setState(() => _isListening = false);
+  //   }
+  // }
 
   Future<void> _handleVoiceCommand(String command) async {
     final intentData = await getIntentFromAI(command);

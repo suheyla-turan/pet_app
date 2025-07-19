@@ -13,6 +13,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:pet_app/l10n/app_localizations.dart';
+import 'widgets/ai_fab.dart';
+import 'features/pet/widgets/voice_command_widget.dart';
 // import 'generated/l10n.dart'; // Otomatik oluşturulacak
 
 void main() async {
@@ -28,8 +30,27 @@ void main() async {
   runApp(const MiniPetApp());
 }
 
-class MiniPetApp extends StatelessWidget {
+class MiniPetApp extends StatefulWidget {
   const MiniPetApp({super.key});
+
+  @override
+  State<MiniPetApp> createState() => _MiniPetAppState();
+}
+
+class _MiniPetAppState extends State<MiniPetApp> {
+  bool isAssistantOpen = false;
+
+  void openAssistant() {
+    setState(() {
+      isAssistantOpen = true;
+    });
+  }
+
+  void closeAssistant() {
+    setState(() {
+      isAssistantOpen = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +82,55 @@ class MiniPetApp extends StatelessWidget {
             theme: themeProvider.lightTheme,
             darkTheme: themeProvider.darkTheme,
             themeMode: themeProvider.themeMode,
-            home: const RootPage(),
+            home: Stack(
+              children: [
+                const RootPage(),
+                DraggableAIFab(
+                  onTap: openAssistant,
+                ),
+                if (isAssistantOpen)
+                  Positioned.fill(
+                    child: Material(
+                      color: Colors.black.withOpacity(0.15),
+                      child: Stack(
+                        children: [
+                          Center(
+                            child: Container(
+                              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(24),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.08),
+                                    blurRadius: 24,
+                                    offset: const Offset(0, 8),
+                                  ),
+                                ],
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 8),
+                                child: VoiceCommandWidget(
+                                  key: ValueKey(isAssistantOpen),
+                                ),
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            top: 36,
+                            right: 36,
+                            child: IconButton(
+                              icon: const Icon(Icons.close, size: 32, color: Colors.black54),
+                              tooltip: 'Kapat',
+                              onPressed: closeAssistant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
             debugShowCheckedModeBanner: false,
             locale: settingsProvider.locale,
             localizationsDelegates: [

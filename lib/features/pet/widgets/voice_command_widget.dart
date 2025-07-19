@@ -1,10 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:speech_to_text/speech_to_text.dart' as stt;
-import 'package:pet_app/services/realtime_service.dart';
-import 'package:provider/provider.dart';
-import '../models/pet.dart';
-import '../screens/pet_detail_page.dart';
-import '../../../providers/pet_provider.dart';
+import 'package:pet_app/services/voice_google_service.dart';
 
 class VoiceCommandWidget extends StatefulWidget {
   const VoiceCommandWidget({super.key});
@@ -13,126 +8,104 @@ class VoiceCommandWidget extends StatefulWidget {
 }
 
 class _VoiceCommandWidgetState extends State<VoiceCommandWidget> {
-  late stt.SpeechToText _speech;
-  bool _isListening = false;
-  String _command = '';
-  final realtimeService = RealtimeService();
+  String? _recognizedText;
+  String? _response;
+  bool _isLoading = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _speech = stt.SpeechToText();
-  }
-
-  void _listen() async {
-    if (!_isListening) {
-      bool available = await _speech.initialize(
-        onError: (error) {
-          if (error.errorMsg == 'error_speech_timeout') {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Konuşma algılanamadı, lütfen tekrar deneyin.')),
-            );
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Sesli tanıma hatası: \\${error.errorMsg}')),
-            );
-          }
-          setState(() => _isListening = false);
-        },
-      );
-      if (available) {
-        setState(() => _isListening = true);
-        _speech.listen(
-          onResult: (val) async {
-            setState(() {
-              _command = val.recognizedWords;
-            });
-            if (val.hasConfidenceRating && val.confidence > 0) {
-              _speech.stop();
-              setState(() => _isListening = false);
-              await handleVoiceCommand(context, _command);
-            }
-          },
-        );
+  Future<void> _startGoogleSpeech() async {
+    if (!mounted) return;
+    setState(() {
+      _isLoading = true;
+      _recognizedText = null;
+      _response = null;
+    });
+    try {
+      final base64Audio = await recordAndGetBase64(seconds: 5);
+      if (base64Audio != null) {
+        final metin = await googleSpeechToText(base64Audio);
+        if (!mounted) return;
+        setState(() {
+          _recognizedText = metin ?? 'Hiçbir şey algılanamadı!';
+          _isLoading = false;
+        });
+        // Burada asistan yanıtı üretme fonksiyonunu çağırabilirsin
+        // Örnek: _response = await getAIResponse(metin);
+      } else {
+        if (!mounted) return;
+        setState(() {
+          _recognizedText = 'Kayıt başarısız!';
+          _isLoading = false;
+        });
       }
-    } else {
-      _speech.stop();
-      setState(() => _isListening = false);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _recognizedText = 'Bir hata oluştu: $e';
+        _isLoading = false;
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text('Komut: $_command'),
-        IconButton(
-          icon: Icon(_isListening ? Icons.mic : Icons.mic_none),
-          onPressed: _listen,
-        ),
-      ],
-    );
-  }
-
-  Future<void> handleVoiceCommand(BuildContext context, String command) async {
-    final intentData = await getIntentFromAI(command);
-    final petProvider = context.read<PetProvider>();
-    Pet? pet;
-    // intentData['petId'] ile PetProvider'dan bul
-    if (intentData['petId'] != null) {
-      try {
-        pet = petProvider.pets.firstWhere(
-          (p) => p.id == intentData['petId'] || p.name == intentData['petId'],
-        );
-      } catch (e) {
-        pet = null;
-      }
-    }
-    switch (intentData['intent']) {
-      case 'feed':
-        if (pet != null) {
-          await realtimeService.setFeedingTime(pet.id ?? pet.name, DateTime.now());
-          await realtimeService.updatePetStatus(pet.id ?? pet.name, satiety: 100);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${pet.name} beslendi!')),
-          );
-        }
-        break;
-      case 'sleep':
-        if (pet != null) {
-          await realtimeService.updatePetStatus(pet.id ?? pet.name, energy: 100);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${pet.name} uyutuldu!')),
-          );
-        }
-        break;
-      case 'care':
-        if (pet != null) {
-          await realtimeService.updatePetStatus(pet.id ?? pet.name, happiness: 100);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${pet.name} bakımı yapıldı!')),
-          );
-        }
-        break;
-      case 'go_to_profile':
-        if (pet != null) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => PetDetailPage(pet: pet!),
+    final theme = Theme.of(context);
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          GestureDetector(
+            onTap: _isLoading ? null : _startGoogleSpeech,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: theme.colorScheme.primary.withOpacity(0.3),
+                    blurRadius: 16,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator(color: Colors.white))
+                  : Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: const [
+                        Icon(Icons.mic, color: Colors.white, size: 36),
+                        SizedBox(height: 4),
+                        // Text('Konuş', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                      ],
+                    ),
             ),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Hayvan bulunamadı!')),
-          );
-        }
-        break;
-      default:
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Komut anlaşılamadı: $command')),
-        );
-        break;
-    }
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Google ile Sesli Komut',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: theme.colorScheme.primary,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 32),
+          if (_recognizedText != null) ...[
+            Text('Algılanan metin:', style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.primary)),
+            const SizedBox(height: 4),
+            Text(_recognizedText!, style: const TextStyle(fontSize: 16)),
+          ],
+          if (_response != null) ...[
+            const SizedBox(height: 16),
+            Text('Yanıt:', style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.primary)),
+            const SizedBox(height: 4),
+            Text(_response!, style: const TextStyle(fontSize: 16, color: Colors.blue)),
+          ],
+        ],
+      ),
+    );
   }
 } 

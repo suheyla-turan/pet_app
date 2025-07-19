@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:speech_to_text/speech_to_text.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:pet_app/l10n/app_localizations.dart';
 
@@ -8,18 +7,13 @@ class VoiceService {
   factory VoiceService() => _instance;
   VoiceService._internal();
 
-  final SpeechToText _speechToText = SpeechToText();
   final FlutterTts _flutterTts = FlutterTts();
   
-  bool _speechEnabled = false;
-  bool _isListening = false;
   bool _isSpeaking = false;
   
   // Callbacks
   Function(String)? onSpeechResult;
   Function(String)? onSpeechError;
-  Function()? onListeningStarted;
-  Function()? onListeningStopped;
   Function()? onSpeakingStarted;
   Function()? onSpeakingStopped;
 
@@ -27,29 +21,10 @@ class VoiceService {
   double _currentRate = 0.3;
   double _currentPitch = 1.0;
 
-  bool get speechEnabled => _speechEnabled;
-  bool get isListening => _isListening;
   bool get isSpeaking => _isSpeaking;
 
   Future<void> initialize() async {
     try {
-      _speechEnabled = await _speechToText.initialize(
-        onError: (error) {
-          print('❌ Konuşma tanıma hatası: $error');
-          onSpeechError?.call(error.errorMsg);
-        },
-        onStatus: (status) {
-          print('📱 Konuşma durumu: $status');
-          if (status == 'listening') {
-            _isListening = true;
-            onListeningStarted?.call();
-          } else if (status == 'notListening') {
-            _isListening = false;
-            onListeningStopped?.call();
-          }
-        },
-      );
-
       // TTS ayarları - daha kapsamlı
       await _flutterTts.setLanguage("tr-TR");
       await _flutterTts.setSpeechRate(0.3); // Daha yavaş okuma
@@ -98,71 +73,8 @@ class VoiceService {
     } catch (e) {
       // TODO: Inject localization here for TTS service failed
       print('Voice service could not be started: $e');
-      _speechEnabled = false;
+      _isSpeaking = false; // Ensure _isSpeaking is false on failure
     }
-  }
-
-  Future<void> startListening() async {
-    if (!_speechEnabled) {
-      // TODO: Inject localization here for speech not enabled
-      print('Speech recognition is not enabled');
-      onSpeechError?.call('Speech recognition is not enabled');
-      return;
-    }
-
-    if (_isListening) {
-      print('⚠️ Zaten dinleniyor');
-      return;
-    }
-
-    try {
-      await _speechToText.listen(
-        onResult: (result) {
-          if (result.finalResult) {
-            final recognizedWords = result.recognizedWords;
-            print('🎤 Tanınan kelimeler: $recognizedWords');
-            onSpeechResult?.call(recognizedWords);
-          }
-        },
-        listenFor: const Duration(seconds: 30),
-        pauseFor: const Duration(seconds: 3),
-        partialResults: true,
-        localeId: "tr_TR",
-        cancelOnError: true,
-        listenMode: ListenMode.confirmation,
-      );
-    } catch (e) {
-      print('❌ Dinleme başlatılamadı: $e');
-      onSpeechError?.call('Dinleme başlatılamadı: $e');
-    }
-  }
-
-  Future<void> stopListening() async {
-    if (_isListening) {
-      await _speechToText.stop();
-      _isListening = false;
-    }
-  }
-
-  Future<List<dynamic>> getAvailableVoices() async {
-    return await _flutterTts.getVoices;
-  }
-
-  Future<void> setVoice(String? voice) async {
-    _currentVoice = voice;
-    if (voice != null) {
-      await _flutterTts.setVoice({"name": voice});
-    }
-  }
-
-  Future<void> setRate(double rate) async {
-    _currentRate = rate;
-    await _flutterTts.setSpeechRate(rate);
-  }
-
-  Future<void> setPitch(double pitch) async {
-    _currentPitch = pitch;
-    await _flutterTts.setPitch(pitch);
   }
 
   Future<void> speak(String text, {String? voice, double? rate, double? pitch}) async {
@@ -247,8 +159,28 @@ class VoiceService {
     }
   }
 
+  Future<List<dynamic>> getAvailableVoices() async {
+    return await _flutterTts.getVoices;
+  }
+
+  Future<void> setVoice(String? voice) async {
+    _currentVoice = voice;
+    if (voice != null) {
+      await _flutterTts.setVoice({"name": voice});
+    }
+  }
+
+  Future<void> setRate(double rate) async {
+    _currentRate = rate;
+    await _flutterTts.setSpeechRate(rate);
+  }
+
+  Future<void> setPitch(double pitch) async {
+    _currentPitch = pitch;
+    await _flutterTts.setPitch(pitch);
+  }
+
   void dispose() {
-    _speechToText.cancel();
     _flutterTts.stop();
   }
 } 

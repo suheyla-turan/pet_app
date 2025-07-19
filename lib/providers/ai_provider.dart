@@ -96,19 +96,11 @@ class AIProvider with ChangeNotifier {
     return await _realtimeService.getAIChatList(petId);
   }
 
-  // Sesli konuşma metodları (değişmedi)
+  // initializeVoiceService fonksiyonunda sadece TTS ile ilgili callbackler kalsın
   Future<void> initializeVoiceService() async {
     await _voiceService.initialize();
     _voiceService.onSpeechResult = (text) {
       _recognizedText = text;
-      notifyListeners();
-    };
-    _voiceService.onListeningStarted = () {
-      _isListening = true;
-      notifyListeners();
-    };
-    _voiceService.onListeningStopped = () {
-      _isListening = false;
       notifyListeners();
     };
     _voiceService.onSpeakingStarted = () {
@@ -126,16 +118,7 @@ class AIProvider with ChangeNotifier {
     };
   }
 
-  Future<void> startVoiceInput() async {
-    if (!_voiceService.speechEnabled) {
-      await initializeVoiceService();
-    }
-    await _voiceService.startListening();
-  }
-
-  Future<void> stopVoiceInput() async {
-    await _voiceService.stopListening();
-  }
+  // startVoiceInput ve stopVoiceInput fonksiyonlarını kaldır
 
   Future<void> speakResponse(String? text) async {
     if (text != null && text.isNotEmpty) {
