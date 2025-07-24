@@ -1,12 +1,11 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:pet_app/secrets.dart';
+import 'package:pati_takip/secrets.dart';
 import '../providers/settings_provider.dart';
-import 'package:pet_app/features/pet/models/ai_chat_message.dart';
+import 'package:pati_takip/features/pet/models/ai_chat_message.dart';
 
-class GeminiService {
-  static const String _baseUrl =
-      'https://generativelanguage.googleapis.com/v1/models/gemini-2.5-pro:generateContent';
+class OpenAIService {
+  static const String _baseUrl = 'https://api.openai.com/v1/chat/completions';
 
   static String _getStylePrompt(ConversationStyle style) {
     switch (style) {
@@ -33,16 +32,26 @@ Kullanıcı sorusu: $userInput
 Lütfen yukarıdaki stilde yanıt ver ve Türkçe kullan.
 ''';
 
-    final url = Uri.parse('$_baseUrl?key=$geminiApiKey');
-    final headers = {'Content-Type': 'application/json'};
+    final url = Uri.parse(_baseUrl);
+    final headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $openaiApiKey',
+    };
+    
     final body = jsonEncode({
-      "contents": [
+      "model": "gpt-3.5-turbo",
+      "messages": [
         {
-          "parts": [
-            {"text": enhancedPrompt}
-          ]
+          "role": "system",
+          "content": "Sen evcil hayvan bakımı konusunda uzman bir AI asistanısın. Türkçe yanıt ver ve kısa tut."
+        },
+        {
+          "role": "user",
+          "content": enhancedPrompt
         }
-      ]
+      ],
+      "max_tokens": 150,
+      "temperature": 0.7,
     });
 
     try {
@@ -52,7 +61,7 @@ Lütfen yukarıdaki stilde yanıt ver ve Türkçe kullan.
 
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body);
-        return json["candidates"][0]["content"]["parts"][0]["text"];
+        return json["choices"][0]["message"]["content"];
       } else {
         return 'Hata: ${response.body}';
       }
@@ -79,24 +88,34 @@ Lütfen yukarıdaki stilde yanıt ver ve Türkçe kullan.
 - Enerji: ${pet.energy}/10
 - Bakım: ${pet.care}/10
 ''';
-    // Sohbet geçmişini role bazlı olarak oluştur
-    final chatHistory = history.map((msg) =>
-      (msg.sender == 'user')
-        ? 'Kullanıcı: ${msg.text}'
-        : 'AI: ${msg.text}'
-    ).join('\n');
-    final prompt = '''$stylePrompt\n\n$petInfo\n\nSohbet Geçmişi:\n$chatHistory\n\nLütfen yukarıdaki stilde, Türkçe ve kısa yanıt ver.''';
 
-    final url = Uri.parse('$_baseUrl?key=$geminiApiKey');
-    final headers = {'Content-Type': 'application/json'};
+    // OpenAI için mesaj formatını oluştur
+    final messages = [
+      {
+        "role": "system",
+        "content": "$stylePrompt\n\n$petInfo\n\nSen evcil hayvan bakımı konusunda uzman bir AI asistanısın. Türkçe yanıt ver ve kısa tut."
+      }
+    ];
+
+    // Sohbet geçmişini OpenAI formatına çevir
+    for (final msg in history) {
+      messages.add({
+        "role": msg.sender == 'user' ? 'user' : 'assistant',
+        "content": msg.text,
+      });
+    }
+
+    final url = Uri.parse(_baseUrl);
+    final headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $openaiApiKey',
+    };
+    
     final body = jsonEncode({
-      "contents": [
-        {
-          "parts": [
-            {"text": prompt}
-          ]
-        }
-      ]
+      "model": "gpt-3.5-turbo",
+      "messages": messages,
+      "max_tokens": 150,
+      "temperature": 0.7,
     });
 
     try {
@@ -106,12 +125,12 @@ Lütfen yukarıdaki stilde yanıt ver ve Türkçe kullan.
 
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body);
-        return json["candidates"][0]["content"]["parts"][0]["text"];
+        return json["choices"][0]["message"]["content"];
       } else {
-        return 'Hata:  ${response.body}';
+        return 'Hata: ${response.body}';
       }
     } catch (e) {
       return 'Bağlantı hatası veya zaman aşımı: $e';
     }
   }
-}
+} 

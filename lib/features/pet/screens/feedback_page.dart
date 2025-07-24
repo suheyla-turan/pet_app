@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:pet_app/l10n/app_localizations.dart';
-import 'package:pet_app/services/firestore_service.dart';
+import 'package:pati_takip/l10n/app_localizations.dart';
+import 'package:pati_takip/services/firestore_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class FeedbackPage extends StatefulWidget {
@@ -21,7 +21,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
     final isDark = theme.brightness == Brightness.dark;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Patizeka'),
+        title: const Text('PatiTakip'),
         backgroundColor: Colors.transparent,
         elevation: 0,
         iconTheme: IconThemeData(color: theme.colorScheme.primary),

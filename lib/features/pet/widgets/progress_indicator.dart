@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:pet_app/l10n/app_localizations.dart';
+import 'package:pati_takip/l10n/app_localizations.dart';
 
 class StatusIndicator extends StatelessWidget {
   final IconData icon;

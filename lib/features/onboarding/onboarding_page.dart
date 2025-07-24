@@ -3,7 +3,7 @@ import 'package:lottie/lottie.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import '../../providers/auth_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:pet_app/l10n/app_localizations.dart';
+import 'package:pati_takip/l10n/app_localizations.dart';
 
 class OnboardingPage extends StatefulWidget {
   const OnboardingPage({super.key});
@@ -399,7 +399,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Patizeka')),
+              appBar: AppBar(title: const Text('PatiTakip')),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Center(

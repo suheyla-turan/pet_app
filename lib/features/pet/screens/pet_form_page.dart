@@ -3,9 +3,9 @@ import 'dart:io';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 
-import 'package:pet_app/features/pet/models/pet.dart';
-import 'package:pet_app/providers/pet_provider.dart';
-import 'package:pet_app/l10n/app_localizations.dart';
+import 'package:pati_takip/features/pet/models/pet.dart';
+import 'package:pati_takip/providers/pet_provider.dart';
+import 'package:pati_takip/l10n/app_localizations.dart';
 
 class PetFormPage extends StatefulWidget {
   final Pet? pet;

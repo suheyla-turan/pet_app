@@ -3,22 +3,25 @@ import 'dart:io';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:image_picker/image_picker.dart';
 
-import 'package:pet_app/features/pet/models/pet.dart';
-import 'package:pet_app/features/pet/widgets/progress_indicator.dart';
-import 'package:pet_app/features/pet/screens/vaccine_page.dart';
-import 'package:pet_app/features/pet/screens/pet_form_page.dart';
-import 'package:pet_app/providers/ai_provider.dart';
-import 'package:pet_app/providers/pet_provider.dart';
-import 'package:pet_app/services/notification_service.dart';
-import 'package:pet_app/services/firestore_service.dart';
-import 'package:pet_app/services/realtime_service.dart';
-import 'package:pet_app/providers/auth_provider.dart';
+import 'package:pati_takip/features/pet/models/pet.dart';
+import 'package:pati_takip/features/pet/widgets/progress_indicator.dart';
+import 'package:pati_takip/features/pet/screens/vaccine_page.dart';
+import 'package:pati_takip/features/pet/screens/pet_form_page.dart';
+import 'package:pati_takip/providers/ai_provider.dart';
+import 'package:pati_takip/providers/pet_provider.dart';
+import 'package:pati_takip/services/notification_service.dart';
+import 'package:pati_takip/services/firestore_service.dart';
+import 'package:pati_takip/services/realtime_service.dart';
+import 'package:pati_takip/services/voice_service.dart';
+import 'package:pati_takip/providers/auth_provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:pet_app/features/pet/screens/ai_chat_page.dart';
-import 'package:pet_app/l10n/app_localizations.dart';
-import 'package:pet_app/features/pet/widgets/voice_command_widget.dart';
-import 'package:pet_app/widgets/ai_fab.dart';
+import 'package:pati_takip/features/pet/screens/ai_chat_page.dart';
+import 'package:pati_takip/l10n/app_localizations.dart';
+import 'package:pati_takip/features/pet/widgets/voice_command_widget.dart';
+import 'package:pati_takip/widgets/ai_fab.dart';
+import 'package:pati_takip/services/media_service.dart';
 
 class PetDetailPage extends StatefulWidget {
   final Pet pet;
@@ -47,6 +50,11 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
   bool isAssistantOpen = false;
   void openAssistant() => setState(() => isAssistantOpen = true);
   void closeAssistant() => setState(() => isAssistantOpen = false);
+  
+  // Ses kayıt için eklenen değişkenler
+  bool _isRecording = false;
+  int _recordingDuration = 0;
+  final MediaService _mediaService = MediaService();
 
   Future<void> speak(String text) async {
     await flutterTts.speak(text);
@@ -83,11 +91,96 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
     _loadFeedingTime();
     _loadCreatorName();
     // _speech = stt.SpeechToText(); // KALDIRILDI
+    
+    // Media service'i başlat
+    _initializeMediaService();
+  }
+
+  // Ses kayıt metodları
+  String _formatDuration(int seconds) {
+    final minutes = seconds ~/ 60;
+    final remainingSeconds = seconds % 60;
+    return '${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
+  }
+
+  Future<void> _toggleVoiceRecording() async {
+    if (_isRecording) {
+      await _stopVoiceRecording();
+    } else {
+      await _startVoiceRecording();
+    }
+  }
+
+  Future<void> _startVoiceRecording() async {
+    try {
+      await _mediaService.initialize();
+      
+      _mediaService.onRecordingStarted = () {
+        setState(() {
+          _isRecording = true;
+          _recordingDuration = 0;
+        });
+      };
+      
+      _mediaService.onRecordingStopped = () {
+        setState(() {
+          _isRecording = false;
+        });
+      };
+      
+      _mediaService.onRecordingDurationChanged = (duration) {
+        setState(() {
+          _recordingDuration = duration;
+        });
+      };
+      
+      _mediaService.onVoiceRecorded = (path, duration) async {
+        final user = Provider.of<AuthProvider>(context, listen: false).user;
+        if (user != null) {
+          final realtime = RealtimeService();
+          await realtime.addPetMessage(_pet.id!, user.uid, '🎤 Ses mesajı (${_formatDuration(duration)})');
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Ses mesajı gönderildi!')),
+          );
+        }
+      };
+      
+      _mediaService.onError = (error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Hata: $error')),
+        );
+      };
+      
+      await _mediaService.startVoiceRecording();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ses kayıt başlatılamadı: $e')),
+      );
+    }
+  }
+
+  Future<void> _stopVoiceRecording() async {
+    try {
+      await _mediaService.stopVoiceRecording();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ses kayıt durdurulamadı: $e')),
+      );
+    }
+  }
+
+  Future<void> _initializeMediaService() async {
+    try {
+      await _mediaService.initialize();
+    } catch (e) {
+      print('Media service başlatılamadı: $e');
+    }
   }
 
   @override
   void dispose() {
     _animationController.dispose();
+    _mediaService.dispose();
     super.dispose();
   }
 
@@ -187,76 +280,107 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
     await aiProvider.initializeVoiceService();
     return showDialog<void>(
       context: context,
+      barrierDismissible: false,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) {
           return AlertDialog(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             title: Text(AppLocalizations.of(context)!.aiAskTitle),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Tanınan metin gösterimi
-                if (aiProvider.recognizedText != null && aiProvider.recognizedText!.isNotEmpty)
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(12),
-                    margin: const EdgeInsets.only(bottom: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.shade50,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.blue.shade200),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Tanınan metin gösterimi
+                  if (aiProvider.recognizedText != null && aiProvider.recognizedText!.isNotEmpty)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade50,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.blue.shade200),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            AppLocalizations.of(context)!.recognizedText,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                              color: Colors.blue,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            aiProvider.recognizedText!,
+                            style: const TextStyle(fontSize: 14),
+                          ),
+                        ],
+                      ),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          AppLocalizations.of(context)!.recognizedText,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                            color: Colors.blue,
+                  
+                  // Metin girişi - SafeArea ile sarılmış
+                  SafeArea(
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        bottom: MediaQuery.of(context).viewInsets.bottom,
+                      ),
+                      child: TextField(
+                        controller: controller,
+                        decoration: InputDecoration(
+                          hintText: AppLocalizations.of(context)!.askHint,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          aiProvider.recognizedText!,
-                          style: const TextStyle(fontSize: 14),
-                        ),
-                      ],
+                        maxLines: 3,
+                        minLines: 1,
+                        autofocus: true,
+                        textInputAction: TextInputAction.done,
+                        onSubmitted: (text) async {
+                          String question = text.trim();
+                          
+                          // Eğer sesli tanınan metin varsa onu kullan
+                          if (aiProvider.recognizedText != null && aiProvider.recognizedText!.isNotEmpty) {
+                            question = aiProvider.recognizedText!;
+                          }
+                          
+                          if (question.isNotEmpty) {
+                            Navigator.pop(context);
+                            // Eski getSuggestion, getCurrentResponseForPet, clearResponseForPet fonksiyonlarına ait kalan kodları tamamen kaldır
+                          }
+                        },
+                      ),
                     ),
                   ),
-                
-                // Metin girişi
-                TextField(
-                  controller: controller,
-                  decoration: InputDecoration(
-                    hintText: AppLocalizations.of(context)!.askHint,
-                    border: OutlineInputBorder(),
-                  ),
-                  maxLines: 3,
-                  autofocus: true,
-                ),
-                
-                const SizedBox(height: 12),
-                
-                // Sesli konuşma butonu kaldırıldı
-                // Yükleme göstergesi
-                if (aiProvider.isLoading)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 12),
-                    child: Row(
-                      children: [
-                        const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(AppLocalizations.of(context)!.aiThinking),
-                      ],
+                  
+                  const SizedBox(height: 12),
+                  
+                  // Sesli konuşma butonu kaldırıldı
+                  // Yükleme göstergesi
+                  if (aiProvider.isLoading)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: Row(
+                        children: [
+                          const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(AppLocalizations.of(context)!.aiThinking),
+                        ],
+                      ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
             actions: [
               TextButton(
@@ -368,7 +492,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
           appBar: AppBar(
             backgroundColor: Colors.transparent,
             elevation: 0,
-            title: const Text('Patizeka'),
+            title: const Text('PatiTakip'),
             leading: IconButton(
               icon: Container(
                 padding: const EdgeInsets.all(8),
@@ -897,7 +1021,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
             ),
           ),
         ),
-        DraggableAIFab(onTap: openAssistant),
+                          DraggableAIFab(onTap: openAssistant, pet: widget.pet),
         if (isAssistantOpen)
           Positioned.fill(
             child: Material(
@@ -1146,25 +1270,104 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
           ),
         ),
         const SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(
-              child: TextField(
-                controller: _chatController,
-                decoration: InputDecoration(hintText: AppLocalizations.of(context)!.writeMessage),
-              ),
+        // Geliştirilmiş mesaj girişi alanı - SafeArea ile sarılmış
+        SafeArea(
+          child: Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+              left: 8,
+              right: 8,
             ),
-            IconButton(
-              icon: const Icon(Icons.send),
-              onPressed: () async {
-                final text = _chatController.text.trim();
-                if (text.isNotEmpty && user != null) {
-                  await realtime.addPetMessage(_pet.id!, user.uid, text);
-                  _chatController.clear();
-                }
-              },
+            child: Column(
+              children: [
+                // Kayıt süresi göstergesi
+                if (_isRecording)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                    margin: const EdgeInsets.only(bottom: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.red.shade200),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.mic, color: Colors.red, size: 16),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Kayıt yapılıyor... ${_formatDuration(_recordingDuration)}',
+                          style: const TextStyle(
+                            color: Colors.red,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                Row(
+                  children: [
+                    // Ses kayıt butonu
+                    IconButton(
+                      icon: Icon(
+                        _isRecording ? Icons.stop : Icons.mic,
+                        color: _isRecording ? Colors.red : Colors.blue,
+                      ),
+                      onPressed: () => _toggleVoiceRecording(),
+                      tooltip: _isRecording ? 'Kaydı Durdur' : 'Ses Kaydet',
+                    ),
+                    // Görsel not butonu
+                    IconButton(
+                      icon: const Icon(Icons.camera_alt, color: Colors.green),
+                      onPressed: () => _showImageNoteDialog(),
+                      tooltip: 'Görsel Not Ekle',
+                    ),
+                    const SizedBox(width: 8),
+                    // Metin girişi
+                    Expanded(
+                      child: TextField(
+                        controller: _chatController,
+                        enabled: !_isRecording,
+                        decoration: InputDecoration(
+                          hintText: _isRecording 
+                              ? 'Kayıt yapılıyor...' 
+                              : AppLocalizations.of(context)!.writeMessage,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                        ),
+                        maxLines: null,
+                        textInputAction: TextInputAction.send,
+                        onSubmitted: (text) async {
+                          if (text.trim().isNotEmpty && user != null && !_isRecording) {
+                            await realtime.addPetMessage(_pet.id!, user.uid, text.trim());
+                            _chatController.clear();
+                          }
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // Gönder butonu
+                    IconButton(
+                      icon: const Icon(Icons.send, color: Colors.blue),
+                      onPressed: _isRecording ? null : () async {
+                        final text = _chatController.text.trim();
+                        if (text.isNotEmpty && user != null) {
+                          await realtime.addPetMessage(_pet.id!, user.uid, text);
+                          _chatController.clear();
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ],
     );
@@ -1265,7 +1468,25 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
   // }
 
   Future<void> _handleVoiceCommand(String command) async {
-    final intentData = await getIntentFromAI(command);
+    // Basit intent recognition - gerçek uygulamada AI servisi kullanılabilir
+    Map<String, dynamic> intentData = {'intent': 'unknown', 'petId': null};
+    
+    final lowerCommand = command.toLowerCase();
+    if (lowerCommand.contains('besle') || lowerCommand.contains('yemek')) {
+      intentData['intent'] = 'feed';
+    } else if (lowerCommand.contains('uyu') || lowerCommand.contains('dinlen')) {
+      intentData['intent'] = 'sleep';
+    } else if (lowerCommand.contains('bakım') || lowerCommand.contains('sev')) {
+      intentData['intent'] = 'care';
+    }
+    
+    // Pet adını bul
+    for (final pet in context.read<PetProvider>().pets) {
+      if (lowerCommand.contains(pet.name.toLowerCase())) {
+        intentData['petId'] = pet.id;
+        break;
+      }
+    }
     final petProvider = context.read<PetProvider>();
     Pet? pet;
     if (intentData['petId'] != null) {
@@ -1314,6 +1535,253 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
         );
         break;
     }
+  }
+
+  // Sesli not dialog'u
+  Future<void> _showVoiceNoteDialog() async {
+    final user = Provider.of<AuthProvider>(context, listen: false).user;
+    if (user == null) return;
+
+    bool isRecording = false;
+    String recordedText = '';
+    final realtime = RealtimeService();
+    final voiceService = VoiceService();
+
+    await showDialog<void>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            title: const Text('Sesli Not Ekle'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (isRecording)
+                  const Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.mic, color: Colors.red, size: 24),
+                        SizedBox(width: 8),
+                        Text('Kayıt yapılıyor...'),
+                      ],
+                    ),
+                  ),
+                if (recordedText.isNotEmpty)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.blue.shade200),
+                    ),
+                    child: Text(recordedText),
+                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: () async {
+                        if (!isRecording) {
+                          // Kayıt başlat
+                          setDialogState(() {
+                            isRecording = true;
+                            recordedText = '';
+                          });
+                          
+                          // Sesli tanıma servisini başlat
+                          voiceService.onSpeechResult = (text) {
+                            setDialogState(() {
+                              recordedText = text;
+                              isRecording = false;
+                            });
+                          };
+                          
+                          voiceService.onSpeechError = (error) {
+                            setDialogState(() {
+                              isRecording = false;
+                            });
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Hata: $error')),
+                            );
+                          };
+                          
+                          await voiceService.startVoiceInput(seconds: 10);
+                        } else {
+                          // Kayıt durdur
+                          await voiceService.stopVoiceInput();
+                          setDialogState(() {
+                            isRecording = false;
+                          });
+                        }
+                      },
+                      icon: Icon(isRecording ? Icons.stop : Icons.mic),
+                      label: Text(isRecording ? 'Durdur' : 'Kaydet'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: isRecording ? Colors.red : Colors.blue,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  if (isRecording) {
+                    voiceService.stopVoiceInput();
+                  }
+                  Navigator.pop(context);
+                },
+                child: const Text('İptal'),
+              ),
+              ElevatedButton(
+                onPressed: recordedText.isNotEmpty
+                    ? () async {
+                        await realtime.addPetMessage(_pet.id!, user.uid, '🎤 $recordedText');
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Sesli not eklendi!')),
+                        );
+                      }
+                    : null,
+                child: const Text('Ekle'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  // Görsel not dialog'u
+  Future<void> _showImageNoteDialog() async {
+    final user = Provider.of<AuthProvider>(context, listen: false).user;
+    if (user == null) return;
+
+    String? selectedImagePath;
+    final textController = TextEditingController();
+    final realtime = RealtimeService();
+
+    await showDialog<void>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            title: const Text('Görsel Not Ekle'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Görsel seçme butonları
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () async {
+                          final ImagePicker picker = ImagePicker();
+                          final XFile? image = await picker.pickImage(source: ImageSource.camera);
+                          if (image != null) {
+                            setDialogState(() {
+                              selectedImagePath = image.path;
+                            });
+                          }
+                        },
+                        icon: const Icon(Icons.camera_alt),
+                        label: const Text('Kamera'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () async {
+                          final ImagePicker picker = ImagePicker();
+                          final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+                          if (image != null) {
+                            setDialogState(() {
+                              selectedImagePath = image.path;
+                            });
+                          }
+                        },
+                        icon: const Icon(Icons.photo_library),
+                        label: const Text('Galeri'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                // Seçilen görsel önizlemesi
+                if (selectedImagePath != null)
+                  Container(
+                    width: 200,
+                    height: 150,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.file(
+                        File(selectedImagePath!),
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: Colors.grey.shade200,
+                            child: const Icon(Icons.image, size: 50, color: Colors.grey),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: 16),
+                // Not metni
+                TextField(
+                  controller: textController,
+                  decoration: const InputDecoration(
+                    hintText: 'Not ekleyin (opsiyonel)',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 3,
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('İptal'),
+              ),
+              ElevatedButton(
+                onPressed: selectedImagePath != null
+                    ? () async {
+                        final note = textController.text.trim();
+                        final message = note.isNotEmpty 
+                            ? '📷 $note'
+                            : '📷 Görsel not eklendi';
+                        await realtime.addPetMessage(_pet.id!, user.uid, message);
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Görsel not eklendi!')),
+                        );
+                      }
+                    : null,
+                child: const Text('Ekle'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
   }
 }
 

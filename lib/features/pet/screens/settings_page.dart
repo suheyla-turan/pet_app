@@ -6,7 +6,8 @@ import '../../../services/voice_service.dart';
 import '../../profile/profile_page.dart';
 import 'about_page.dart';
 import 'feedback_page.dart';
-import 'package:pet_app/l10n/app_localizations.dart';
+import 'faq_page.dart';
+import 'package:pati_takip/l10n/app_localizations.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -588,6 +589,16 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                                 onTap: () {
                                   Navigator.of(context).push(
                                     MaterialPageRoute(builder: (_) => FeedbackPage()),
+                                  );
+                                },
+                              ),
+                              const Divider(indent: 16, endIndent: 16, height: 0),
+                              ListTile(
+                                leading: Icon(Icons.help_outline, color: Theme.of(context).colorScheme.primary),
+                                title: Text('Sık Sorulan Sorular'),
+                                onTap: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(builder: (_) => FAQPage()),
                                   );
                                 },
                               ),

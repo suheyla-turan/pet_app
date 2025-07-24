@@ -9,7 +9,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appTitle => 'Mini Pet';
+  String get appTitle => 'PatiTakip';
 
   @override
   String get settings => 'Settings';
@@ -63,7 +63,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiAskTitle => 'Ask AI a Question';
 
   @override
-  String get recognizedText => 'Recognized Text:';
+  String get recognizedText => 'Recognized Text';
 
   @override
   String get askHint => 'Type or ask your question...';
@@ -331,7 +331,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get speechNotEnabled => 'Speech recognition is not enabled';
 
   @override
-  String get onboardingWelcome => 'Welcome to Mini Pet!';
+  String get onboardingWelcome => 'Welcome to PatiTakip!';
 
   @override
   String get onboardingDescription => 'Track your pets, vaccinations, and more.';
@@ -602,7 +602,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get developer => 'Developer';
 
   @override
-  String get copyright => '© 2024 Mini Pet';
+  String get copyright => '© 2024 PatiTakip';
 
   @override
   String get nameLabel => 'Name';
@@ -660,4 +660,178 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get other => 'Other';
+
+  @override
+  String get selectFromGallery => 'Select from Gallery';
+
+  @override
+  String get takePhoto => 'Take Photo';
+
+  @override
+  String get useRecognizedText => 'Use This Text';
+
+  @override
+  String get faq => 'FAQ';
+
+  @override
+  String get faqTitle => 'Frequently Asked Questions';
+
+  @override
+  String get faqDescription => 'Common questions and answers about the app';
+
+  @override
+  String get faqGeneral => 'General Questions';
+
+  @override
+  String get faqFeatures => 'Features';
+
+  @override
+  String get faqTechnical => 'Technical Questions';
+
+  @override
+  String get faqSupport => 'Support';
+
+  @override
+  String get faqWhatIsPatiTakip => 'What is PatiTakip?';
+
+  @override
+  String get faqWhatIsPatiTakipAnswer => 'PatiTakip is a comprehensive mobile app designed to make pet care easier. It offers vaccination tracking, daily notes, AI-powered chat, and voice command features.';
+
+  @override
+  String get faqHowToAddPet => 'How do I add a pet?';
+
+  @override
+  String get faqHowToAddPetAnswer => 'You can add a new pet by clicking the + button on the main page. You need to enter basic information such as pet type, breed, gender, and birth date.';
+
+  @override
+  String get faqHowToTrackVaccines => 'How do I track vaccinations?';
+
+  @override
+  String get faqHowToTrackVaccinesAnswer => 'Go to the \'Vaccines\' tab on the pet detail page to add new vaccines or view existing ones. You can mark completed vaccines as done.';
+
+  @override
+  String get faqHowToUseAI => 'How do I use the AI chat feature?';
+
+  @override
+  String get faqHowToUseAIAnswer => 'Click the AI button in the bottom right corner of the main page to chat with artificial intelligence. You can ask questions both in writing and by voice.';
+
+  @override
+  String get faqVoiceCommands => 'How do voice commands work?';
+
+  @override
+  String get faqVoiceCommandsAnswer => 'Press the microphone button on the AI chat page to ask questions by voice. The app converts your voice to text and AI responds.';
+
+  @override
+  String get faqNotifications => 'How do I set up notifications?';
+
+  @override
+  String get faqNotificationsAnswer => 'You can manage your notification preferences in Settings > Notifications. You can receive notifications for pet care reminders and vaccination times.';
+
+  @override
+  String get faqDataBackup => 'Is my data safe?';
+
+  @override
+  String get faqDataBackupAnswer => 'Yes, all your data is stored securely on Firebase cloud servers. Your data is always accessible when you log into your account.';
+
+  @override
+  String get faqMultiplePets => 'Can I add multiple pets?';
+
+  @override
+  String get faqMultiplePetsAnswer => 'Yes, you can add as many pets as you want. Each pet has its own profile and tracking system.';
+
+  @override
+  String get faqShareAccount => 'Can I share my account with others?';
+
+  @override
+  String get faqShareAccountAnswer => 'Yes, you can add other users from the \'Owners\' section on the pet detail page. This way family members can also participate in pet care.';
+
+  @override
+  String get faqAppUpdates => 'How do app updates work?';
+
+  @override
+  String get faqAppUpdatesAnswer => 'You can set up automatic update settings in Settings > Update. New features and improvements are added regularly.';
+
+  @override
+  String get faqContactSupport => 'How can I contact the support team?';
+
+  @override
+  String get faqContactSupportAnswer => 'You can contact our support team using the \'Send Feedback\' section on this page or by sending an email directly.';
+
+  @override
+  String get faqPrivacyPolicy => 'What is the privacy policy?';
+
+  @override
+  String get faqPrivacyPolicyAnswer => 'Your personal data is securely protected and not shared with third parties. You can find our detailed privacy policy in the app.';
+
+  @override
+  String get faqTermsOfService => 'What are the terms of service?';
+
+  @override
+  String get faqTermsOfServiceAnswer => 'By using the app, you accept our terms of service. You can find the full text in the app.';
+
+  @override
+  String get aboutAppVersion => 'App Version';
+
+  @override
+  String get aboutAppVersionValue => '1.0.0';
+
+  @override
+  String get aboutDeveloper => 'Developer';
+
+  @override
+  String get aboutDeveloperValue => 'PatiTakip Team';
+
+  @override
+  String get aboutContact => 'Contact';
+
+  @override
+  String get aboutContactValue => 'info@patitakip.com';
+
+  @override
+  String get aboutWebsite => 'Website';
+
+  @override
+  String get aboutWebsiteValue => 'www.patitakip.com';
+
+  @override
+  String get aboutFeatures => 'Features';
+
+  @override
+  String get aboutFeaturesList => '• Pet profile management\n• Vaccination tracking system\n• AI-powered chat\n• Voice command feature\n• Notification system\n• Multi-user support\n• Cloud backup';
+
+  @override
+  String get aboutTechnology => 'Technologies';
+
+  @override
+  String get aboutTechnologyList => '• Flutter & Dart\n• Firebase\n• OpenAI API\n• Speech Recognition\n• Text-to-Speech';
+
+  @override
+  String get aboutPrivacy => 'Privacy';
+
+  @override
+  String get aboutPrivacyText => 'Your data is stored securely and not shared with third parties. You can find our detailed privacy policy on our website.';
+
+  @override
+  String get aboutSupport => 'Support';
+
+  @override
+  String get aboutSupportText => 'You can contact our support team for your questions. Your feedback is valuable to us.';
+
+  @override
+  String get aboutRateApp => 'Rate App';
+
+  @override
+  String get aboutRateAppText => 'Rate your experience and help us improve.';
+
+  @override
+  String get aboutShareApp => 'Share App';
+
+  @override
+  String get aboutShareAppText => 'Share PatiTakip with your friends.';
+
+  @override
+  String get aboutFollowUs => 'Follow Us';
+
+  @override
+  String get aboutFollowUsText => 'Follow us on social media for updates and news.';
 }

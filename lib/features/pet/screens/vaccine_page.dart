@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/pet.dart';
-import 'package:pet_app/services/notification_service.dart';
-import 'package:pet_app/l10n/app_localizations.dart';
+import 'package:pati_takip/services/notification_service.dart';
+import 'package:pati_takip/l10n/app_localizations.dart';
 
 class VaccinePage extends StatefulWidget {
   final List<Vaccine> vaccines;
@@ -83,14 +83,15 @@ class _VaccinePageState extends State<VaccinePage> {
   Widget build(BuildContext context) {
     // Filtrelenmiş listeyi göster
     List<Vaccine> filteredVaccines = widget.vaccines.where((v) => v.isDone == widget.showDone).toList();
-    return WillPopScope(
-      onWillPop: () async {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
         Navigator.pop(context, widget.vaccines); // Geri tuşuna basınca güncel listeyi döndür
-        return false;
       },
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Patizeka'),
+          title: const Text('PatiTakip'),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () {

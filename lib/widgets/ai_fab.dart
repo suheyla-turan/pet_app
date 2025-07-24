@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:pet_app/features/pet/widgets/voice_command_widget.dart';
+import 'package:pati_takip/features/pet/widgets/voice_command_widget.dart';
+import 'package:pati_takip/features/pet/models/pet.dart';
 
 class DraggableAIFab extends StatefulWidget {
   final VoidCallback? onTap;
-  const DraggableAIFab({super.key, this.onTap});
+  final Pet? pet; // Pet bilgisini al
+  const DraggableAIFab({super.key, this.onTap, this.pet});
 
   @override
   State<DraggableAIFab> createState() => _DraggableAIFabState();
@@ -23,7 +25,7 @@ class _DraggableAIFabState extends State<DraggableAIFab> {
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
         padding: const EdgeInsets.only(top: 16, left: 16, right: 16, bottom: 32),
-        child: const VoiceCommandWidget(),
+        child: VoiceCommandWidget(pet: widget.pet), // Pet bilgisini geçir
       ),
     );
   }

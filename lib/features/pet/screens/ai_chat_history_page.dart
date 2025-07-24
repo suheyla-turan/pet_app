@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:pet_app/features/pet/models/pet.dart';
+import 'package:pati_takip/features/pet/models/pet.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../../providers/ai_provider.dart';
-import 'package:pet_app/features/pet/models/ai_chat_message.dart';
-import 'package:pet_app/services/realtime_service.dart';
+import 'package:pati_takip/features/pet/models/ai_chat_message.dart';
+import 'package:pati_takip/services/realtime_service.dart';
 import 'ai_chat_page.dart'; // <-- eksik import eklendi
 
 class AIChatHistoryPage extends StatefulWidget {
@@ -33,7 +33,7 @@ class _AIChatHistoryPageState extends State<AIChatHistoryPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Patizeka')),
+      appBar: AppBar(title: const Text('PatiTakip')),
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: _futureChats,
         builder: (context, snapshot) {
@@ -120,7 +120,7 @@ class AIChatDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Patizeka')),
+      appBar: AppBar(title: const Text('PatiTakip')),
       body: Column(
         children: [
           Expanded(

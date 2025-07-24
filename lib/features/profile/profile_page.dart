@@ -4,7 +4,7 @@ import '../../providers/auth_provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:pet_app/l10n/app_localizations.dart';
+import 'package:pati_takip/l10n/app_localizations.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});

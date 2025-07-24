@@ -1,111 +1,227 @@
 import 'package:flutter/material.dart';
-import 'package:pet_app/services/voice_google_service.dart';
+import 'package:provider/provider.dart';
+import 'package:pati_takip/providers/ai_provider.dart';
+import '../models/pet.dart';
 
 class VoiceCommandWidget extends StatefulWidget {
-  const VoiceCommandWidget({super.key});
+  final Pet? pet; // Pet bilgisini al
+  const VoiceCommandWidget({super.key, this.pet});
   @override
   State<VoiceCommandWidget> createState() => _VoiceCommandWidgetState();
 }
 
 class _VoiceCommandWidgetState extends State<VoiceCommandWidget> {
-  String? _recognizedText;
-  String? _response;
-  bool _isLoading = false;
-
-  Future<void> _startGoogleSpeech() async {
-    if (!mounted) return;
-    setState(() {
-      _isLoading = true;
-      _recognizedText = null;
-      _response = null;
+  @override
+  void initState() {
+    super.initState();
+    // AI Provider'ı başlat
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final aiProvider = Provider.of<AIProvider>(context, listen: false);
+      aiProvider.initializeVoiceService();
     });
-    try {
-      final base64Audio = await recordAndGetBase64(seconds: 5);
-      if (base64Audio != null) {
-        final metin = await googleSpeechToText(base64Audio);
-        if (!mounted) return;
-        setState(() {
-          _recognizedText = metin ?? 'Hiçbir şey algılanamadı!';
-          _isLoading = false;
-        });
-        // Burada asistan yanıtı üretme fonksiyonunu çağırabilirsin
-        // Örnek: _response = await getAIResponse(metin);
-      } else {
-        if (!mounted) return;
-        setState(() {
-          _recognizedText = 'Kayıt başarısız!';
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _recognizedText = 'Bir hata oluştu: $e';
-        _isLoading = false;
-      });
+  }
+
+  Future<void> _startContinuousListening() async {
+    if (!mounted) return;
+    
+    print('🎤 Sürekli dinleme başlatılıyor...');
+    final aiProvider = Provider.of<AIProvider>(context, listen: false);
+    await aiProvider.startContinuousListening();
+    print('✅ Sürekli dinleme başlatıldı');
+  }
+
+  Future<void> _stopContinuousListening() async {
+    if (!mounted) return;
+    
+    print('🛑 Sürekli dinleme durduruluyor...');
+    final aiProvider = Provider.of<AIProvider>(context, listen: false);
+    if (widget.pet != null) {
+      await aiProvider.stopContinuousListening(currentPet: widget.pet!);
+    } else {
+      // Pet yoksa sadece durdur
+      await aiProvider.stopContinuousListening();
     }
+    print('✅ Sürekli dinleme durduruldu');
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          GestureDetector(
-            onTap: _isLoading ? null : _startGoogleSpeech,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: theme.colorScheme.primary.withOpacity(0.3),
-                    blurRadius: 16,
-                    offset: const Offset(0, 8),
+    return Consumer<AIProvider>(
+      builder: (context, aiProvider, child) {
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              GestureDetector(
+                onTap: aiProvider.isContinuousListening ? _stopContinuousListening : _startContinuousListening,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: aiProvider.isContinuousListening 
+                        ? theme.colorScheme.error 
+                        : theme.colorScheme.primary,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: (aiProvider.isContinuousListening 
+                            ? theme.colorScheme.error 
+                            : theme.colorScheme.primary).withOpacity(0.3),
+                        blurRadius: 16,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
                   ),
-                ],
+                  child: aiProvider.isLoading || aiProvider.isContinuousListening
+                      ? const Center(child: CircularProgressIndicator(color: Colors.white))
+                      : Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: const [
+                            Icon(Icons.mic, color: Colors.white, size: 36),
+                            SizedBox(height: 4),
+                          ],
+                        ),
+                ),
               ),
-              child: _isLoading
-                  ? const Center(child: CircularProgressIndicator(color: Colors.white))
-                  : Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
-                        Icon(Icons.mic, color: Colors.white, size: 36),
-                        SizedBox(height: 4),
-                        // Text('Konuş', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
-                      ],
+              const SizedBox(height: 16),
+              Text(
+                aiProvider.isContinuousListening ? 'Sürekli Dinleniyor...' : 'Sürekli Sesli Komut',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: aiProvider.isContinuousListening 
+                      ? theme.colorScheme.error 
+                      : theme.colorScheme.primary,
+                  letterSpacing: 0.5,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                aiProvider.isContinuousListening 
+                    ? 'Durdurmak için tekrar dokunun' 
+                    : 'Başlatmak için dokunun',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: theme.colorScheme.onSurface.withOpacity(0.7),
+                ),
+              ),
+              const SizedBox(height: 32),
+              // Status mesajı
+              if (aiProvider.statusMessage.isNotEmpty) ...[
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: aiProvider.statusMessage.contains('limit') 
+                        ? Colors.red.shade50 
+                        : Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: aiProvider.statusMessage.contains('limit') 
+                          ? Colors.red.shade200 
+                          : Colors.blue.shade200,
                     ),
-            ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        aiProvider.statusMessage.contains('limit') 
+                            ? Icons.timer 
+                            : Icons.info,
+                        color: aiProvider.statusMessage.contains('limit') 
+                            ? Colors.red 
+                            : Colors.blue,
+                        size: 16,
+                      ),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          aiProvider.statusMessage,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: aiProvider.statusMessage.contains('limit') 
+                                ? Colors.red.shade700 
+                                : Colors.blue.shade700,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+
+              // Anlık transkripsiyon gösterimi
+              if (aiProvider.isContinuousListening && aiProvider.currentTranscription.isNotEmpty) ...[
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.orange.shade200),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.mic, color: Colors.orange, size: 16),
+                          SizedBox(width: 4),
+                          Text(
+                            'Anlık Transkripsiyon...',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                              color: Colors.orange,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        aiProvider.currentTranscription,
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+              // Final transkripsiyon gösterimi
+              if (aiProvider.recognizedText != null && aiProvider.recognizedText!.isNotEmpty && !aiProvider.isContinuousListening) ...[
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.blue.shade200),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Tanınan Metin:',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                          color: Colors.blue,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        aiProvider.recognizedText!,
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
           ),
-          const SizedBox(height: 16),
-          Text(
-            'Google ile Sesli Komut',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: theme.colorScheme.primary,
-              letterSpacing: 0.5,
-            ),
-          ),
-          const SizedBox(height: 32),
-          if (_recognizedText != null) ...[
-            Text('Algılanan metin:', style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.primary)),
-            const SizedBox(height: 4),
-            Text(_recognizedText!, style: const TextStyle(fontSize: 16)),
-          ],
-          if (_response != null) ...[
-            const SizedBox(height: 16),
-            Text('Yanıt:', style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.primary)),
-            const SizedBox(height: 4),
-            Text(_response!, style: const TextStyle(fontSize: 16, color: Colors.blue)),
-          ],
-        ],
-      ),
+        );
+      },
     );
   }
 } 

@@ -98,7 +98,7 @@ abstract class AppLocalizations {
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:
-  /// **'Mini Pet'**
+  /// **'PatiTakip'**
   String get appTitle;
 
   /// No description provided for @settings.
@@ -206,7 +206,7 @@ abstract class AppLocalizations {
   /// No description provided for @recognizedText.
   ///
   /// In en, this message translates to:
-  /// **'Recognized Text:'**
+  /// **'Recognized Text'**
   String get recognizedText;
 
   /// No description provided for @askHint.
@@ -734,7 +734,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingWelcome.
   ///
   /// In en, this message translates to:
-  /// **'Welcome to Mini Pet!'**
+  /// **'Welcome to PatiTakip!'**
   String get onboardingWelcome;
 
   /// No description provided for @onboardingDescription.
@@ -1256,7 +1256,7 @@ abstract class AppLocalizations {
   /// No description provided for @copyright.
   ///
   /// In en, this message translates to:
-  /// **'© 2024 Mini Pet'**
+  /// **'© 2024 PatiTakip'**
   String get copyright;
 
   /// No description provided for @nameLabel.
@@ -1372,6 +1372,354 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Other'**
   String get other;
+
+  /// No description provided for @selectFromGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Select from Gallery'**
+  String get selectFromGallery;
+
+  /// No description provided for @takePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Take Photo'**
+  String get takePhoto;
+
+  /// No description provided for @useRecognizedText.
+  ///
+  /// In en, this message translates to:
+  /// **'Use This Text'**
+  String get useRecognizedText;
+
+  /// No description provided for @faq.
+  ///
+  /// In en, this message translates to:
+  /// **'FAQ'**
+  String get faq;
+
+  /// No description provided for @faqTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Frequently Asked Questions'**
+  String get faqTitle;
+
+  /// No description provided for @faqDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Common questions and answers about the app'**
+  String get faqDescription;
+
+  /// No description provided for @faqGeneral.
+  ///
+  /// In en, this message translates to:
+  /// **'General Questions'**
+  String get faqGeneral;
+
+  /// No description provided for @faqFeatures.
+  ///
+  /// In en, this message translates to:
+  /// **'Features'**
+  String get faqFeatures;
+
+  /// No description provided for @faqTechnical.
+  ///
+  /// In en, this message translates to:
+  /// **'Technical Questions'**
+  String get faqTechnical;
+
+  /// No description provided for @faqSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Support'**
+  String get faqSupport;
+
+  /// No description provided for @faqWhatIsPatiTakip.
+  ///
+  /// In en, this message translates to:
+  /// **'What is PatiTakip?'**
+  String get faqWhatIsPatiTakip;
+
+  /// No description provided for @faqWhatIsPatiTakipAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'PatiTakip is a comprehensive mobile app designed to make pet care easier. It offers vaccination tracking, daily notes, AI-powered chat, and voice command features.'**
+  String get faqWhatIsPatiTakipAnswer;
+
+  /// No description provided for @faqHowToAddPet.
+  ///
+  /// In en, this message translates to:
+  /// **'How do I add a pet?'**
+  String get faqHowToAddPet;
+
+  /// No description provided for @faqHowToAddPetAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'You can add a new pet by clicking the + button on the main page. You need to enter basic information such as pet type, breed, gender, and birth date.'**
+  String get faqHowToAddPetAnswer;
+
+  /// No description provided for @faqHowToTrackVaccines.
+  ///
+  /// In en, this message translates to:
+  /// **'How do I track vaccinations?'**
+  String get faqHowToTrackVaccines;
+
+  /// No description provided for @faqHowToTrackVaccinesAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to the \'Vaccines\' tab on the pet detail page to add new vaccines or view existing ones. You can mark completed vaccines as done.'**
+  String get faqHowToTrackVaccinesAnswer;
+
+  /// No description provided for @faqHowToUseAI.
+  ///
+  /// In en, this message translates to:
+  /// **'How do I use the AI chat feature?'**
+  String get faqHowToUseAI;
+
+  /// No description provided for @faqHowToUseAIAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'Click the AI button in the bottom right corner of the main page to chat with artificial intelligence. You can ask questions both in writing and by voice.'**
+  String get faqHowToUseAIAnswer;
+
+  /// No description provided for @faqVoiceCommands.
+  ///
+  /// In en, this message translates to:
+  /// **'How do voice commands work?'**
+  String get faqVoiceCommands;
+
+  /// No description provided for @faqVoiceCommandsAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'Press the microphone button on the AI chat page to ask questions by voice. The app converts your voice to text and AI responds.'**
+  String get faqVoiceCommandsAnswer;
+
+  /// No description provided for @faqNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'How do I set up notifications?'**
+  String get faqNotifications;
+
+  /// No description provided for @faqNotificationsAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'You can manage your notification preferences in Settings > Notifications. You can receive notifications for pet care reminders and vaccination times.'**
+  String get faqNotificationsAnswer;
+
+  /// No description provided for @faqDataBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Is my data safe?'**
+  String get faqDataBackup;
+
+  /// No description provided for @faqDataBackupAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, all your data is stored securely on Firebase cloud servers. Your data is always accessible when you log into your account.'**
+  String get faqDataBackupAnswer;
+
+  /// No description provided for @faqMultiplePets.
+  ///
+  /// In en, this message translates to:
+  /// **'Can I add multiple pets?'**
+  String get faqMultiplePets;
+
+  /// No description provided for @faqMultiplePetsAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, you can add as many pets as you want. Each pet has its own profile and tracking system.'**
+  String get faqMultiplePetsAnswer;
+
+  /// No description provided for @faqShareAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Can I share my account with others?'**
+  String get faqShareAccount;
+
+  /// No description provided for @faqShareAccountAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, you can add other users from the \'Owners\' section on the pet detail page. This way family members can also participate in pet care.'**
+  String get faqShareAccountAnswer;
+
+  /// No description provided for @faqAppUpdates.
+  ///
+  /// In en, this message translates to:
+  /// **'How do app updates work?'**
+  String get faqAppUpdates;
+
+  /// No description provided for @faqAppUpdatesAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'You can set up automatic update settings in Settings > Update. New features and improvements are added regularly.'**
+  String get faqAppUpdatesAnswer;
+
+  /// No description provided for @faqContactSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'How can I contact the support team?'**
+  String get faqContactSupport;
+
+  /// No description provided for @faqContactSupportAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'You can contact our support team using the \'Send Feedback\' section on this page or by sending an email directly.'**
+  String get faqContactSupportAnswer;
+
+  /// No description provided for @faqPrivacyPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'What is the privacy policy?'**
+  String get faqPrivacyPolicy;
+
+  /// No description provided for @faqPrivacyPolicyAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'Your personal data is securely protected and not shared with third parties. You can find our detailed privacy policy in the app.'**
+  String get faqPrivacyPolicyAnswer;
+
+  /// No description provided for @faqTermsOfService.
+  ///
+  /// In en, this message translates to:
+  /// **'What are the terms of service?'**
+  String get faqTermsOfService;
+
+  /// No description provided for @faqTermsOfServiceAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'By using the app, you accept our terms of service. You can find the full text in the app.'**
+  String get faqTermsOfServiceAnswer;
+
+  /// No description provided for @aboutAppVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'App Version'**
+  String get aboutAppVersion;
+
+  /// No description provided for @aboutAppVersionValue.
+  ///
+  /// In en, this message translates to:
+  /// **'1.0.0'**
+  String get aboutAppVersionValue;
+
+  /// No description provided for @aboutDeveloper.
+  ///
+  /// In en, this message translates to:
+  /// **'Developer'**
+  String get aboutDeveloper;
+
+  /// No description provided for @aboutDeveloperValue.
+  ///
+  /// In en, this message translates to:
+  /// **'PatiTakip Team'**
+  String get aboutDeveloperValue;
+
+  /// No description provided for @aboutContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact'**
+  String get aboutContact;
+
+  /// No description provided for @aboutContactValue.
+  ///
+  /// In en, this message translates to:
+  /// **'info@patitakip.com'**
+  String get aboutContactValue;
+
+  /// No description provided for @aboutWebsite.
+  ///
+  /// In en, this message translates to:
+  /// **'Website'**
+  String get aboutWebsite;
+
+  /// No description provided for @aboutWebsiteValue.
+  ///
+  /// In en, this message translates to:
+  /// **'www.patitakip.com'**
+  String get aboutWebsiteValue;
+
+  /// No description provided for @aboutFeatures.
+  ///
+  /// In en, this message translates to:
+  /// **'Features'**
+  String get aboutFeatures;
+
+  /// No description provided for @aboutFeaturesList.
+  ///
+  /// In en, this message translates to:
+  /// **'• Pet profile management\n• Vaccination tracking system\n• AI-powered chat\n• Voice command feature\n• Notification system\n• Multi-user support\n• Cloud backup'**
+  String get aboutFeaturesList;
+
+  /// No description provided for @aboutTechnology.
+  ///
+  /// In en, this message translates to:
+  /// **'Technologies'**
+  String get aboutTechnology;
+
+  /// No description provided for @aboutTechnologyList.
+  ///
+  /// In en, this message translates to:
+  /// **'• Flutter & Dart\n• Firebase\n• OpenAI API\n• Speech Recognition\n• Text-to-Speech'**
+  String get aboutTechnologyList;
+
+  /// No description provided for @aboutPrivacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy'**
+  String get aboutPrivacy;
+
+  /// No description provided for @aboutPrivacyText.
+  ///
+  /// In en, this message translates to:
+  /// **'Your data is stored securely and not shared with third parties. You can find our detailed privacy policy on our website.'**
+  String get aboutPrivacyText;
+
+  /// No description provided for @aboutSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Support'**
+  String get aboutSupport;
+
+  /// No description provided for @aboutSupportText.
+  ///
+  /// In en, this message translates to:
+  /// **'You can contact our support team for your questions. Your feedback is valuable to us.'**
+  String get aboutSupportText;
+
+  /// No description provided for @aboutRateApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate App'**
+  String get aboutRateApp;
+
+  /// No description provided for @aboutRateAppText.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate your experience and help us improve.'**
+  String get aboutRateAppText;
+
+  /// No description provided for @aboutShareApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Share App'**
+  String get aboutShareApp;
+
+  /// No description provided for @aboutShareAppText.
+  ///
+  /// In en, this message translates to:
+  /// **'Share PatiTakip with your friends.'**
+  String get aboutShareAppText;
+
+  /// No description provided for @aboutFollowUs.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow Us'**
+  String get aboutFollowUs;
+
+  /// No description provided for @aboutFollowUsText.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow us on social media for updates and news.'**
+  String get aboutFollowUsText;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

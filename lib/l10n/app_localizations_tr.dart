@@ -9,7 +9,7 @@ class AppLocalizationsTr extends AppLocalizations {
   AppLocalizationsTr([String locale = 'tr']) : super(locale);
 
   @override
-  String get appTitle => 'Mini Pet';
+  String get appTitle => 'PatiTakip';
 
   @override
   String get settings => 'Ayarlar';
@@ -63,7 +63,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get aiAskTitle => 'Yapay Zekaya Soru Sor';
 
   @override
-  String get recognizedText => 'Tanınan Metin:';
+  String get recognizedText => 'Tanınan Metin';
 
   @override
   String get askHint => 'Sorunuzu yazın veya sesli sorun...';
@@ -331,7 +331,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get speechNotEnabled => 'Konuşma tanıma etkin değil';
 
   @override
-  String get onboardingWelcome => 'Mini Pet\'e Hoş Geldin!';
+  String get onboardingWelcome => 'PatiTakip\'e Hoş Geldin!';
 
   @override
   String get onboardingDescription => 'Evcil hayvanlarını, aşılarını ve daha fazlasını takip et.';
@@ -602,7 +602,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get developer => 'Geliştirici';
 
   @override
-  String get copyright => '© 2024 Mini Pet';
+  String get copyright => '© 2024 PatiTakip';
 
   @override
   String get nameLabel => 'İsim';
@@ -660,4 +660,178 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get other => 'Diğer';
+
+  @override
+  String get selectFromGallery => 'Galeriden Seç';
+
+  @override
+  String get takePhoto => 'Fotoğraf Çek';
+
+  @override
+  String get useRecognizedText => 'Bu Metni Kullan';
+
+  @override
+  String get faq => 'Sık Sorulan Sorular';
+
+  @override
+  String get faqTitle => 'Sık Sorulan Sorular';
+
+  @override
+  String get faqDescription => 'Uygulama hakkında sık sorulan sorular ve cevapları';
+
+  @override
+  String get faqGeneral => 'Genel Sorular';
+
+  @override
+  String get faqFeatures => 'Özellikler';
+
+  @override
+  String get faqTechnical => 'Teknik Sorular';
+
+  @override
+  String get faqSupport => 'Destek';
+
+  @override
+  String get faqWhatIsPatiTakip => 'PatiTakip nedir?';
+
+  @override
+  String get faqWhatIsPatiTakipAnswer => 'PatiTakip, evcil hayvanlarınızın bakımını kolaylaştırmak için geliştirilmiş kapsamlı bir mobil uygulamadır. Aşı takibi, günlük notlar, yapay zeka destekli sohbet ve sesli komut özellikleri sunar.';
+
+  @override
+  String get faqHowToAddPet => 'Evcil hayvan nasıl eklenir?';
+
+  @override
+  String get faqHowToAddPetAnswer => 'Ana sayfada + butonuna tıklayarak yeni evcil hayvan ekleyebilirsiniz. Hayvan türü, cins, cinsiyet ve doğum tarihi gibi temel bilgileri girmeniz gerekiyor.';
+
+  @override
+  String get faqHowToTrackVaccines => 'Aşı takibi nasıl yapılır?';
+
+  @override
+  String get faqHowToTrackVaccinesAnswer => 'Evcil hayvan detay sayfasında \'Aşılar\' sekmesine giderek yeni aşı ekleyebilir veya mevcut aşıları görüntüleyebilirsiniz. Tamamlanan aşıları işaretleyebilirsiniz.';
+
+  @override
+  String get faqHowToUseAI => 'AI sohbet özelliği nasıl kullanılır?';
+
+  @override
+  String get faqHowToUseAIAnswer => 'Ana sayfada sağ alt köşedeki AI butonuna tıklayarak yapay zeka ile sohbet edebilirsiniz. Hem yazılı hem de sesli soru sorabilirsiniz.';
+
+  @override
+  String get faqVoiceCommands => 'Sesli komutlar nasıl çalışır?';
+
+  @override
+  String get faqVoiceCommandsAnswer => 'AI sohbet sayfasında mikrofon butonuna basarak sesli soru sorabilirsiniz. Uygulama sesinizi metne çevirir ve AI yanıt verir.';
+
+  @override
+  String get faqNotifications => 'Bildirimler nasıl ayarlanır?';
+
+  @override
+  String get faqNotificationsAnswer => 'Ayarlar > Bildirimler bölümünden bildirim tercihlerinizi yönetebilirsiniz. Evcil hayvan bakım hatırlatıcıları ve aşı zamanları için bildirim alabilirsiniz.';
+
+  @override
+  String get faqDataBackup => 'Verilerim güvenli mi?';
+
+  @override
+  String get faqDataBackupAnswer => 'Evet, tüm verileriniz Firebase güvenli bulut sunucularında saklanır. Hesabınıza giriş yaptığınızda verileriniz her zaman erişilebilir.';
+
+  @override
+  String get faqMultiplePets => 'Birden fazla evcil hayvan ekleyebilir miyim?';
+
+  @override
+  String get faqMultiplePetsAnswer => 'Evet, istediğiniz kadar evcil hayvan ekleyebilirsiniz. Her hayvan için ayrı profil ve takip sistemi bulunur.';
+
+  @override
+  String get faqShareAccount => 'Hesabımı başkalarıyla paylaşabilir miyim?';
+
+  @override
+  String get faqShareAccountAnswer => 'Evet, evcil hayvan detay sayfasında \'Sahipler\' bölümünden diğer kullanıcıları ekleyebilirsiniz. Bu sayede aile üyeleri de hayvan bakımına katılabilir.';
+
+  @override
+  String get faqAppUpdates => 'Uygulama güncellemeleri nasıl çalışır?';
+
+  @override
+  String get faqAppUpdatesAnswer => 'Ayarlar > Güncelleme bölümünden otomatik güncelleme ayarlarını yapabilirsiniz. Yeni özellikler ve iyileştirmeler düzenli olarak eklenir.';
+
+  @override
+  String get faqContactSupport => 'Destek ekibiyle nasıl iletişime geçebilirim?';
+
+  @override
+  String get faqContactSupportAnswer => 'Bu sayfada \'Geri Bildirim Gönder\' bölümünü kullanarak veya doğrudan e-posta göndererek destek ekibimizle iletişime geçebilirsiniz.';
+
+  @override
+  String get faqPrivacyPolicy => 'Gizlilik politikası nedir?';
+
+  @override
+  String get faqPrivacyPolicyAnswer => 'Kişisel verileriniz güvenle korunur ve üçüncü taraflarla paylaşılmaz. Detaylı gizlilik politikamızı uygulama içinde bulabilirsiniz.';
+
+  @override
+  String get faqTermsOfService => 'Kullanım şartları nelerdir?';
+
+  @override
+  String get faqTermsOfServiceAnswer => 'Uygulamayı kullanarak kullanım şartlarımızı kabul etmiş olursunuz. Tam metni uygulama içinde bulabilirsiniz.';
+
+  @override
+  String get aboutAppVersion => 'Uygulama Sürümü';
+
+  @override
+  String get aboutAppVersionValue => '1.0.0';
+
+  @override
+  String get aboutDeveloper => 'Geliştirici';
+
+  @override
+  String get aboutDeveloperValue => 'PatiTakip Ekibi';
+
+  @override
+  String get aboutContact => 'İletişim';
+
+  @override
+  String get aboutContactValue => 'info@patitakip.com';
+
+  @override
+  String get aboutWebsite => 'Web Sitesi';
+
+  @override
+  String get aboutWebsiteValue => 'www.patitakip.com';
+
+  @override
+  String get aboutFeatures => 'Özellikler';
+
+  @override
+  String get aboutFeaturesList => '• Evcil hayvan profili yönetimi\n• Aşı takip sistemi\n• Yapay zeka destekli sohbet\n• Sesli komut özelliği\n• Bildirim sistemi\n• Çoklu kullanıcı desteği\n• Bulut yedekleme';
+
+  @override
+  String get aboutTechnology => 'Teknolojiler';
+
+  @override
+  String get aboutTechnologyList => '• Flutter & Dart\n• Firebase\n• OpenAI API\n• Speech Recognition\n• Text-to-Speech';
+
+  @override
+  String get aboutPrivacy => 'Gizlilik';
+
+  @override
+  String get aboutPrivacyText => 'Verileriniz güvenle saklanır ve üçüncü taraflarla paylaşılmaz. Detaylı gizlilik politikamızı web sitemizde bulabilirsiniz.';
+
+  @override
+  String get aboutSupport => 'Destek';
+
+  @override
+  String get aboutSupportText => 'Sorularınız için destek ekibimizle iletişime geçebilirsiniz. Geri bildirimleriniz bizim için değerlidir.';
+
+  @override
+  String get aboutRateApp => 'Uygulamayı Değerlendir';
+
+  @override
+  String get aboutRateAppText => 'Deneyiminizi değerlendirin ve geliştirmemize yardımcı olun.';
+
+  @override
+  String get aboutShareApp => 'Uygulamayı Paylaş';
+
+  @override
+  String get aboutShareAppText => 'Arkadaşlarınızla PatiTakip\'i paylaşın.';
+
+  @override
+  String get aboutFollowUs => 'Bizi Takip Edin';
+
+  @override
+  String get aboutFollowUsText => 'Güncellemeler ve haberler için sosyal medyada bizi takip edin.';
 }

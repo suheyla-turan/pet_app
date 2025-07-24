@@ -7,11 +7,9 @@ import 'pet_form_page.dart';
 import 'settings_page.dart';
 import '../../../providers/pet_provider.dart';
 import '../../profile/profile_page.dart';
-import 'package:pet_app/l10n/app_localizations.dart';
-import 'package:pet_app/features/pet/widgets/voice_command_widget.dart';
+import 'package:pati_takip/l10n/app_localizations.dart';
 // import 'package:speech_to_text/speech_to_text.dart' as stt; // KALDIRILDI
-import 'package:pet_app/services/realtime_service.dart';
-import 'package:pet_app/widgets/ai_fab.dart';
+import 'package:pati_takip/services/realtime_service.dart';
 
 class PetListPage extends StatefulWidget {
   const PetListPage({super.key});
@@ -151,7 +149,7 @@ class _PetListPageState extends State<PetListPage> with TickerProviderStateMixin
                         // Uygulama adı en üstte
                         const SizedBox(height: 24),
                         Text(
-                          'Patizeka',
+                          'PatiTakip',
                           style: TextStyle(
                             fontSize: 32,
                             fontWeight: FontWeight.bold,

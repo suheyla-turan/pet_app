@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "675238660620",
+    "firebase_url": "https://petapp-7c378-default-rtdb.firebaseio.com",
     "project_id": "petapp-7c378",
     "storage_bucket": "petapp-7c378.firebasestorage.app"
   },
@@ -9,7 +10,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:675238660620:android:4f2d37c9b40ff0f4fcfc29",
         "android_client_info": {
-          "package_name": "com.example.pet_app"
+          "package_name": "com.example.pati_takip"
         }
       },
       "oauth_client": [],
