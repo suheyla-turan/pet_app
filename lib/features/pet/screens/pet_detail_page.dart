@@ -1245,23 +1245,38 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                   final isMe = user?.uid == msg.sender;
                   return Align(
                     alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: isMe ? Colors.blue.shade100 : Colors.grey.shade200,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(msg.text),
-                          const SizedBox(height: 4),
-                          Text(
-                            DateTime.fromMillisecondsSinceEpoch(msg.timestamp).toString().substring(0, 16),
-                            style: const TextStyle(fontSize: 10, color: Colors.grey),
-                          ),
-                        ],
+                    child: GestureDetector(
+                      onLongPress: isMe ? () => _showDeleteMessageDialog(msg) : null,
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: isMe ? Colors.blue.shade100 : Colors.grey.shade200,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Expanded(child: Text(msg.text)),
+                                if (isMe && msg.key != null)
+                                  IconButton(
+                                    icon: const Icon(Icons.delete, size: 16, color: Colors.red),
+                                    onPressed: () => _showDeleteMessageDialog(msg),
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(),
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              DateTime.fromMillisecondsSinceEpoch(msg.timestamp).toString().substring(0, 16),
+                              style: const TextStyle(fontSize: 10, color: Colors.grey),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   );
@@ -1783,6 +1798,41 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
         },
       ),
     );
+  }
+
+  // Not silme dialog'u
+  Future<void> _showDeleteMessageDialog(PetMessage message) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Notu Sil'),
+        content: const Text('Bu notu silmek istediğinize emin misiniz?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('İptal'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Sil'),
+          ),
+        ],
+      ),
+    );
+    
+    if (confirm == true && message.key != null && _pet.id != null) {
+      try {
+        await RealtimeService().deletePetMessage(_pet.id!, message.key!);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Not başarıyla silindi!')),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Not silinirken hata oluştu: $e')),
+        );
+      }
+    }
   }
 }
 

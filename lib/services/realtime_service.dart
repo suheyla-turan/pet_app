@@ -23,11 +23,13 @@ class RealtimeService {
 }
 
 class PetMessage {
+  final String? key;
   final String sender;
   final String text;
   final int timestamp;
-  PetMessage({required this.sender, required this.text, required this.timestamp});
-  factory PetMessage.fromMap(Map map) => PetMessage(
+  PetMessage({this.key, required this.sender, required this.text, required this.timestamp});
+  factory PetMessage.fromMap(Map map, [String? key]) => PetMessage(
+    key: key,
     sender: map['sender'],
     text: map['text'],
     timestamp: map['timestamp'],
@@ -53,9 +55,13 @@ extension PetChatRealtime on RealtimeService {
         if (data == null || data is! Map) return [];
         final mapData = data;
         if (mapData.isEmpty) return [];
-        return mapData.entries.map((e) => PetMessage.fromMap(e.value)).toList()
+        return mapData.entries.map((e) => PetMessage.fromMap(e.value, e.key)).toList()
           ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
       });
+  }
+
+  Future<void> deletePetMessage(String petId, String messageKey) async {
+    await _db.child('pet_chats').child(petId).child('messages').child(messageKey).remove();
   }
 }
 
