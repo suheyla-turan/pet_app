@@ -222,6 +222,16 @@
       "error": {}
     }
   },
+  "deleteNote": "Delete Note",
+  "deleteNoteConfirm": "Are you sure you want to delete this note?",
+  "noteDeleted": "Note deleted successfully!",
+  "noteDeleteError": "Error deleting note: {error}",
+  "@noteDeleteError": {
+    "description": "Note deletion error message.",
+    "placeholders": {
+      "error": {}
+    }
+  },
   "error": "Error: {error}",
   "@error": {
     "description": "Generic error message.",

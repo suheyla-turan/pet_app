@@ -583,6 +583,20 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
+  String get deleteNote => 'Notu Sil';
+
+  @override
+  String get deleteNoteConfirm => 'Bu notu silmek istediğinize emin misiniz?';
+
+  @override
+  String get noteDeleted => 'Not başarıyla silindi!';
+
+  @override
+  String noteDeleteError(Object error) {
+    return 'Not silinirken hata oluştu: $error';
+  }
+
+  @override
   String error(Object error) {
     return 'Hata: $error';
   }

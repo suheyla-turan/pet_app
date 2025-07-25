@@ -1223,6 +1223,30 @@ abstract class AppLocalizations {
   /// **'Failed to delete pet: {error}'**
   String deletePetError(Object error);
 
+  /// No description provided for @deleteNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Note'**
+  String get deleteNote;
+
+  /// No description provided for @deleteNoteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this note?'**
+  String get deleteNoteConfirm;
+
+  /// No description provided for @noteDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Note deleted successfully!'**
+  String get noteDeleted;
+
+  /// Note deletion error message.
+  ///
+  /// In en, this message translates to:
+  /// **'Error deleting note: {error}'**
+  String noteDeleteError(Object error);
+
   /// Generic error message.
   ///
   /// In en, this message translates to:

@@ -583,6 +583,20 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get deleteNote => 'Delete Note';
+
+  @override
+  String get deleteNoteConfirm => 'Are you sure you want to delete this note?';
+
+  @override
+  String get noteDeleted => 'Note deleted successfully!';
+
+  @override
+  String noteDeleteError(Object error) {
+    return 'Error deleting note: $error';
+  }
+
+  @override
   String error(Object error) {
     return 'Error: $error';
   }

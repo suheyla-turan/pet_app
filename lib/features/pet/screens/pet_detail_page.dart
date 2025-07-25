@@ -1805,17 +1805,17 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Notu Sil'),
-        content: const Text('Bu notu silmek istediğinize emin misiniz?'),
+        title: Text(AppLocalizations.of(context)!.deleteNote),
+        content: Text(AppLocalizations.of(context)!.deleteNoteConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('İptal'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Sil'),
+            child: Text(AppLocalizations.of(context)!.delete),
           ),
         ],
       ),
@@ -1825,11 +1825,11 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
       try {
         await RealtimeService().deletePetMessage(_pet.id!, message.key!);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Not başarıyla silindi!')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.noteDeleted)),
         );
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Not silinirken hata oluştu: $e')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.noteDeleteError(e.toString()))),
         );
       }
     }

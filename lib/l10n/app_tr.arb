@@ -223,6 +223,16 @@
       "error": {}
     }
   },
+  "deleteNote": "Notu Sil",
+  "deleteNoteConfirm": "Bu notu silmek istediğinize emin misiniz?",
+  "noteDeleted": "Not başarıyla silindi!",
+  "noteDeleteError": "Not silinirken hata oluştu: {error}",
+  "@noteDeleteError": {
+    "description": "Not silme hata mesajı.",
+    "placeholders": {
+      "error": {}
+    }
+  },
   "error": "Hata: {error}",
   "@error": {
     "description": "Genel hata mesajı.",
