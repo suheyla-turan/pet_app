@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/ai_provider.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../services/whisper_service.dart';
 import '../models/pet.dart';
 
 class VoiceTestPage extends StatefulWidget {
@@ -286,6 +287,79 @@ class _VoiceTestPageState extends State<VoiceTestPage> {
                         label: const Text('Yenile'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.orange,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                
+                const SizedBox(height: 12),
+                
+                // Test butonları
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () async {
+                          try {
+                            final result = await WhisperService.testApiKey();
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(result ? '✅ API Key geçerli!' : '❌ API Key geçersiz!'),
+                                  backgroundColor: result ? Colors.green : Colors.red,
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('❌ API Test hatası: $e'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          }
+                        },
+                        icon: const Icon(Icons.api),
+                        label: const Text('API Test'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.purple,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () async {
+                          try {
+                            final result = await WhisperService.testSimpleRecording();
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(result ?? '❌ Ses kayıt testi başarısız!'),
+                                  backgroundColor: result != null ? Colors.green : Colors.red,
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('❌ Ses kayıt testi hatası: $e'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          }
+                        },
+                        icon: const Icon(Icons.mic),
+                        label: const Text('Ses Test'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.teal,
                           foregroundColor: Colors.white,
                         ),
                       ),

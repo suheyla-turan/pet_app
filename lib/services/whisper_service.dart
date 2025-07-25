@@ -16,7 +16,7 @@ class WhisperService {
   
   // Rate limit yönetimi için
   static DateTime? _lastRequestTime;
-  static const int _minRequestInterval = 30; // 30 saniye (daha güvenli)
+  static const int _minRequestInterval = 10; // 10 saniye (test için daha kısa)
   static const int _maxRetries = 3;
 
   // Global ses servisi durumu yönetimi
@@ -128,6 +128,7 @@ class WhisperService {
     }
     
     try {
+      print('🔧 WhisperService.recordAndTranscribe başlatılıyor...');
       await initialize();
       
       // Geçici dosya yolu - platform bağımsız
@@ -135,6 +136,9 @@ class WhisperService {
       final tempPath = '${tempDir.path}/temp_audio_${DateTime.now().millisecondsSinceEpoch}.wav';
       
       print('📁 Geçici dosya yolu: $tempPath');
+      
+      // Recorder durumunu kontrol et
+      print('🎤 Recorder durumu: isRecording=${_recorder.isRecording}, isStopped=${_recorder.isStopped}');
       
       // Kayıt başlat
       print('🎤 Kayıt başlatılıyor...');
@@ -146,11 +150,13 @@ class WhisperService {
       );
       
       print('✅ Kayıt başlatıldı, $seconds saniye bekleniyor...');
+      print('🎤 Kayıt sırasında recorder durumu: isRecording=${_recorder.isRecording}');
       
       // Belirtilen süre kadar bekle
       await Future.delayed(Duration(seconds: seconds));
       
       // Kayıt durdur
+      print('🛑 Kayıt durduruluyor...');
       final path = await _recorder.stopRecorder();
       if (path == null) {
         print('❌ Kayıt durdurulamadı, path null');
@@ -167,6 +173,13 @@ class WhisperService {
         
         if (fileSize < 2000) { // 2KB'dan küçük dosyalar için uyarı
           print('⚠️ Dosya çok küçük ($fileSize bytes), muhtemelen ses kaydedilmedi');
+          print('🔍 Dosya içeriği kontrol ediliyor...');
+          try {
+            final bytes = await file.readAsBytes();
+            print('🔍 Dosya ilk 100 byte: ${bytes.take(100).toList()}');
+          } catch (e) {
+            print('❌ Dosya okuma hatası: $e');
+          }
           return null;
         }
       } else {
@@ -199,6 +212,7 @@ class WhisperService {
       return transcription;
     } catch (e) {
       print('❌ Ses kayıt hatası: $e');
+      print('🔍 Hata detayı: ${e.runtimeType}');
       return null;
     } finally {
       // Ses kilidini serbest bırak
@@ -209,16 +223,29 @@ class WhisperService {
   static Future<String?> _transcribeAudio(String audioPath) async {
     int retryCount = 0;
     
+    print('🔧 _transcribeAudio başlatılıyor...');
+    
     // API key kontrolü
     if (openaiApiKey == 'YOUR_OPENAI_API_KEY_HERE' || openaiApiKey.isEmpty) {
       print('❌ OpenAI API key ayarlanmamış! Lütfen lib/secrets.dart dosyasına gerçek API key\'inizi ekleyin.');
       return null;
     }
     
+    // API key format kontrolü
+    if (!openaiApiKey.startsWith('sk-')) {
+      print('❌ OpenAI API key formatı yanlış! API key "sk-" ile başlamalı.');
+      print('🔑 Mevcut API key: ${openaiApiKey.substring(0, 10)}...');
+      return null;
+    }
+    
     print('🔑 API Key kontrol edildi: ${openaiApiKey.substring(0, 10)}...');
+    print('🔑 API Key uzunluğu: ${openaiApiKey.length} karakter');
+    print('🔑 API Key formatı: ${openaiApiKey.startsWith('sk-') ? 'Doğru' : 'Yanlış'}');
     
     while (retryCount <= _maxRetries) {
       try {
+        print('🔄 Transcription denemesi ${retryCount + 1}/${_maxRetries + 1}');
+        
         // Rate limit kontrolü
         if (_lastRequestTime != null) {
           final timeSinceLastRequest = DateTime.now().difference(_lastRequestTime!).inSeconds;
@@ -238,11 +265,24 @@ class WhisperService {
         final bytes = await audioFile.readAsBytes();
         print('📊 Ses dosyası boyutu: ${bytes.length} bytes');
         
+        // Dosya formatını kontrol et
+        if (bytes.length > 4) {
+          final header = bytes.take(4).toList();
+          print('🔍 Dosya header: $header');
+          // WAV dosyası header kontrolü (RIFF)
+          if (header[0] == 82 && header[1] == 73 && header[2] == 70 && header[3] == 70) {
+            print('✅ WAV dosya formatı doğrulandı');
+          } else {
+            print('⚠️ WAV dosya formatı doğrulanamadı, header: $header');
+          }
+        }
+        
         // Multipart request oluştur
         final request = http.MultipartRequest('POST', Uri.parse(_baseUrl));
         
         // Authorization header ekle
         request.headers['Authorization'] = 'Bearer $openaiApiKey';
+        print('🔑 Authorization header eklendi');
         
         // Ses dosyasını ekle
         request.files.add(
@@ -252,28 +292,34 @@ class WhisperService {
             filename: 'audio.wav',
           ),
         );
+        print('📎 Ses dosyası request\'e eklendi');
         
         // Model parametresi ekle
         request.fields['model'] = 'whisper-1';
         request.fields['language'] = 'tr';
         request.fields['response_format'] = 'json';
+        print('⚙️ Request parametreleri eklendi: model=whisper-1, language=tr');
 
         print('🌐 Whisper API isteği gönderiliyor... (Deneme ${retryCount + 1}/${_maxRetries + 1})');
+        print('🌐 API URL: $_baseUrl');
         _lastRequestTime = DateTime.now();
         
         final response = await request.send();
         final responseBody = await response.stream.bytesToString();
 
         print('📡 API yanıt kodu: ${response.statusCode}');
+        print('📡 Response headers: ${response.headers}');
         
         if (response.statusCode == 200) {
           final data = jsonDecode(responseBody);
           final text = data['text']?.toString().trim();
           print('✅ API yanıtı başarılı: $text');
+          print('✅ Response data: $data');
           return text;
         } else if (response.statusCode == 429) {
           // Rate limit hatası
           print('⚠️ Rate limit hatası (429) alındı');
+          print('⚠️ Response body: $responseBody');
           
           if (retryCount < _maxRetries) {
             // Exponential backoff ile bekle
@@ -288,10 +334,26 @@ class WhisperService {
           }
         } else {
           print('❌ Whisper API hatası: ${response.statusCode} - $responseBody');
+          print('❌ Response headers: ${response.headers}');
+          
+          // Özel hata mesajları
+          if (response.statusCode == 400) {
+            print('❌ Bad Request: Ses dosyası formatı veya boyutu uygun değil');
+          } else if (response.statusCode == 401) {
+            print('❌ Unauthorized: API key geçersiz veya eksik');
+          } else if (response.statusCode == 403) {
+            print('❌ Forbidden: API key yetkisi yok');
+          } else if (response.statusCode == 413) {
+            print('❌ Payload Too Large: Ses dosyası çok büyük');
+          } else if (response.statusCode == 500) {
+            print('❌ Internal Server Error: OpenAI sunucu hatası');
+          }
+          
           return null;
         }
       } catch (e) {
         print('❌ Transcription hatası: $e');
+        print('🔍 Hata türü: ${e.runtimeType}');
         
         if (retryCount < _maxRetries) {
           final waitTime = pow(2, retryCount) * 2; // 2, 4, 8 saniye
@@ -306,6 +368,110 @@ class WhisperService {
     }
     
     return null;
+  }
+
+  // Basit ses kayıt test fonksiyonu
+  static Future<String?> testSimpleRecording({int seconds = 3}) async {
+    print('🧪 Basit ses kayıt testi başlatılıyor...');
+    
+    try {
+      await initialize();
+      
+      // Geçici dosya yolu
+      final tempDir = await getTemporaryDirectory();
+      final tempPath = '${tempDir.path}/test_audio_${DateTime.now().millisecondsSinceEpoch}.wav';
+      
+      print('📁 Test dosya yolu: $tempPath');
+      
+      // Kayıt başlat
+      print('🎤 Test kayıt başlatılıyor...');
+      await _recorder.startRecorder(
+        toFile: tempPath,
+        codec: Codec.pcm16WAV,
+        sampleRate: 16000,
+        numChannels: 1,
+      );
+      
+      print('✅ Test kayıt başlatıldı, $seconds saniye bekleniyor...');
+      await Future.delayed(Duration(seconds: seconds));
+      
+      // Kayıt durdur
+      final path = await _recorder.stopRecorder();
+      if (path == null) {
+        print('❌ Test kayıt durdurulamadı');
+        return null;
+      }
+      
+      print('✅ Test kayıt tamamlandı: $path');
+      
+      // Dosya boyutunu kontrol et
+      final file = File(path);
+      if (await file.exists()) {
+        final fileSize = await file.length();
+        print('📊 Test dosya boyutu: $fileSize bytes');
+        
+        if (fileSize < 1000) {
+          print('⚠️ Test dosyası çok küçük ($fileSize bytes)');
+          return null;
+        }
+        
+        // Dosyayı sil
+        await file.delete();
+        print('✅ Test dosyası silindi');
+        
+        return 'Test kayıt başarılı: $fileSize bytes';
+      } else {
+        print('❌ Test dosyası bulunamadı');
+        return null;
+      }
+    } catch (e) {
+      print('❌ Test kayıt hatası: $e');
+      return null;
+    }
+  }
+
+  // API key test fonksiyonu
+  static Future<bool> testApiKey() async {
+    print('🧪 API key test ediliyor...');
+    
+    // API key kontrolü
+    if (openaiApiKey == 'YOUR_OPENAI_API_KEY_HERE' || openaiApiKey.isEmpty) {
+      print('❌ OpenAI API key ayarlanmamış!');
+      return false;
+    }
+    
+    if (!openaiApiKey.startsWith('sk-')) {
+      print('❌ OpenAI API key formatı yanlış!');
+      return false;
+    }
+    
+    try {
+      // Basit bir test isteği gönder
+      final request = http.Request('GET', Uri.parse('https://api.openai.com/v1/models'));
+      request.headers['Authorization'] = 'Bearer $openaiApiKey';
+      
+      print('🌐 API test isteği gönderiliyor...');
+      final response = await request.send();
+      final responseBody = await response.stream.bytesToString();
+      
+      print('📡 Test yanıt kodu: ${response.statusCode}');
+      
+      if (response.statusCode == 200) {
+        print('✅ API key geçerli!');
+        return true;
+      } else if (response.statusCode == 401) {
+        print('❌ API key geçersiz! (401 Unauthorized)');
+        print('📡 Response: $responseBody');
+        return false;
+      } else {
+        print('❌ API test hatası: ${response.statusCode}');
+        print('📡 Response: $responseBody');
+        return false;
+      }
+    } catch (e) {
+      print('❌ API test hatası: $e');
+      return false;
+    }
   }
 
   static Future<void> dispose() async {

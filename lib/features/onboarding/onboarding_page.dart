@@ -76,23 +76,22 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16.0),
-              child: SmoothPageIndicator(
-                controller: _pageController,
-                count: 6,
-                effect: WormEffect(
-                  dotHeight: 10,
-                  dotWidth: 10,
-                  activeDotColor: Theme.of(context).colorScheme.primary,
-                ),
-                onDotClicked: (index) {
-                  if (index < 4) {
+            if (_pageIndex < 4)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16.0),
+                child: SmoothPageIndicator(
+                  controller: _pageController,
+                  count: 4,
+                  effect: WormEffect(
+                    dotHeight: 10,
+                    dotWidth: 10,
+                    activeDotColor: Theme.of(context).colorScheme.primary,
+                  ),
+                  onDotClicked: (index) {
                     _pageController.animateToPage(index, duration: Duration(milliseconds: 400), curve: Curves.ease);
-                  }
-                },
+                  },
+                ),
               ),
-            ),
           ],
         ),
       ),
