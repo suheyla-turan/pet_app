@@ -93,15 +93,26 @@ Lütfen yukarıdaki stilde yanıt ver ve Türkçe kullan.
     final messages = [
       {
         "role": "system",
-        "content": "$stylePrompt\n\n$petInfo\n\nSen evcil hayvan bakımı konusunda uzman bir AI asistanısın. Türkçe yanıt ver ve kısa tut."
+        "content": "$stylePrompt\n\n$petInfo\n\nSen evcil hayvan bakımı konusunda uzman bir AI asistanısın. Türkçe yanıt ver ve kısa tut. Kullanıcı sesli mesaj gönderdiğinde, sesli mesajı anlamaya çalış ve uygun yanıt ver. Sesli mesajlar için 'Sesli mesaj gönderildi' şeklinde işaretlenir."
       }
     ];
 
     // Sohbet geçmişini OpenAI formatına çevir
     for (final msg in history) {
+      String content = msg.text;
+      
+      // Ses mesajları için özel işlem
+      if (msg.type == MessageType.voice) {
+        content = '[Sesli mesaj gönderildi] ${msg.text}';
+      }
+      // Resim mesajları için özel işlem
+      else if (msg.type == MessageType.image) {
+        content = '[Resim gönderildi] ${msg.text}';
+      }
+      
       messages.add({
         "role": msg.sender == 'user' ? 'user' : 'assistant',
-        "content": msg.text,
+        "content": content,
       });
     }
 

@@ -201,6 +201,15 @@ class VoiceService {
     }
     
     try {
+      // Global ses kilidi kontrolü
+      if (WhisperService.isAnyVoiceServiceActive) {
+        final activeService = WhisperService.activeServiceName ?? 'Bilinmeyen';
+        final status = WhisperService.getVoiceLockStatus();
+        print('❌ Ses servisi meşgul: $activeService. $status');
+        onSpeechError?.call('Ses servisi meşgul: $activeService. $status');
+        return;
+      }
+      
       _isListening = true;
       onListeningStarted?.call();
       
@@ -240,11 +249,23 @@ class VoiceService {
     }
     
     try {
+      // Global ses kilidi kontrolü
+      if (WhisperService.isAnyVoiceServiceActive) {
+        final activeService = WhisperService.activeServiceName ?? 'Bilinmeyen';
+        final status = WhisperService.getVoiceLockStatus();
+        print('❌ Ses servisi meşgul: $activeService. $status');
+        onSpeechError?.call('Ses servisi meşgul: $activeService. $status');
+        return;
+      }
+      
       _isContinuousListening = true;
       _currentTranscription = '';
       onContinuousListeningStarted?.call();
       
       print('🎤 Sürekli ses dinleme başlatılıyor...');
+      
+      // Whisper servisini başlat
+      await WhisperService.initialize();
       
       // Önceki timer'ı temizle
       if (_continuousListeningTimer != null) {
@@ -252,8 +273,8 @@ class VoiceService {
         _continuousListeningTimer = null;
       }
       
-      // Her 3 saniyede bir ses kaydı yap ve transkripsiyon al
-      _continuousListeningTimer = Timer.periodic(const Duration(seconds: 3), (timer) async {
+      // Her 5 saniyede bir ses kaydı yap ve transkripsiyon al (daha uzun süre)
+      _continuousListeningTimer = Timer.periodic(const Duration(seconds: 5), (timer) async {
         if (!_isContinuousListening) {
           print('⏱️ Timer durduruldu - dinleme durmuş');
           timer.cancel();
@@ -261,15 +282,19 @@ class VoiceService {
         }
         
         try {
-          final transcription = await WhisperService.recordAndTranscribe(seconds: 3);
+          print('🎤 Ses kayıt başlatılıyor...');
+          final transcription = await WhisperService.recordAndTranscribe(seconds: 4); // 4 saniye kayıt
           if (transcription != null && transcription.isNotEmpty) {
             _currentTranscription += ' ' + transcription;
             _currentTranscription = _currentTranscription.trim();
             print('🎤 Anlık transkripsiyon: $_currentTranscription');
             onContinuousTranscription?.call(_currentTranscription);
+          } else {
+            print('⚠️ Transkripsiyon boş veya null');
           }
         } catch (e) {
           print('❌ Anlık transkripsiyon hatası: $e');
+          // Hata durumunda timer'ı durdurma, devam et
         }
       });
       
@@ -302,8 +327,8 @@ class VoiceService {
       
       onContinuousListeningStopped?.call();
       
-      // Son bir kayıt daha yap ve transkripsiyonu tamamla
-      final finalTranscription = await WhisperService.recordAndTranscribe(seconds: 2);
+      // Son bir kayıt daha yap ve transkripsiyonu tamamla (daha uzun süre)
+      final finalTranscription = await WhisperService.recordAndTranscribe(seconds: 3); // 3 saniye
       if (finalTranscription != null && finalTranscription.isNotEmpty) {
         _currentTranscription += ' ' + finalTranscription;
         _currentTranscription = _currentTranscription.trim();

@@ -8,6 +8,8 @@ import 'package:image_picker/image_picker.dart';
 import 'ai_chat_history_page.dart';
 import '../../../l10n/app_localizations.dart';
 import 'dart:io';
+import '../../../services/whisper_service.dart'; // Added import for WhisperService
+import 'dart:async'; // Added import for Timer
 
 class AIChatPage extends StatefulWidget {
   final Pet pet;
@@ -23,7 +25,6 @@ class _AIChatPageState extends State<AIChatPage> {
   final MediaService _mediaService = MediaService();
   bool _isRecording = false;
   bool _isContinuousListening = false; // Yeni: sürekli dinleme durumu
-  int _recordingDuration = 0;
 
   @override
   void initState() {
@@ -48,7 +49,6 @@ class _AIChatPageState extends State<AIChatPage> {
     _mediaService.onRecordingStarted = () {
       setState(() {
         _isRecording = true;
-        _recordingDuration = 0;
       });
     };
     _mediaService.onRecordingStopped = () {
@@ -57,8 +57,9 @@ class _AIChatPageState extends State<AIChatPage> {
       });
     };
     _mediaService.onRecordingDurationChanged = (duration) {
+      print('📱 AI Chat: Kayıt süresi güncellendi: ${duration}s');
       setState(() {
-        _recordingDuration = duration;
+        // UI'ı güncelle (MediaService'teki süre otomatik olarak güncelleniyor)
       });
     };
     _mediaService.onVoiceRecorded = (path, duration) {
@@ -314,13 +315,17 @@ class _AIChatPageState extends State<AIChatPage> {
                 children: [
                   Icon(Icons.mic, color: Colors.orange),
                   SizedBox(width: 8),
-                  Text('Sürekli Dinleniyor... Anlık Transkripsiyon Aktif'),
-                  Spacer(),
+                  Expanded(
+                    child: Text(
+                      'Sürekli Dinleniyor... Anlık Transkripsiyon Aktif',
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
                   TextButton(
                     onPressed: () async {
                       await aiProvider.stopContinuousListening(currentPet: widget.pet);
                     },
-                    child: Text('Durdur ve Yanıt Al'),
+                    child: Text('Durdur'),
                   ),
                 ],
               ),
@@ -334,8 +339,12 @@ class _AIChatPageState extends State<AIChatPage> {
                 children: [
                   Icon(Icons.mic, color: Colors.red),
                   SizedBox(width: 8),
-                  Text('Ses Kaydı: ${_mediaService.formatDuration(_recordingDuration)}'),
-                  Spacer(),
+                  Expanded(
+                    child: Text(
+                      'Ses Kaydı: ${_mediaService.formatDuration(_mediaService.recordingDuration)}',
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
                   TextButton(
                     onPressed: () => _mediaService.stopVoiceRecording(),
                     child: Text('Durdur'),
@@ -352,8 +361,12 @@ class _AIChatPageState extends State<AIChatPage> {
                 children: [
                   Icon(Icons.hearing, color: Colors.blue),
                   SizedBox(width: 8),
-                  Text('Sesli Komut Dinleniyor...'),
-                  Spacer(),
+                  Expanded(
+                    child: Text(
+                      'Sesli Komut Dinleniyor...',
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
                   TextButton(
                     onPressed: () => aiProvider.stopVoiceInput(),
                     child: Text('Durdur'),
@@ -361,106 +374,348 @@ class _AIChatPageState extends State<AIChatPage> {
                 ],
               ),
             ),
-          Row(
-            children: [
-              // Sürekli dinleme butonu (AI asistan için)
-              IconButton(
-                icon: Icon(aiProvider.isContinuousListening ? Icons.stop : Icons.hearing),
-                tooltip: aiProvider.isContinuousListening ? 'Dinlemeyi Durdur' : 'AI Asistan Dinleme',
-                onPressed: (aiProvider.isLoading || _isRecording || aiProvider.isListening)
-                    ? null
-                    : () async {
-                        if (aiProvider.isContinuousListening) {
-                          await aiProvider.stopContinuousListening(currentPet: widget.pet);
-                        } else {
-                          // Diğer kayıtları durdur
-                          if (_isRecording) {
-                            _mediaService.stopVoiceRecording();
-                          }
-                          if (aiProvider.isListening) {
-                            aiProvider.stopVoiceInput();
-                          }
-                          await aiProvider.startContinuousListening();
-                        }
-                      },
-              ),
-              // Ses kayıt butonu (chat için)
-              IconButton(
-                icon: Icon(_isRecording ? Icons.stop : Icons.fiber_manual_record),
-                tooltip: _isRecording ? 'Kaydı Durdur' : 'Ses Mesajı Kaydet',
-                onPressed: (aiProvider.isLoading || aiProvider.isListening || aiProvider.isContinuousListening)
-                    ? null
-                    : () {
-                        if (_isRecording) {
-                          _mediaService.stopVoiceRecording();
-                        } else {
-                          // Voice service'i durdur (eğer çalışıyorsa)
-                          if (aiProvider.isListening) {
-                            aiProvider.stopVoiceInput();
-                          }
-                          if (aiProvider.isContinuousListening) {
-                            aiProvider.stopContinuousListening();
-                          }
-                          _mediaService.startVoiceRecording();
-                        }
-                      },
-              ),
-              // Resim butonu
-              IconButton(
-                icon: const Icon(Icons.image),
-                tooltip: 'Resim Gönder',
-                onPressed: (aiProvider.isLoading || aiProvider.isListening || aiProvider.isContinuousListening)
-                    ? null
-                    : () => _showImageSourceDialog(),
-              ),
-              // Mesaj yazma alanı
-              Expanded(
-                child: TextField(
-                  controller: _chatController,
-                  enabled: !aiProvider.isLoading && !aiProvider.isListening && !aiProvider.isContinuousListening,
-                  decoration: InputDecoration(
-                    hintText: AppLocalizations.of(context)!.chatHint,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      borderSide: BorderSide.none,
+          // Global ses servisi durumu gösterimi
+          if (WhisperService.isAnyVoiceServiceActive && !_isRecording && !aiProvider.isListening && !aiProvider.isContinuousListening)
+            Container(
+              padding: const EdgeInsets.all(8),
+              color: Colors.purple.shade100,
+              child: Row(
+                children: [
+                  Icon(Icons.mic, color: Colors.purple),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Ses Servisi Aktif: ${WhisperService.activeServiceName ?? "Bilinmeyen"}'),
+                        Text(
+                          WhisperService.getVoiceLockStatus(),
+                          style: TextStyle(fontSize: 12, color: Colors.purple.shade700),
+                        ),
+                        Text(
+                          'Bu durum ses kayıt işlemlerini engelleyebilir',
+                          style: TextStyle(fontSize: 10, color: Colors.purple.shade600),
+                        ),
+                      ],
                     ),
-                    filled: true,
-                    fillColor: Theme.of(context).brightness == Brightness.dark 
-                        ? Colors.grey[800] 
-                        : Colors.grey[100],
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   ),
-                  onSubmitted: (val) async {
-                    if (val.trim().isNotEmpty && !aiProvider.isLoading && !aiProvider.isListening && !aiProvider.isContinuousListening) {
-                      await aiProvider.sendMessageAndGetAIResponse(
-                        petId: widget.pet.id ?? widget.pet.name,
-                        pet: widget.pet,
-                        message: val.trim(),
+                  TextButton(
+                    onPressed: () {
+                      WhisperService.releaseVoiceLock();
+                      setState(() {});
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Ses kilidi temizlendi'),
+                          backgroundColor: Colors.green,
+                          duration: Duration(seconds: 2),
+                        ),
                       );
-                      _chatController.clear();
-                    }
-                  },
+                    },
+                    child: Text('Temizle'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      WhisperService.forceReleaseAllVoiceLocks();
+                      setState(() {});
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Tüm ses servisleri zorla durduruldu'),
+                          backgroundColor: Colors.red,
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    },
+                    child: Text('Zorla Durdur'),
+                  ),
+                ],
+              ),
+            ),
+          // Mesaj yazma alanı - Yukarı taşındı ve optimize edildi
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Theme.of(context).brightness == Brightness.dark 
+                  ? Colors.grey[900] 
+                  : Colors.grey[50],
+              border: Border(
+                top: BorderSide(
+                  color: Theme.of(context).dividerColor,
+                  width: 0.5,
                 ),
               ),
-              // Gönder butonu
-              IconButton(
-                icon: const Icon(Icons.send),
-                tooltip: 'Mesaj Gönder',
-                onPressed: (aiProvider.isLoading || aiProvider.isListening || aiProvider.isContinuousListening)
-                    ? null
-                    : () async {
-                        final val = _chatController.text.trim();
-                        if (val.isNotEmpty) {
-                          await aiProvider.sendMessageAndGetAIResponse(
-                            petId: widget.pet.id ?? widget.pet.name,
-                            pet: widget.pet,
-                            message: val,
-                          );
-                          _chatController.clear();
-                        }
-                      },
+            ),
+            child: SafeArea(
+              child: Row(
+                children: [
+                  // Sürekli dinleme butonu (AI asistan için)
+                  IconButton(
+                    icon: Icon(aiProvider.isContinuousListening ? Icons.stop : Icons.hearing),
+                    tooltip: aiProvider.isContinuousListening ? 'Dinlemeyi Durdur' : 'AI Asistan Dinleme',
+                    onPressed: (aiProvider.isLoading || _isRecording || aiProvider.isListening)
+                        ? null
+                        : () async {
+                            try {
+                              if (aiProvider.isContinuousListening) {
+                                await aiProvider.stopContinuousListening(currentPet: widget.pet);
+                              } else {
+                                // Voice service'i başlat (eğer başlatılmamışsa)
+                                await aiProvider.initializeVoiceService();
+                                
+                                // Diğer kayıtları durdur
+                                if (_isRecording) {
+                                  _mediaService.stopVoiceRecording();
+                                }
+                                if (aiProvider.isListening) {
+                                  aiProvider.stopVoiceInput();
+                                }
+                                
+                                // Ses kilidi kontrolü - daha güçlü kontrol
+                                if (WhisperService.isAnyVoiceServiceActive) {
+                                  final activeService = WhisperService.activeServiceName ?? 'Bilinmeyen';
+                                  final status = WhisperService.getVoiceLockStatus();
+                                  
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) => AlertDialog(
+                                      title: Text('Ses Servisi Meşgul'),
+                                      content: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text('Aktif servis: $activeService'),
+                                          SizedBox(height: 8),
+                                          Text(status, style: TextStyle(fontSize: 12)),
+                                          SizedBox(height: 16),
+                                          Text('Ne yapmak istiyorsunuz?'),
+                                        ],
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.pop(context);
+                                          },
+                                          child: Text('İptal'),
+                                        ),
+                                        TextButton(
+                                          onPressed: () {
+                                            WhisperService.releaseVoiceLock();
+                                            Navigator.pop(context);
+                                            setState(() {});
+                                            // Tekrar dene
+                                            Future.delayed(Duration(milliseconds: 500), () {
+                                              aiProvider.startContinuousListening();
+                                            });
+                                          },
+                                          child: Text('Temizle ve Dene'),
+                                        ),
+                                        TextButton(
+                                          onPressed: () {
+                                            WhisperService.forceReleaseAllVoiceLocks();
+                                            Navigator.pop(context);
+                                            setState(() {});
+                                            // Tekrar dene
+                                            Future.delayed(Duration(milliseconds: 500), () {
+                                              aiProvider.startContinuousListening();
+                                            });
+                                          },
+                                          style: TextButton.styleFrom(foregroundColor: Colors.red),
+                                          child: Text('Zorla Durdur'),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                  return;
+                                }
+                                
+                                await aiProvider.startContinuousListening();
+                              }
+                            } catch (e) {
+                              print('❌ Sürekli dinleme hatası: $e');
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Ses dinleme hatası: $e'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          },
+                  ),
+                  // Ses kayıt butonu (chat için) - Mikrofon ikonu ile
+                  IconButton(
+                    icon: Icon(_isRecording ? Icons.stop : Icons.mic),
+                    tooltip: _isRecording ? 'Kaydı Durdur' : 'Ses Mesajı Kaydet',
+                    onPressed: (aiProvider.isLoading || aiProvider.isListening || aiProvider.isContinuousListening)
+                        ? null
+                        : () {
+                            if (_isRecording) {
+                              _mediaService.stopVoiceRecording();
+                            } else {
+                              // Voice service'i durdur (eğer çalışıyorsa)
+                              if (aiProvider.isListening) {
+                                aiProvider.stopVoiceInput();
+                              }
+                              if (aiProvider.isContinuousListening) {
+                                aiProvider.stopContinuousListening();
+                              }
+                              
+                              // Ses kilidi kontrolü - daha güçlü kontrol
+                              if (WhisperService.isAnyVoiceServiceActive) {
+                                final activeService = WhisperService.activeServiceName ?? 'Bilinmeyen';
+                                final status = WhisperService.getVoiceLockStatus();
+                                
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: Text('Ses Servisi Meşgul'),
+                                    content: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text('Aktif servis: $activeService'),
+                                        SizedBox(height: 8),
+                                        Text(status, style: TextStyle(fontSize: 12)),
+                                        SizedBox(height: 16),
+                                        Text('Ne yapmak istiyorsunuz?'),
+                                      ],
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.pop(context);
+                                        },
+                                        child: Text('İptal'),
+                                      ),
+                                      TextButton(
+                                        onPressed: () {
+                                          WhisperService.releaseVoiceLock();
+                                          Navigator.pop(context);
+                                          setState(() {});
+                                          // Tekrar dene
+                                          Future.delayed(Duration(milliseconds: 500), () {
+                                            _mediaService.startVoiceRecording();
+                                          });
+                                        },
+                                        child: Text('Temizle ve Dene'),
+                                      ),
+                                      TextButton(
+                                        onPressed: () {
+                                          WhisperService.forceReleaseAllVoiceLocks();
+                                          Navigator.pop(context);
+                                          setState(() {});
+                                          // Tekrar dene
+                                          Future.delayed(Duration(milliseconds: 500), () {
+                                            _mediaService.startVoiceRecording();
+                                          });
+                                        },
+                                        style: TextButton.styleFrom(foregroundColor: Colors.red),
+                                        child: Text('Zorla Durdur'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                                return;
+                              }
+                              
+                              _mediaService.startVoiceRecording();
+                            }
+                          },
+                  ),
+                  // Resim butonu
+                  IconButton(
+                    icon: const Icon(Icons.image),
+                    tooltip: 'Resim Gönder',
+                    onPressed: (aiProvider.isLoading || aiProvider.isListening || aiProvider.isContinuousListening)
+                        ? null
+                        : () => _showImageSourceDialog(),
+                  ),
+                  // Mesaj yazma alanı - Optimize edildi
+                  Expanded(
+                    child: Container(
+                      constraints: BoxConstraints(
+                        minHeight: 40,
+                        maxHeight: 120, // Maksimum yükseklik sınırı
+                      ),
+                      child: TextField(
+                        controller: _chatController,
+                        enabled: !aiProvider.isLoading && !aiProvider.isListening && !aiProvider.isContinuousListening,
+                        maxLines: null,
+                        minLines: 1,
+                        textInputAction: TextInputAction.newline,
+                        keyboardType: TextInputType.multiline,
+                        style: TextStyle(fontSize: 16),
+                        // Performans optimizasyonları
+                        enableInteractiveSelection: true,
+                        autocorrect: false, // Otomatik düzeltmeyi kapat
+                        enableSuggestions: false, // Önerileri kapat
+                        textCapitalization: TextCapitalization.sentences, // Cümle başı büyük harf
+                        // Debounce ile gereksiz rebuild'leri önle
+                        onChanged: (value) {
+                          // _debounceTimer?.cancel(); // Removed
+                          // _debounceTimer = Timer(Duration(milliseconds: 300), () { // Removed
+                          //   if (mounted) { // Removed
+                          //     setState(() {}); // Removed
+                          //   } // Removed
+                          // }); // Removed
+                        },
+                        decoration: InputDecoration(
+                          hintText: AppLocalizations.of(context)!.chatHint,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(20),
+                            borderSide: BorderSide.none,
+                          ),
+                          filled: true,
+                          fillColor: Theme.of(context).brightness == Brightness.dark 
+                              ? Colors.grey[800] 
+                              : Colors.grey[100],
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          isDense: true, // Daha kompakt görünüm
+                          // Performans için ek optimizasyonlar
+                          counterText: '', // Karakter sayacını kapat
+                          suffixIcon: null, // Suffix icon'u kapat
+                        ),
+                        onSubmitted: (val) async {
+                          if (val.trim().isNotEmpty && !aiProvider.isLoading && !aiProvider.isListening && !aiProvider.isContinuousListening) {
+                            await aiProvider.sendMessageAndGetAIResponse(
+                              petId: widget.pet.id ?? widget.pet.name,
+                              pet: widget.pet,
+                              message: val.trim(),
+                            );
+                            _chatController.clear();
+                          }
+                        },
+                        // Klavye açılırken performans iyileştirmesi
+                        onTap: () {
+                          // Klavye açılırken gereksiz rebuild'leri önle
+                          // Future.delayed(Duration(milliseconds: 100), () { // Removed
+                          //   if (mounted) { // Removed
+                          //     setState(() {}); // Removed
+                          //   } // Removed
+                          // }); // Removed
+                        },
+                      ),
+                    ),
+                  ),
+                  // Gönder butonu
+                  IconButton(
+                    icon: const Icon(Icons.send),
+                    tooltip: 'Mesaj Gönder',
+                    onPressed: (aiProvider.isLoading || aiProvider.isListening || aiProvider.isContinuousListening)
+                        ? null
+                        : () async {
+                            final val = _chatController.text.trim();
+                            if (val.isNotEmpty) {
+                              await aiProvider.sendMessageAndGetAIResponse(
+                                petId: widget.pet.id ?? widget.pet.name,
+                                pet: widget.pet,
+                                message: val,
+                              );
+                              _chatController.clear();
+                            }
+                          },
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ],
       ),

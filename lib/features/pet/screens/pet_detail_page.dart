@@ -339,10 +339,11 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                             vertical: 12,
                           ),
                         ),
-                        maxLines: 3,
+                        maxLines: null,
                         minLines: 1,
                         autofocus: true,
-                        textInputAction: TextInputAction.done,
+                        textInputAction: TextInputAction.newline,
+                        keyboardType: TextInputType.multiline,
                         onSubmitted: (text) async {
                           String question = text.trim();
                           

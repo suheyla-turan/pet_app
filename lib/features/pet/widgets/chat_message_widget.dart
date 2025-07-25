@@ -83,7 +83,7 @@ class ChatMessageWidget extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              message.text.isNotEmpty ? message.text : 'Ses mesajı',
+              message.text.isNotEmpty ? message.text : '🎤 Sesli mesaj',
               style: const TextStyle(fontWeight: FontWeight.w500),
             ),
             if (message.voiceDuration != null)

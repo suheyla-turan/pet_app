@@ -24,10 +24,26 @@ class _VoiceCommandWidgetState extends State<VoiceCommandWidget> {
   Future<void> _startContinuousListening() async {
     if (!mounted) return;
     
-    print('🎤 Sürekli dinleme başlatılıyor...');
-    final aiProvider = Provider.of<AIProvider>(context, listen: false);
-    await aiProvider.startContinuousListening();
-    print('✅ Sürekli dinleme başlatıldı');
+    try {
+      print('🎤 Sürekli dinleme başlatılıyor...');
+      final aiProvider = Provider.of<AIProvider>(context, listen: false);
+      
+      // Voice service'i başlat (eğer başlatılmamışsa)
+      await aiProvider.initializeVoiceService();
+      
+      await aiProvider.startContinuousListening();
+      print('✅ Sürekli dinleme başlatıldı');
+    } catch (e) {
+      print('❌ Sürekli dinleme başlatma hatası: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Ses dinleme başlatılamadı: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _stopContinuousListening() async {
@@ -35,12 +51,9 @@ class _VoiceCommandWidgetState extends State<VoiceCommandWidget> {
     
     print('🛑 Sürekli dinleme durduruluyor...');
     final aiProvider = Provider.of<AIProvider>(context, listen: false);
-    if (widget.pet != null) {
-      await aiProvider.stopContinuousListening(currentPet: widget.pet!);
-    } else {
-      // Pet yoksa sadece durdur
-      await aiProvider.stopContinuousListening();
-    }
+    
+    // Pet bilgisini geçir (varsa)
+    await aiProvider.stopContinuousListening(currentPet: widget.pet);
     print('✅ Sürekli dinleme durduruldu');
   }
 

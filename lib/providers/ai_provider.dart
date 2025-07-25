@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import '../services/openai_service.dart';
 import '../services/voice_service.dart';
+import '../services/media_service.dart';
 import '../providers/settings_provider.dart';
 import '../providers/pet_provider.dart';
 import '../features/pet/models/pet.dart';
@@ -128,7 +129,7 @@ class AIProvider with ChangeNotifier {
     final chatId = _activeChatId!;
     final userMsg = AIChatMessage.voice(
       sender: 'user',
-      text: 'Ses mesajı',
+      text: '🎤 Sesli mesaj (${MediaService().formatDuration(duration)})',
       timestamp: DateTime.now().millisecondsSinceEpoch,
       mediaUrl: voicePath,
       voiceDuration: duration,
@@ -244,55 +245,67 @@ class AIProvider with ChangeNotifier {
 
   // initializeVoiceService fonksiyonunda TTS ve Whisper callbacklerini ayarla
   Future<void> initializeVoiceService() async {
-    await _voiceService.initialize();
-    
-    // TTS callbacks
-    _voiceService.onSpeakingStarted = () {
-      _isSpeaking = true;
-      notifyListeners();
-    };
-    _voiceService.onSpeakingStopped = () {
-      _isSpeaking = false;
-      notifyListeners();
-    };
-    
-    // Whisper callbacks
-    _voiceService.onSpeechResult = (text) {
-      _recognizedText = text;
-      notifyListeners();
-      print('🎤 Tanınan metin: $text');
-    };
-    _voiceService.onListeningStarted = () {
-      _isListening = true;
-      notifyListeners();
-    };
-    _voiceService.onListeningStopped = () {
-      _isListening = false;
-      notifyListeners();
-    };
-    _voiceService.onSpeechError = (error) {
-      print('❌ Sesli konuşma hatası: $error');
-      _isListening = false;
-      notifyListeners();
-    };
-    
-    // Yeni: Sürekli dinleme callbacks
-    _voiceService.onContinuousListeningStarted = () {
-      _isContinuousListening = true;
-      _currentTranscription = '';
-      notifyListeners();
-      print('🎤 Sürekli dinleme başladı');
-    };
-    _voiceService.onContinuousListeningStopped = () {
-      _isContinuousListening = false;
-      notifyListeners();
-      print('🎤 Sürekli dinleme durdu');
-    };
-    _voiceService.onContinuousTranscription = (text) {
-      _currentTranscription = text;
-      notifyListeners();
-      print('🎤 Anlık transkripsiyon güncellendi: $text');
-    };
+    try {
+      print('🔧 AI Provider: Voice service başlatılıyor...');
+      await _voiceService.initialize();
+      
+      // TTS callbacks
+      _voiceService.onSpeakingStarted = () {
+        _isSpeaking = true;
+        notifyListeners();
+        print('🎤 TTS başladı');
+      };
+      _voiceService.onSpeakingStopped = () {
+        _isSpeaking = false;
+        notifyListeners();
+        print('🎤 TTS durdu');
+      };
+      
+      // Whisper callbacks
+      _voiceService.onSpeechResult = (text) {
+        _recognizedText = text;
+        notifyListeners();
+        print('🎤 Tanınan metin: $text');
+      };
+      _voiceService.onListeningStarted = () {
+        _isListening = true;
+        notifyListeners();
+        print('🎤 Dinleme başladı');
+      };
+      _voiceService.onListeningStopped = () {
+        _isListening = false;
+        notifyListeners();
+        print('🎤 Dinleme durdu');
+      };
+      _voiceService.onSpeechError = (error) {
+        print('❌ Sesli konuşma hatası: $error');
+        _isListening = false;
+        _isContinuousListening = false;
+        notifyListeners();
+      };
+      
+      // Yeni: Sürekli dinleme callbacks
+      _voiceService.onContinuousListeningStarted = () {
+        _isContinuousListening = true;
+        _currentTranscription = '';
+        notifyListeners();
+        print('🎤 Sürekli dinleme başladı');
+      };
+      _voiceService.onContinuousListeningStopped = () {
+        _isContinuousListening = false;
+        notifyListeners();
+        print('🎤 Sürekli dinleme durdu');
+      };
+      _voiceService.onContinuousTranscription = (text) {
+        _currentTranscription = text;
+        notifyListeners();
+        print('🎤 Anlık transkripsiyon güncellendi: $text');
+      };
+      
+      print('✅ AI Provider: Voice service başlatıldı');
+    } catch (e) {
+      print('❌ AI Provider: Voice service başlatma hatası: $e');
+    }
   }
 
   // startVoiceInput ve stopVoiceInput fonksiyonlarını kaldır
@@ -350,9 +363,14 @@ class AIProvider with ChangeNotifier {
       _statusMessage = 'Ses tanıma tamamlandı, işleniyor...';
       notifyListeners();
       
-      // Otomatik olarak AI yanıtı al (sadece pet varsa)
-      if (_activeChatId != null && currentPet != null) {
+      // Pet varsa AI yanıtı al (chat ID yoksa otomatik başlat)
+      if (currentPet != null) {
         try {
+          // Eğer aktif chat yoksa yeni bir chat başlat
+          if (_activeChatId == null) {
+            await startNewChat(currentPet.id ?? currentPet.name);
+          }
+          
           await sendMessageAndGetAIResponse(
             petId: currentPet.id ?? currentPet.name,
             pet: currentPet,

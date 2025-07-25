@@ -233,6 +233,8 @@ class _FAQPageState extends State<FAQPage> with TickerProviderStateMixin {
                             style: TextStyle(
                               color: isDark ? Colors.white : Colors.black,
                             ),
+                            maxLines: 1,
+                            textInputAction: TextInputAction.search,
                           ),
                         ),
                         

@@ -6,6 +6,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import '../secrets.dart';
+import 'dart:async'; // Timer için
 
 class WhisperService {
   static const String _baseUrl = 'https://api.openai.com/v1/audio/transcriptions';
@@ -15,8 +16,86 @@ class WhisperService {
   
   // Rate limit yönetimi için
   static DateTime? _lastRequestTime;
-  static const int _minRequestInterval = 21; // 20 saniye + 1 saniye buffer
+  static const int _minRequestInterval = 30; // 30 saniye (daha güvenli)
   static const int _maxRetries = 3;
+
+  // Global ses servisi durumu yönetimi
+  static bool _isAnyVoiceServiceActive = false;
+  static String? _activeServiceName;
+  static DateTime? _lockAcquiredTime;
+  static Timer? _autoReleaseTimer;
+  
+  static bool get isAnyVoiceServiceActive => _isAnyVoiceServiceActive;
+  static String? get activeServiceName => _activeServiceName;
+
+  // Ses servisi kilidi alma
+  static bool acquireVoiceLock(String serviceName) {
+    if (_isAnyVoiceServiceActive) {
+      print('⚠️ Ses servisi zaten aktif: $_activeServiceName, istenen: $serviceName');
+      return false;
+    }
+    
+    // Eğer 5 dakikadan fazla süre geçmişse kilidi zorla temizle
+    if (_lockAcquiredTime != null) {
+      final duration = DateTime.now().difference(_lockAcquiredTime!).inMinutes;
+      if (duration >= 5) {
+        print('⏰ Kilidi zorla temizleme (${duration} dakika geçti)');
+        releaseVoiceLock();
+      }
+    }
+    
+    _isAnyVoiceServiceActive = true;
+    _activeServiceName = serviceName;
+    _lockAcquiredTime = DateTime.now();
+    
+    // Otomatik temizleme timer'ı (5 dakika sonra)
+    _autoReleaseTimer?.cancel();
+    _autoReleaseTimer = Timer(Duration(minutes: 5), () {
+      print('⏰ Otomatik ses kilidi temizleme (5 dakika geçti)');
+      releaseVoiceLock();
+    });
+    
+    print('🔒 Ses kilidi alındı: $serviceName');
+    return true;
+  }
+
+  // Ses servisi kilidini serbest bırakma
+  static void releaseVoiceLock() {
+    if (_isAnyVoiceServiceActive) {
+      print('🔓 Ses kilidi serbest bırakıldı: $_activeServiceName');
+      _isAnyVoiceServiceActive = false;
+      _activeServiceName = null;
+      _lockAcquiredTime = null;
+      
+      // Timer'ı temizle
+      _autoReleaseTimer?.cancel();
+      _autoReleaseTimer = null;
+    }
+  }
+
+  // Zorla tüm ses servislerini temizle
+  static void forceReleaseAllVoiceLocks() {
+    print('🛑 Tüm ses kilitleri zorla temizleniyor...');
+    releaseVoiceLock();
+    
+    // Recorder'ı da durdur
+    if (_recorder.isRecording) {
+      _recorder.stopRecorder();
+    }
+  }
+
+  // Ses kilidi durumunu kontrol et
+  static String getVoiceLockStatus() {
+    if (!_isAnyVoiceServiceActive) {
+      return 'Ses servisi aktif değil';
+    }
+    
+    final duration = _lockAcquiredTime != null 
+        ? DateTime.now().difference(_lockAcquiredTime!).inSeconds 
+        : 0;
+    
+    return 'Aktif servis: $_activeServiceName (${duration}s)';
+  }
 
   static Future<void> initialize() async {
     if (_isInitialized) return;
@@ -26,7 +105,7 @@ class WhisperService {
     var status = await Permission.microphone.request();
     if (!status.isGranted) {
       print('❌ Mikrofon izni verilmedi!');
-      throw Exception('Mikrofon izni verilmedi!');
+      throw Exception('Mikrofon izni verilmedi! Lütfen ayarlardan mikrofon iznini verin.');
     }
     
     print('✅ Mikrofon izni verildi');
@@ -42,12 +121,18 @@ class WhisperService {
   }
 
   static Future<String?> recordAndTranscribe({int seconds = 5}) async {
+    // Ses kilidi kontrolü
+    if (!acquireVoiceLock('WhisperService')) {
+      print('❌ Ses servisi meşgul, kayıt başlatılamıyor');
+      return null;
+    }
+    
     try {
       await initialize();
       
       // Geçici dosya yolu - platform bağımsız
       final tempDir = await getTemporaryDirectory();
-      final tempPath = '${tempDir.path}/temp_audio.wav';
+      final tempPath = '${tempDir.path}/temp_audio_${DateTime.now().millisecondsSinceEpoch}.wav';
       
       print('📁 Geçici dosya yolu: $tempPath');
       
@@ -57,6 +142,7 @@ class WhisperService {
         toFile: tempPath,
         codec: Codec.pcm16WAV,
         sampleRate: 16000,
+        numChannels: 1, // Mono kayıt (daha iyi tanıma)
       );
       
       print('✅ Kayıt başlatıldı, $seconds saniye bekleniyor...');
@@ -73,6 +159,21 @@ class WhisperService {
       
       print('✅ Kayıt tamamlandı: $path');
       
+      // Dosya boyutunu kontrol et
+      final file = File(path);
+      if (await file.exists()) {
+        final fileSize = await file.length();
+        print('📊 Dosya boyutu: $fileSize bytes');
+        
+        if (fileSize < 2000) { // 2KB'dan küçük dosyalar için uyarı
+          print('⚠️ Dosya çok küçük ($fileSize bytes), muhtemelen ses kaydedilmedi');
+          return null;
+        }
+      } else {
+        print('❌ Ses dosyası bulunamadı: $path');
+        return null;
+      }
+      
       // Whisper API'ye gönder
       print('🔄 Whisper API\'ye gönderiliyor...');
       final transcription = await _transcribeAudio(path);
@@ -85,7 +186,6 @@ class WhisperService {
       
       // Geçici dosyayı sil
       try {
-        final file = File(path);
         if (await file.exists()) {
           await file.delete();
           print('✅ Geçici dosya silindi: $path');
@@ -100,11 +200,22 @@ class WhisperService {
     } catch (e) {
       print('❌ Ses kayıt hatası: $e');
       return null;
+    } finally {
+      // Ses kilidini serbest bırak
+      releaseVoiceLock();
     }
   }
 
   static Future<String?> _transcribeAudio(String audioPath) async {
     int retryCount = 0;
+    
+    // API key kontrolü
+    if (openaiApiKey == 'YOUR_OPENAI_API_KEY_HERE' || openaiApiKey.isEmpty) {
+      print('❌ OpenAI API key ayarlanmamış! Lütfen lib/secrets.dart dosyasına gerçek API key\'inizi ekleyin.');
+      return null;
+    }
+    
+    print('🔑 API Key kontrol edildi: ${openaiApiKey.substring(0, 10)}...');
     
     while (retryCount <= _maxRetries) {
       try {
@@ -209,6 +320,10 @@ class WhisperService {
       await _recorder.closeRecorder();
     }
     _isInitialized = false;
+    
+    // Tüm ses kilitlerini zorla temizle
+    forceReleaseAllVoiceLocks();
+    
     print('✅ WhisperService temizlendi');
   }
 } 

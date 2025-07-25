@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/settings_provider.dart';
 import '../../../providers/theme_provider.dart';
+import '../../../providers/pet_provider.dart';
 import '../../../services/voice_service.dart';
 import '../../profile/profile_page.dart';
 import 'about_page.dart';
 import 'feedback_page.dart';
 import 'faq_page.dart';
+import 'voice_test_page.dart';
 import 'package:pati_takip/l10n/app_localizations.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -599,6 +601,22 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                                 onTap: () {
                                   Navigator.of(context).push(
                                     MaterialPageRoute(builder: (_) => FAQPage()),
+                                  );
+                                },
+                              ),
+                              const Divider(indent: 16, endIndent: 16, height: 0),
+                              ListTile(
+                                leading: Icon(Icons.mic, color: Theme.of(context).colorScheme.primary),
+                                title: Text('Ses Tanıma Testi'),
+                                subtitle: Text('AI ses tanıma özelliğini test edin'),
+                                onTap: () {
+                                  // Mevcut pet'i al (ilk pet'i kullan)
+                                  final petProvider = Provider.of<PetProvider>(context, listen: false);
+                                  final pets = petProvider.pets;
+                                  final currentPet = pets.isNotEmpty ? pets.first : null;
+                                  
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(builder: (_) => VoiceTestPage(pet: currentPet)),
                                   );
                                 },
                               ),

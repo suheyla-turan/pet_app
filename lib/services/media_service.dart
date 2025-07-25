@@ -3,6 +3,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'whisper_service.dart';
 
 class MediaService {
   static final MediaService _instance = MediaService._internal();
@@ -29,7 +30,7 @@ class MediaService {
   int get recordingDuration => _recordingDuration;
   
   // Diğer ses servislerinin aktif olup olmadığını kontrol et
-  bool get isAnyVoiceServiceActive => _isRecording;
+  bool get isAnyVoiceServiceActive => WhisperService.isAnyVoiceServiceActive || _isRecording;
 
   Future<void> initialize() async {
     try {
@@ -80,6 +81,16 @@ class MediaService {
   // Ses kayıt başlatma
   Future<void> startVoiceRecording() async {
     try {
+      // Global ses kilidi kontrolü
+      if (WhisperService.isAnyVoiceServiceActive) {
+        final activeService = WhisperService.activeServiceName ?? 'Bilinmeyen';
+        final status = WhisperService.getVoiceLockStatus();
+        final errorMessage = 'Ses servisi meşgul: $activeService. $status';
+        onError?.call(errorMessage);
+        print('❌ $errorMessage');
+        return;
+      }
+
       // Mikrofon izni kontrolü
       final status = await Permission.microphone.request();
       if (status != PermissionStatus.granted) {
@@ -91,8 +102,13 @@ class MediaService {
         await stopVoiceRecording();
       }
 
-      // Diğer ses servislerinin çalışıp çalışmadığını kontrol et
-      // Bu sayede çakışmaları önleriz
+      // Global ses kilidini al
+      if (!WhisperService.acquireVoiceLock('MediaService')) {
+        final errorMessage = 'Ses servisi meşgul. Lütfen bekleyin.';
+        onError?.call(errorMessage);
+        print('❌ $errorMessage');
+        return;
+      }
 
       // Kayıt dosyası yolu oluştur
       final directory = await getTemporaryDirectory();
@@ -107,11 +123,13 @@ class MediaService {
 
       _isRecording = true;
       _recordingDuration = 0;
+      print('🎤 Kayıt başlatıldı, süre sıfırlandı');
       onRecordingStarted?.call();
 
       // Süre sayacı başlat
       _recordingTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
         _recordingDuration++;
+        print('⏱️ Kayıt süresi: ${_recordingDuration}s');
         onRecordingDurationChanged?.call(_recordingDuration);
       });
 
@@ -119,6 +137,8 @@ class MediaService {
     } catch (e) {
       print('❌ Ses kayıt başlatma hatası: $e');
       onError?.call('Ses kayıt başlatılamadı: $e');
+      // Hata durumunda kilidi serbest bırak
+      WhisperService.releaseVoiceLock();
     }
   }
 
@@ -135,6 +155,9 @@ class MediaService {
 
       onRecordingStopped?.call();
 
+      // Global ses kilidini serbest bırak
+      WhisperService.releaseVoiceLock();
+
       if (path != null && _recordingDuration > 0) {
         onVoiceRecorded?.call(path, _recordingDuration);
         print('🎤 Ses kayıt tamamlandı: $path (${_recordingDuration}s)');
@@ -143,6 +166,8 @@ class MediaService {
     } catch (e) {
       print('❌ Ses kayıt durdurma hatası: $e');
       onError?.call('Ses kayıt durdurulamadı: $e');
+      // Hata durumunda kilidi serbest bırak
+      WhisperService.releaseVoiceLock();
     }
     return null;
   }
@@ -175,5 +200,10 @@ class MediaService {
   void dispose() {
     _recordingTimer?.cancel();
     _recorder.closeRecorder();
+    
+    // Eğer kayıt yapılıyorsa kilidi serbest bırak
+    if (_isRecording) {
+      WhisperService.releaseVoiceLock();
+    }
   }
 } 
