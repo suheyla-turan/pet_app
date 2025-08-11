@@ -60,22 +60,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get ok => 'Tamam';
 
   @override
-  String get aiAskTitle => 'Yapay Zekaya Soru Sor';
-
-  @override
-  String get recognizedText => 'Tanınan Metin';
-
-  @override
-  String get askHint => 'Sorunuzu yazın veya sesli sorun...';
-
-  @override
-  String get voiceAsk => 'Sesli Sor';
-
-  @override
-  String get stopListening => 'Dinlemeyi Durdur';
-
-  @override
-  String get aiThinking => 'AI düşünüyor...';
+  String get askHint => 'Sorunuzu yazın...';
 
   @override
   String get cancel => 'İptal';
@@ -128,35 +113,7 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get themeSystemDesc => 'Cihazın tema ayarını kullan';
 
-  @override
-  String get aiConversationStyle => 'AI Konuşma Stili';
-
-  @override
-  String get aiConversationStyleDesc => 'AI asistanın size nasıl yanıt vereceğini seçin';
-
-  @override
-  String get aiFriendly => 'Dostane';
-
-  @override
-  String get aiFriendlyDesc => 'Sıcak ve samimi bir ton kullanır';
-
-  @override
-  String get aiProfessional => 'Profesyonel';
-
-  @override
-  String get aiProfessionalDesc => 'Resmi ve bilgilendirici bir ton kullanır';
-
-  @override
-  String get aiFun => 'Eğlenceli';
-
-  @override
-  String get aiFunDesc => 'Eğlenceli ve oyuncu bir ton kullanır';
-
-  @override
-  String get aiCompassionate => 'Şefkatli';
-
-  @override
-  String get aiCompassionateDesc => 'Şefkatli ve koruyucu bir ton kullanır';
+  
 
   @override
   String get voiceSettings => 'Sesli Konuşma';

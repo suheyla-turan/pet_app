@@ -1,0 +1,5 @@
+[33m0b506af[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Add daily notes feature and update pet management functionality
+[33m8b66384[m Enhance note deletion feature with localization support in PetDetailPage
+[33m568080f[m Implement message deletion feature in PetDetailPage
+[33md636812[m Implement API testing features and UI enhancements in VoiceTestPage
+[33md0012da[m Enhance voice service conflict resolution and UI improvements

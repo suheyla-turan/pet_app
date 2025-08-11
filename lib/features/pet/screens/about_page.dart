@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:pati_takip/l10n/app_localizations.dart';
+
 
 class AboutPage extends StatefulWidget {
   const AboutPage({super.key});
@@ -67,7 +67,7 @@ class _AboutPageState extends State<AboutPage> with TickerProviderStateMixin {
                       icon: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withOpacity(0.1),
+                          color: theme.colorScheme.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(
@@ -140,8 +140,6 @@ class _AboutPageState extends State<AboutPage> with TickerProviderStateMixin {
                             children: [
                               _buildFeatureItem('Evcil hayvan profili yönetimi'),
                               _buildFeatureItem('Aşı takip sistemi'),
-                              _buildFeatureItem('Yapay zeka destekli sohbet'),
-                              _buildFeatureItem('Sesli komut özelliği'),
                               _buildFeatureItem('Bildirim sistemi'),
                               _buildFeatureItem('Çoklu kullanıcı desteği'),
                               _buildFeatureItem('Bulut yedekleme'),
@@ -162,9 +160,8 @@ class _AboutPageState extends State<AboutPage> with TickerProviderStateMixin {
                             children: [
                               _buildFeatureItem('Flutter & Dart'),
                               _buildFeatureItem('Firebase'),
-                              _buildFeatureItem('OpenAI API'),
-                              _buildFeatureItem('Speech Recognition'),
-                              _buildFeatureItem('Text-to-Speech'),
+                              _buildFeatureItem('Bildirim sistemi'),
+                              _buildFeatureItem('Çoklu kullanıcı desteği'),
                             ],
                           ),
                         ),
@@ -238,7 +235,7 @@ class _AboutPageState extends State<AboutPage> with TickerProviderStateMixin {
     
     return Card(
       elevation: 8,
-      shadowColor: color.withOpacity(0.2),
+      shadowColor: color.withValues(alpha: 0.2),
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
@@ -266,7 +263,7 @@ class _AboutPageState extends State<AboutPage> with TickerProviderStateMixin {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: color.withOpacity(0.1),
+                      color: color.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
@@ -405,9 +402,6 @@ class _AboutPageState extends State<AboutPage> with TickerProviderStateMixin {
   }
 
   Widget _buildActionButtons() {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    
     return Row(
       children: [
         Expanded(
@@ -446,18 +440,15 @@ class _AboutPageState extends State<AboutPage> with TickerProviderStateMixin {
     required Color color,
     required VoidCallback onTap,
   }) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Column(
           children: [

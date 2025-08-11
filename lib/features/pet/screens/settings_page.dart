@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/settings_provider.dart';
 import '../../../providers/theme_provider.dart';
-import '../../../providers/pet_provider.dart';
+
 import '../../../services/voice_service.dart';
 import '../../profile/profile_page.dart';
 import 'about_page.dart';
 import 'feedback_page.dart';
 import 'faq_page.dart';
-import 'voice_test_page.dart';
+
 import 'package:pati_takip/l10n/app_localizations.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -191,56 +191,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                         ),
                         const SizedBox(height: 20),
                         
-                        // AI Conversation Style Card
-                        _buildSettingsCard(
-                          title: AppLocalizations.of(context)!.aiConversationStyle,
-                          icon: Icons.psychology,
-                          color: Colors.blue,
-                          subtitle: AppLocalizations.of(context)!.aiConversationStyleDesc,
-                          child: Consumer<SettingsProvider>(
-                            builder: (context, settingsProvider, child) {
-                              return Column(
-                                children: ConversationStyle.values.map((style) {
-                                  return _buildRadioTile(
-                                    title: () {
-                                      switch (style) {
-                                        case ConversationStyle.friendly:
-                                          return AppLocalizations.of(context)!.aiFriendly;
-                                        case ConversationStyle.professional:
-                                          return AppLocalizations.of(context)!.aiProfessional;
-                                        case ConversationStyle.playful:
-                                          return AppLocalizations.of(context)!.aiFun;
-                                        case ConversationStyle.caring:
-                                          return AppLocalizations.of(context)!.aiCompassionate;
-                                      }
-                                    }(),
-                                    subtitle: () {
-                                      switch (style) {
-                                        case ConversationStyle.friendly:
-                                          return AppLocalizations.of(context)!.aiFriendlyDesc;
-                                        case ConversationStyle.professional:
-                                          return AppLocalizations.of(context)!.aiProfessionalDesc;
-                                        case ConversationStyle.playful:
-                                          return AppLocalizations.of(context)!.aiFunDesc;
-                                        case ConversationStyle.caring:
-                                          return AppLocalizations.of(context)!.aiCompassionateDesc;
-                                      }
-                                    }(),
-                                    value: style,
-                                    groupValue: settingsProvider.conversationStyle,
-                                    onChanged: (value) {
-                                      if (value != null) {
-                                        settingsProvider.setConversationStyle(value);
-                                      }
-                                    },
-                                  );
-                                }).toList(),
-                              );
-                            },
-                          ),
-                        ),
-                        
-                        const SizedBox(height: 20),
+
                         
                         // Voice Settings Card
                         _buildSettingsCard(
@@ -315,8 +266,8 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                           color: Colors.deepPurple,
                           child: Consumer<SettingsProvider>(
                             builder: (context, settingsProvider, child) {
-                              return FutureBuilder<List<dynamic>>(
-                                future: VoiceService().getAvailableVoices(),
+                              return FutureBuilder<List<dynamic>?>(
+                                future: VoiceService().getVoices(),
                                 builder: (context, snapshot) {
                                   final voices = snapshot.data ?? [];
                                   // Only unique voice names
@@ -604,22 +555,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                                   );
                                 },
                               ),
-                              const Divider(indent: 16, endIndent: 16, height: 0),
-                              ListTile(
-                                leading: Icon(Icons.mic, color: Theme.of(context).colorScheme.primary),
-                                title: Text('Ses Tanıma Testi'),
-                                subtitle: Text('AI ses tanıma özelliğini test edin'),
-                                onTap: () {
-                                  // Mevcut pet'i al (ilk pet'i kullan)
-                                  final petProvider = Provider.of<PetProvider>(context, listen: false);
-                                  final pets = petProvider.pets;
-                                  final currentPet = pets.isNotEmpty ? pets.first : null;
-                                  
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(builder: (_) => VoiceTestPage(pet: currentPet)),
-                                  );
-                                },
-                              ),
+
                             ],
                           ),
                         ),
@@ -781,60 +717,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
     );
   }
 
-  Widget _buildRadioTile({
-    required String title,
-    required String subtitle,
-    required ConversationStyle value,
-    required ConversationStyle? groupValue,
-    required ValueChanged<ConversationStyle?> onChanged,
-  }) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.grey.shade700 : Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isDark ? Colors.grey.shade600 : Colors.grey.shade200,
-        ),
-      ),
-      child: Row(
-        children: [
-          Radio<ConversationStyle>(
-            value: value,
-            groupValue: groupValue,
-            onChanged: onChanged,
-            activeColor: theme.colorScheme.primary,
-          ),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: isDark ? Colors.white : const Color(0xFF2D3748),
-                  ),
-                ),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: isDark ? Colors.grey.shade300 : Colors.grey.shade600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   Widget _buildListTile({
     required String title,

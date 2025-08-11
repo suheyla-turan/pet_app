@@ -9,18 +9,18 @@ import 'package:pati_takip/features/pet/models/pet.dart';
 import 'package:pati_takip/features/pet/widgets/progress_indicator.dart';
 import 'package:pati_takip/features/pet/screens/vaccine_page.dart';
 import 'package:pati_takip/features/pet/screens/pet_form_page.dart';
-import 'package:pati_takip/providers/ai_provider.dart';
+
 import 'package:pati_takip/providers/pet_provider.dart';
 import 'package:pati_takip/services/notification_service.dart';
 import 'package:pati_takip/services/firestore_service.dart';
 import 'package:pati_takip/services/realtime_service.dart';
-import 'package:pati_takip/services/voice_service.dart';
+
 import 'package:pati_takip/providers/auth_provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:pati_takip/features/pet/screens/ai_chat_page.dart';
+
 import 'package:pati_takip/l10n/app_localizations.dart';
-import 'package:pati_takip/features/pet/widgets/voice_command_widget.dart';
-import 'package:pati_takip/widgets/ai_fab.dart';
+
+
 import 'package:pati_takip/services/media_service.dart';
 
 class PetDetailPage extends StatefulWidget {
@@ -47,9 +47,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
   // bool _isListening = false; // KALDIRILDI
   // String _command = ''; // KALDIRILDI
   final realtimeService = RealtimeService();
-  bool isAssistantOpen = false;
-  void openAssistant() => setState(() => isAssistantOpen = true);
-  void closeAssistant() => setState(() => isAssistantOpen = false);
+
   
   // Ses kayıt için eklenen değişkenler
   bool _isRecording = false;
@@ -275,140 +273,67 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
 
   Future<void> soruSorDialog() async {
     final controller = TextEditingController();
-    final aiProvider = context.read<AIProvider>();
-    // AI Provider'ı başlat
-    await aiProvider.initializeVoiceService();
     return showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) {
-          return AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            title: Text(AppLocalizations.of(context)!.aiAskTitle),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Tanınan metin gösterimi
-                  if (aiProvider.recognizedText != null && aiProvider.recognizedText!.isNotEmpty)
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(12),
-                      margin: const EdgeInsets.only(bottom: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.shade50,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.blue.shade200),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            AppLocalizations.of(context)!.recognizedText,
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                              color: Colors.blue,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            aiProvider.recognizedText!,
-                            style: const TextStyle(fontSize: 14),
-                          ),
-                        ],
-                      ),
-                    ),
-                  
-                  // Metin girişi - SafeArea ile sarılmış
-                  SafeArea(
-                    child: Padding(
-                      padding: EdgeInsets.only(
-                        bottom: MediaQuery.of(context).viewInsets.bottom,
-                      ),
-                      child: TextField(
-                        controller: controller,
-                        decoration: InputDecoration(
-                          hintText: AppLocalizations.of(context)!.askHint,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
-                        ),
-                        maxLines: null,
-                        minLines: 1,
-                        autofocus: true,
-                        textInputAction: TextInputAction.newline,
-                        keyboardType: TextInputType.multiline,
-                        onSubmitted: (text) async {
-                          String question = text.trim();
-                          
-                          // Eğer sesli tanınan metin varsa onu kullan
-                          if (aiProvider.recognizedText != null && aiProvider.recognizedText!.isNotEmpty) {
-                            question = aiProvider.recognizedText!;
-                          }
-                          
-                          if (question.isNotEmpty) {
-                            Navigator.pop(context);
-                            // Eski getSuggestion, getCurrentResponseForPet, clearResponseForPet fonksiyonlarına ait kalan kodları tamamen kaldır
-                          }
-                        },
-                      ),
-                    ),
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Soru Sor'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Metin girişi
+              TextField(
+                controller: controller,
+                decoration: InputDecoration(
+                  hintText: AppLocalizations.of(context)!.askHint,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  
-                  const SizedBox(height: 12),
-                  
-                  // Sesli konuşma butonu kaldırıldı
-                  // Yükleme göstergesi
-                  if (aiProvider.isLoading)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 12),
-                      child: Row(
-                        children: [
-                          const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(AppLocalizations.of(context)!.aiThinking),
-                        ],
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: Text(AppLocalizations.of(context)!.cancel),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  String question = controller.text.trim();
-                  
-                  // Eğer sesli tanınan metin varsa onu kullan
-                  if (aiProvider.recognizedText != null && aiProvider.recognizedText!.isNotEmpty) {
-                    question = aiProvider.recognizedText!;
-                  }
-                  
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                ),
+                maxLines: null,
+                minLines: 1,
+                autofocus: true,
+                textInputAction: TextInputAction.newline,
+                keyboardType: TextInputType.multiline,
+                onSubmitted: (text) async {
+                  String question = text.trim();
                   if (question.isNotEmpty) {
                     Navigator.pop(context);
-                    // Eski getSuggestion, getCurrentResponseForPet, clearResponseForPet fonksiyonlarına ait kalan kodları tamamen kaldır
+                    // AI özelliği kaldırıldı
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('AI özelliği kaldırıldı')),
+                    );
                   }
                 },
-                child: Text(AppLocalizations.of(context)!.ask),
               ),
             ],
-          );
-        },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(AppLocalizations.of(context)!.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              String question = controller.text.trim();
+              if (question.isNotEmpty) {
+                Navigator.pop(context);
+                // AI özelliği kaldırıldı
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('AI özelliği kaldırıldı')),
+                );
+              }
+            },
+            child: Text(AppLocalizations.of(context)!.ask),
+          ),
+        ],
       ),
     );
   }
@@ -973,33 +898,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                               
                               const SizedBox(height: 20),
                               
-                              // AI Sohbet ve Sohbet Geçmişi Butonu
-                              Consumer<AIProvider>(
-                                builder: (context, aiProvider, child) {
-                                  return Row(
-                                    children: [
-                                      Expanded(
-                                        child: ElevatedButton.icon(
-                                          onPressed: () {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (_) => AIChatPage(pet: _pet),
-                                              ),
-                                            );
-                                          },
-                                          icon: const Icon(Icons.psychology),
-                                          label: Text(AppLocalizations.of(context)!.askQuestionChat),
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: Theme.of(context).colorScheme.primary,
-                                            foregroundColor: Colors.white,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  );
-                                },
-                              ),
+
                               
                               const SizedBox(height: 20),
                               
@@ -1022,48 +921,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
             ),
           ),
         ),
-                          DraggableAIFab(onTap: openAssistant, pet: widget.pet),
-        if (isAssistantOpen)
-          Positioned.fill(
-            child: Material(
-              color: Colors.black.withOpacity(0.15),
-              child: Stack(
-                children: [
-                  Center(
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.08),
-                            blurRadius: 24,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 8),
-                        child: VoiceCommandWidget(
-                          key: ValueKey(isAssistantOpen),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: 36,
-                    right: 36,
-                    child: IconButton(
-                      icon: const Icon(Icons.close, size: 32, color: Colors.black54),
-                      tooltip: 'Kapat',
-                      onPressed: closeAssistant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+
       ],
     );
   }
@@ -1483,196 +1341,9 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
   //   }
   // }
 
-  Future<void> _handleVoiceCommand(String command) async {
-    // Basit intent recognition - gerçek uygulamada AI servisi kullanılabilir
-    Map<String, dynamic> intentData = {'intent': 'unknown', 'petId': null};
-    
-    final lowerCommand = command.toLowerCase();
-    if (lowerCommand.contains('besle') || lowerCommand.contains('yemek')) {
-      intentData['intent'] = 'feed';
-    } else if (lowerCommand.contains('uyu') || lowerCommand.contains('dinlen')) {
-      intentData['intent'] = 'sleep';
-    } else if (lowerCommand.contains('bakım') || lowerCommand.contains('sev')) {
-      intentData['intent'] = 'care';
-    }
-    
-    // Pet adını bul
-    for (final pet in context.read<PetProvider>().pets) {
-      if (lowerCommand.contains(pet.name.toLowerCase())) {
-        intentData['petId'] = pet.id;
-        break;
-      }
-    }
-    final petProvider = context.read<PetProvider>();
-    Pet? pet;
-    if (intentData['petId'] != null) {
-      try {
-        pet = petProvider.pets.firstWhere(
-          (p) => p.id == intentData['petId'] || p.name == intentData['petId'],
-        );
-      } catch (e) {
-        pet = null;
-      }
-    } else {
-      pet = _pet;
-    }
-    switch (intentData['intent']) {
-      case 'feed':
-        if (pet != null) {
-          await realtimeService.setFeedingTime(pet.id ?? pet.name, DateTime.now());
-          await realtimeService.updatePetStatus(pet.id ?? pet.name, satiety: 100);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${pet.name} beslendi!')),
-          );
-        }
-        break;
-      case 'sleep':
-        if (pet != null) {
-          await realtimeService.updatePetStatus(pet.id ?? pet.name, energy: 100);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${pet.name} uyutuldu!')),
-          );
-        }
-        break;
-      case 'care':
-        if (pet != null) {
-          await realtimeService.updatePetStatus(pet.id ?? pet.name, happiness: 100);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${pet.name} bakımı yapıldı!')),
-          );
-        }
-        break;
-      case 'go_to_profile':
-        // Zaten profildeyiz, gerekirse başka bir işlem yapılabilir
-        break;
-      default:
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Komut anlaşılamadı: $command')),
-        );
-        break;
-    }
-  }
 
-  // Sesli not dialog'u
-  Future<void> _showVoiceNoteDialog() async {
-    final user = Provider.of<AuthProvider>(context, listen: false).user;
-    if (user == null) return;
 
-    bool isRecording = false;
-    String recordedText = '';
-    final realtime = RealtimeService();
-    final voiceService = VoiceService();
 
-    await showDialog<void>(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) {
-          return AlertDialog(
-            title: const Text('Sesli Not Ekle'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (isRecording)
-                  const Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.mic, color: Colors.red, size: 24),
-                        SizedBox(width: 8),
-                        Text('Kayıt yapılıyor...'),
-                      ],
-                    ),
-                  ),
-                if (recordedText.isNotEmpty)
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(12),
-                    margin: const EdgeInsets.only(bottom: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.shade50,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.blue.shade200),
-                    ),
-                    child: Text(recordedText),
-                  ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    ElevatedButton.icon(
-                      onPressed: () async {
-                        if (!isRecording) {
-                          // Kayıt başlat
-                          setDialogState(() {
-                            isRecording = true;
-                            recordedText = '';
-                          });
-                          
-                          // Sesli tanıma servisini başlat
-                          voiceService.onSpeechResult = (text) {
-                            setDialogState(() {
-                              recordedText = text;
-                              isRecording = false;
-                            });
-                          };
-                          
-                          voiceService.onSpeechError = (error) {
-                            setDialogState(() {
-                              isRecording = false;
-                            });
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Hata: $error')),
-                            );
-                          };
-                          
-                          await voiceService.startVoiceInput(seconds: 10);
-                        } else {
-                          // Kayıt durdur
-                          await voiceService.stopVoiceInput();
-                          setDialogState(() {
-                            isRecording = false;
-                          });
-                        }
-                      },
-                      icon: Icon(isRecording ? Icons.stop : Icons.mic),
-                      label: Text(isRecording ? 'Durdur' : 'Kaydet'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: isRecording ? Colors.red : Colors.blue,
-                        foregroundColor: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  if (isRecording) {
-                    voiceService.stopVoiceInput();
-                  }
-                  Navigator.pop(context);
-                },
-                child: const Text('İptal'),
-              ),
-              ElevatedButton(
-                onPressed: recordedText.isNotEmpty
-                    ? () async {
-                        await realtime.addPetMessage(_pet.id!, user.uid, '🎤 $recordedText');
-                        Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Sesli not eklendi!')),
-                        );
-                      }
-                    : null,
-                child: const Text('Ekle'),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
 
   // Görsel not dialog'u
   Future<void> _showImageNoteDialog() async {

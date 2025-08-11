@@ -33,7 +33,7 @@ class FirebaseConfig {
   }
 
   static String getApiKey() {
-    return firebaseApiKey;
+    return Secrets.firebaseApiKey;
   }
 
   static bool isProduction() {

@@ -197,41 +197,11 @@ abstract class AppLocalizations {
   /// **'OK'**
   String get ok;
 
-  /// No description provided for @aiAskTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Ask AI a Question'**
-  String get aiAskTitle;
-
-  /// No description provided for @recognizedText.
-  ///
-  /// In en, this message translates to:
-  /// **'Recognized Text'**
-  String get recognizedText;
-
   /// No description provided for @askHint.
   ///
   /// In en, this message translates to:
-  /// **'Type or ask your question...'**
+  /// **'Type your question...'**
   String get askHint;
-
-  /// No description provided for @voiceAsk.
-  ///
-  /// In en, this message translates to:
-  /// **'Voice Ask'**
-  String get voiceAsk;
-
-  /// No description provided for @stopListening.
-  ///
-  /// In en, this message translates to:
-  /// **'Stop Listening'**
-  String get stopListening;
-
-  /// No description provided for @aiThinking.
-  ///
-  /// In en, this message translates to:
-  /// **'AI is thinking...'**
-  String get aiThinking;
 
   /// No description provided for @cancel.
   ///
@@ -335,65 +305,7 @@ abstract class AppLocalizations {
   /// **'Use device theme'**
   String get themeSystemDesc;
 
-  /// No description provided for @aiConversationStyle.
-  ///
-  /// In en, this message translates to:
-  /// **'AI Conversation Style'**
-  String get aiConversationStyle;
 
-  /// No description provided for @aiConversationStyleDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Choose how the AI assistant responds to you'**
-  String get aiConversationStyleDesc;
-
-  /// No description provided for @aiFriendly.
-  ///
-  /// In en, this message translates to:
-  /// **'Friendly'**
-  String get aiFriendly;
-
-  /// No description provided for @aiFriendlyDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Uses a warm and friendly tone'**
-  String get aiFriendlyDesc;
-
-  /// No description provided for @aiProfessional.
-  ///
-  /// In en, this message translates to:
-  /// **'Professional'**
-  String get aiProfessional;
-
-  /// No description provided for @aiProfessionalDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Uses a formal and informative tone'**
-  String get aiProfessionalDesc;
-
-  /// No description provided for @aiFun.
-  ///
-  /// In en, this message translates to:
-  /// **'Fun'**
-  String get aiFun;
-
-  /// No description provided for @aiFunDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Uses a playful and fun tone'**
-  String get aiFunDesc;
-
-  /// No description provided for @aiCompassionate.
-  ///
-  /// In en, this message translates to:
-  /// **'Compassionate'**
-  String get aiCompassionate;
-
-  /// No description provided for @aiCompassionateDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Uses a caring and protective tone'**
-  String get aiCompassionateDesc;
 
   /// No description provided for @voiceSettings.
   ///
@@ -1073,11 +985,7 @@ abstract class AppLocalizations {
   /// **'Vaccines taken'**
   String get vaccinesTaken;
 
-  /// No description provided for @askQuestionChat.
-  ///
-  /// In en, this message translates to:
-  /// **'Ask a question in chat'**
-  String get askQuestionChat;
+
 
   /// No description provided for @owners.
   ///
@@ -1115,11 +1023,7 @@ abstract class AppLocalizations {
   /// **'Chat History'**
   String get chatHistory;
 
-  /// No description provided for @aiChat.
-  ///
-  /// In en, this message translates to:
-  /// **'AI Chat'**
-  String get aiChat;
+
 
   /// No description provided for @newChat.
   ///
@@ -1127,11 +1031,7 @@ abstract class AppLocalizations {
   /// **'New Chat'**
   String get newChat;
 
-  /// No description provided for @speakQuestion.
-  ///
-  /// In en, this message translates to:
-  /// **'Speak your question'**
-  String get speakQuestion;
+
 
   /// No description provided for @chatHint.
   ///
@@ -1409,11 +1309,7 @@ abstract class AppLocalizations {
   /// **'Take Photo'**
   String get takePhoto;
 
-  /// No description provided for @useRecognizedText.
-  ///
-  /// In en, this message translates to:
-  /// **'Use This Text'**
-  String get useRecognizedText;
+
 
   /// No description provided for @faq.
   ///
@@ -1466,7 +1362,7 @@ abstract class AppLocalizations {
   /// No description provided for @faqWhatIsPatiTakipAnswer.
   ///
   /// In en, this message translates to:
-  /// **'PatiTakip is a comprehensive mobile app designed to make pet care easier. It offers vaccination tracking, daily notes, AI-powered chat, and voice command features.'**
+  /// **'PatiTakip is a comprehensive mobile app designed to make pet care easier. It offers vaccination tracking, daily notes, and voice command features.'**
   String get faqWhatIsPatiTakipAnswer;
 
   /// No description provided for @faqHowToAddPet.
@@ -1493,29 +1389,7 @@ abstract class AppLocalizations {
   /// **'Go to the \'Vaccines\' tab on the pet detail page to add new vaccines or view existing ones. You can mark completed vaccines as done.'**
   String get faqHowToTrackVaccinesAnswer;
 
-  /// No description provided for @faqHowToUseAI.
-  ///
-  /// In en, this message translates to:
-  /// **'How do I use the AI chat feature?'**
-  String get faqHowToUseAI;
 
-  /// No description provided for @faqHowToUseAIAnswer.
-  ///
-  /// In en, this message translates to:
-  /// **'Click the AI button in the bottom right corner of the main page to chat with artificial intelligence. You can ask questions both in writing and by voice.'**
-  String get faqHowToUseAIAnswer;
-
-  /// No description provided for @faqVoiceCommands.
-  ///
-  /// In en, this message translates to:
-  /// **'How do voice commands work?'**
-  String get faqVoiceCommands;
-
-  /// No description provided for @faqVoiceCommandsAnswer.
-  ///
-  /// In en, this message translates to:
-  /// **'Press the microphone button on the AI chat page to ask questions by voice. The app converts your voice to text and AI responds.'**
-  String get faqVoiceCommandsAnswer;
 
   /// No description provided for @faqNotifications.
   ///

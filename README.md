@@ -1,6 +1,6 @@
 # 🐾 PatiTakip - Evcil Hayvan Bakım Uygulaması
 
-Modern Flutter ile geliştirilmiş, AI destekli kapsamlı evcil hayvan bakım ve takip uygulaması.
+Modern Flutter ile geliştirilmiş kapsamlı evcil hayvan bakım ve takip uygulaması.
 
 ## 🌟 Öne Çıkan Özellikler
 
@@ -23,17 +23,11 @@ Modern Flutter ile geliştirilmiş, AI destekli kapsamlı evcil hayvan bakım ve
 - **Tarih Yönetimi**: Geçmiş ve gelecek aşılar için esnek tarih sistemi
 - **Otomatik Bildirimler**: Planlanan aşılar için zamanlı hatırlatmalar
 
-### 🤖 AI Destekli Sohbet Sistemi
-- **Çoklu Mesajlı Sohbet**: Her hayvan için ayrı AI sohbet geçmişi
-- **Sohbet Geçmişi**: Geçmiş konuşmaları görüntüleme ve detayları
-- **Sesli Yanıt (TTS)**: Her AI mesajını sesli dinleme (hoparlör butonu)
-- **Sesli Mesaj Yazma**: Whisper STT ile AI'ya sesli mesaj gönderme
-- **Sürekli Dinleme**: AI asistan ile sürekli sesli iletişim
+
 
 ### 🎤 Gelişmiş Ses Özellikleri
-- **Sesli Komut Sistemi**: Doğal dil ile komut verme
 - **Ses Mesajları**: Chat için ses kayıt ve oynatma
-- **Çoklu Ses Servisi**: Ses kayıt, AI dinleme, TTS entegrasyonu
+- **Ses Servisi**: Ses kayıt ve TTS entegrasyonu
 - **Çakışma Yönetimi**: Akıllı ses servisi koordinasyonu
 
 ### 📷 Medya Desteği
@@ -56,13 +50,11 @@ Modern Flutter ile geliştirilmiş, AI destekli kapsamlı evcil hayvan bakım ve
 
 ### 🎨 Kişiselleştirme
 - **Açık/Koyu Tema**: Otomatik ve manuel tema seçimi
-- **Konuşma Stili**: Dostane, profesyonel, eğlenceli, şefkatli
 - **TTS Ayarları**: Ses seçimi, hız, perde kontrolü
 - **Bildirim Tercihleri**: Zaman ve ses ayarları
 
 ### 🚀 Kullanıcı Deneyimi
 - **Onboarding**: İlk kullanım rehberi ve kurulum
-- **Draggable AI FAB**: Sürüklenebilir AI asistan butonu
 - **Responsive Tasarım**: Tüm ekran boyutlarına uyum
 - **Smooth Animations**: Akıcı geçişler ve animasyonlar
 
@@ -80,13 +72,11 @@ Modern Flutter ile geliştirilmiş, AI destekli kapsamlı evcil hayvan bakım ve
 - **Provider Pattern**: Merkezi state yönetimi
 - **Clean Architecture**: Katmanlı mimari yapısı
 - **Firebase Backend**: Cloud Firestore, Authentication
-- **AI Integration**: OpenAI GPT ve Whisper API
 - **Local Storage**: SharedPreferences ile yerel veri
 
 ### 📦 Kullanılan Teknolojiler
 - **Flutter 3.8+**: Cross-platform framework
 - **Firebase**: Backend ve authentication
-- **OpenAI API**: GPT-4 ve Whisper entegrasyonu
 - **Provider**: State management
 - **Flutter TTS**: Text-to-Speech
 - **Flutter Sound**: Ses kayıt ve oynatma
@@ -123,17 +113,12 @@ API key'lerinizi güvenli bir şekilde yapılandırmanız gerekiyor:
 2. API key'lerinizi `lib/secrets.dart` dosyasına ekleyin:
 
 ```dart
-const String openaiApiKey = 'YOUR_ACTUAL_OPENAI_API_KEY';
 const String firebaseApiKey = 'YOUR_ACTUAL_FIREBASE_API_KEY';
 ```
 
 #### 📋 Gerekli API Key'ler:
 
-1. **OpenAI API Key** 
-   - [OpenAI Platform](https://platform.openai.com/api-keys) adresinden alın
-   - GPT-4 ve Whisper API erişimi gerekli
-
-2. **Firebase API Key**
+1. **Firebase API Key**
    - [Firebase Console](https://console.firebase.google.com/) adresinden alın
    - Authentication ve Firestore erişimi gerekli
 
@@ -237,19 +222,7 @@ flutter build ios --release
 4. **Tik** atarak aşıyı tamamlayın
 5. Aşı otomatik olarak **Yapılmış Aşılar** listesine taşınır
 
-### 🤖 AI Sohbet Özellikleri
-1. **AI Chat** sayfasına gidin
-2. **Sesli Komut** butonu ile komut verin
-3. **Hoparlör** butonu ile AI yanıtını dinleyin
-4. **Sohbet Geçmişi** ile önceki konuşmaları görüntüleyin
 
-### 🎤 Sesli Komutlar
-Desteklenen komut örnekleri:
-- "Duman'ı besle"
-- "Bakım yap"
-- "Bugün kuduz aşısı yaptırdım"
-- "5 gün sonra karma aşı ekle"
-- "Duman'ın durumu nasıl"
 
 ### 📷 Medya Mesajları
 1. **Ses Mesajı**: Mikrofon butonu ile kayıt
@@ -261,7 +234,6 @@ Desteklenen komut örnekleri:
 - **Dil**: Türkçe/İngilizce dil değişimi
 - **TTS**: Ses, hız, perde ayarları
 - **Bildirimler**: Zaman ve ses tercihleri
-- **Konuşma Stili**: AI asistan kişiliği
 
 ## 📁 Proje Yapısı
 
@@ -274,33 +246,29 @@ lib/
 │   │   ├── models/             # Veri modelleri
 │   │   │   ├── pet.dart
 │   │   │   ├── vaccine.dart
-│   │   │   └── ai_chat_message.dart
+
 │   │   ├── screens/            # Ekranlar
 │   │   │   ├── pet_list_page.dart
 │   │   │   ├── pet_detail_page.dart
 │   │   │   ├── pet_form_page.dart
 │   │   │   ├── vaccine_page.dart
-│   │   │   ├── ai_chat_page.dart
-│   │   │   ├── ai_chat_history_page.dart
+
 │   │   │   ├── settings_page.dart
 │   │   │   ├── about_page.dart
 │   │   │   └── feedback_page.dart
 │   │   └── widgets/            # Özel widget'lar
-│   │       ├── chat_message_widget.dart
-│   │       ├── progress_indicator.dart
-│   │       └── voice_command_widget.dart
+│   │       └── progress_indicator.dart
 │   └── profile/                # Profil özellikleri
 │       └── profile_page.dart
 ├── providers/                  # State management
 │   ├── pet_provider.dart       # Evcil hayvan yönetimi
-│   ├── ai_provider.dart        # AI sohbet ve ses
+
 │   ├── auth_provider.dart      # Kimlik doğrulama
 │   ├── settings_provider.dart  # Ayarlar
 │   └── theme_provider.dart     # Tema yönetimi
 ├── services/                   # Servisler
 │   ├── firestore_service.dart  # Firebase veritabanı
-│   ├── openai_service.dart     # OpenAI API
-│   ├── whisper_service.dart    # Whisper STT
+
 │   ├── notification_service.dart # Bildirimler
 │   ├── media_service.dart      # Medya işlemleri
 │   ├── voice_service.dart      # Ses servisleri
@@ -308,7 +276,7 @@ lib/
 │   ├── firebase_config.dart    # Firebase yapılandırması
 │   └── realtime_service.dart   # Gerçek zamanlı veri
 ├── widgets/                    # Genel widget'lar
-│   └── ai_fab.dart            # AI asistan butonu
+
 ├── l10n/                      # Lokalizasyon
 │   ├── app_en.arb            # İngilizce çeviriler
 │   ├── app_tr.arb            # Türkçe çeviriler
@@ -373,7 +341,7 @@ flutter build web --release
 ### 🔄 Güncellemeler
 - Flutter SDK güncellemeleri
 - Firebase SDK güncellemeleri
-- OpenAI API güncellemeleri
+
 - Güvenlik yamaları
 
 ## 🤝 Katkıda Bulunma
@@ -404,7 +372,7 @@ Bu proje **MIT lisansı** altında lisanslanmıştır. Detaylar için `LICENSE` 
 
 - **Flutter Team**: Harika framework için
 - **Firebase Team**: Backend servisleri için
-- **OpenAI Team**: AI API'leri için
+
 - **Tüm Katkıda Bulunanlar**: Projeye destek için
 
 ---

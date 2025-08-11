@@ -9,7 +9,7 @@ import '../../../providers/pet_provider.dart';
 import '../../profile/profile_page.dart';
 import 'package:pati_takip/l10n/app_localizations.dart';
 // import 'package:speech_to_text/speech_to_text.dart' as stt; // KALDIRILDI
-import 'package:pati_takip/services/realtime_service.dart';
+
 
 class PetListPage extends StatefulWidget {
   const PetListPage({super.key});
@@ -26,7 +26,7 @@ class _PetListPageState extends State<PetListPage> with TickerProviderStateMixin
   // late stt.SpeechToText _speech; // KALDIRILDI
   // bool _isListening = false; // KALDIRILDI
   // String _command = ''; // KALDIRILDI
-  final realtimeService = RealtimeService();
+
 
   @override
   void initState() {
@@ -51,68 +51,7 @@ class _PetListPageState extends State<PetListPage> with TickerProviderStateMixin
     super.dispose();
   }
 
-  // _speech, _isListening, _command ile ilgili kodlar ve _startListening fonksiyonu kaldırılacak
 
-  Future<void> _handleVoiceCommand(String command) async {
-    final intentData = await getIntentFromAI(command);
-    final petProvider = context.read<PetProvider>();
-    Pet? pet;
-    if (intentData['petId'] != null) {
-      try {
-        pet = petProvider.pets.firstWhere(
-          (p) => p.id == intentData['petId'] || p.name == intentData['petId'],
-        );
-      } catch (e) {
-        pet = null;
-      }
-    }
-    switch (intentData['intent']) {
-      case 'feed':
-        if (pet != null) {
-          await realtimeService.setFeedingTime(pet.id ?? pet.name, DateTime.now());
-          await realtimeService.updatePetStatus(pet.id ?? pet.name, satiety: 100);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${pet.name} beslendi!')),
-          );
-        }
-        break;
-      case 'sleep':
-        if (pet != null) {
-          await realtimeService.updatePetStatus(pet.id ?? pet.name, energy: 100);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${pet.name} uyutuldu!')),
-          );
-        }
-        break;
-      case 'care':
-        if (pet != null) {
-          await realtimeService.updatePetStatus(pet.id ?? pet.name, happiness: 100);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${pet.name} bakımı yapıldı!')),
-          );
-        }
-        break;
-      case 'go_to_profile':
-        if (pet != null) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => PetDetailPage(pet: pet!),
-            ),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Hayvan bulunamadı!')),
-          );
-        }
-        break;
-      default:
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Komut anlaşılamadı: $command')),
-        );
-        break;
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -193,7 +132,7 @@ class _PetListPageState extends State<PetListPage> with TickerProviderStateMixin
                                 borderRadius: BorderRadius.circular(12),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.08),
+                                    color: Colors.black.withValues(alpha: 0.08),
                                     blurRadius: 8,
                                     offset: const Offset(0, 4),
                                   ),
@@ -246,7 +185,7 @@ class _PetListPageState extends State<PetListPage> with TickerProviderStateMixin
                             gradient: LinearGradient(
                               colors: [
                                 theme.colorScheme.primary,
-                                theme.colorScheme.primary.withOpacity(0.3),
+                                theme.colorScheme.primary.withValues(alpha: 0.3),
                               ],
                             ),
                           ),
@@ -319,7 +258,7 @@ class _PetListPageState extends State<PetListPage> with TickerProviderStateMixin
                                           Container(
                                             padding: const EdgeInsets.all(24),
                                             decoration: BoxDecoration(
-                                              color: theme.colorScheme.primary.withOpacity(0.1),
+                                              color: theme.colorScheme.primary.withValues(alpha: 0.1),
                                               shape: BoxShape.circle,
                                             ),
                                             child: Icon(
@@ -433,34 +372,7 @@ class _PetListPageState extends State<PetListPage> with TickerProviderStateMixin
     );
   }
 
-  Widget _buildActionButton({
-    required IconData icon,
-    required VoidCallback onPressed,
-    required String tooltip,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: IconButton(
-        icon: Icon(icon, size: 20),
-        onPressed: onPressed,
-        tooltip: tooltip,
-        style: IconButton.styleFrom(
-          foregroundColor: Theme.of(context).colorScheme.primary,
-          padding: const EdgeInsets.all(12),
-        ),
-      ),
-    );
-  }
+
 
   Widget _buildPetCard(Pet pet, bool isDark, ThemeData theme) {
     return Card(
@@ -705,18 +617,7 @@ class _PetListPageState extends State<PetListPage> with TickerProviderStateMixin
     );
   }
 
-  Future<void> _removePet(String petName) async {
-    try {
-      await context.read<PetProvider>().removePet(petName);
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context)!.deletePetError(e.toString())),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
+
 
   String getLocalizedPetType(String type, BuildContext context) {
     final loc = AppLocalizations.of(context)!;

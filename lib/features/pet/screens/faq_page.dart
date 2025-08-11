@@ -47,14 +47,7 @@ class _FAQPageState extends State<FAQPage> with TickerProviderStateMixin {
             question: l10n.faqHowToTrackVaccines,
             answer: l10n.faqHowToTrackVaccinesAnswer,
           ),
-          FAQItem(
-            question: l10n.faqHowToUseAI,
-            answer: l10n.faqHowToUseAIAnswer,
-          ),
-          FAQItem(
-            question: l10n.faqVoiceCommands,
-            answer: l10n.faqVoiceCommandsAnswer,
-          ),
+
           FAQItem(
             question: l10n.faqNotifications,
             answer: l10n.faqNotificationsAnswer,

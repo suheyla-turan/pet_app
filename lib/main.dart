@@ -4,7 +4,7 @@ import 'features/pet/screens/pet_list_page.dart';
 import 'services/notification_service.dart';
 import 'services/media_service.dart';
 import 'providers/pet_provider.dart';
-import 'providers/ai_provider.dart';
+
 import 'providers/theme_provider.dart';
 import 'providers/settings_provider.dart';
 import 'providers/auth_provider.dart';
@@ -14,8 +14,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:pati_takip/l10n/app_localizations.dart';
-import 'widgets/ai_fab.dart';
-import 'features/pet/widgets/voice_command_widget.dart';
+
 // import 'generated/l10n.dart'; // Otomatik oluşturulacak
 
 void main() async {
@@ -40,19 +39,7 @@ class PatiTakipApp extends StatefulWidget {
 }
 
 class _PatiTakipAppState extends State<PatiTakipApp> {
-  bool isAssistantOpen = false;
 
-  void openAssistant() {
-    setState(() {
-      isAssistantOpen = true;
-    });
-  }
-
-  void closeAssistant() {
-    setState(() {
-      isAssistantOpen = false;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -67,13 +54,7 @@ class _PatiTakipAppState extends State<PatiTakipApp> {
             return petProvider ?? PetProvider();
           },
         ),
-        ChangeNotifierProxyProvider<SettingsProvider, AIProvider>(
-          create: (_) => AIProvider(),
-          update: (_, settingsProvider, aiProvider) {
-            aiProvider?.setSettingsProvider(settingsProvider);
-            return aiProvider ?? AIProvider();
-          },
-        ),
+
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
       ],
       child: Consumer2<ThemeProvider, SettingsProvider>(
@@ -89,54 +70,7 @@ class _PatiTakipAppState extends State<PatiTakipApp> {
                 return Stack(
                   children: [
                     const RootPage(),
-                    // AI FAB sadece kullanıcı giriş yapmışsa göster
-                    if (authProvider.isAuthenticated)
-                      DraggableAIFab(
-                        onTap: openAssistant,
-                        pet: null, // Ana sayfada pet bilgisi yok
-                      ),
-                    if (isAssistantOpen && authProvider.isAuthenticated)
-                      Positioned.fill(
-                        child: Material(
-                          color: Colors.black.withOpacity(0.15),
-                          child: Stack(
-                            children: [
-                              Center(
-                                child: Container(
-                                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(24),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.08),
-                                        blurRadius: 24,
-                                        offset: const Offset(0, 8),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 8),
-                                    child: VoiceCommandWidget(
-                                      key: ValueKey(isAssistantOpen),
-                                      pet: null, // Ana sayfada pet bilgisi yok
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              Positioned(
-                                top: 36,
-                                right: 36,
-                                child: IconButton(
-                                  icon: const Icon(Icons.close, size: 32, color: Colors.black54),
-                                  tooltip: 'Kapat',
-                                  onPressed: closeAssistant,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
+
                   ],
                 );
               },
