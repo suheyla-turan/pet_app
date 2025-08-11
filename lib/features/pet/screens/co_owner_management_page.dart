@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:pati_takip/features/pet/models/pet.dart';
 import 'package:pati_takip/providers/auth_provider.dart';
@@ -27,14 +28,40 @@ class _CoOwnerManagementPageState extends State<CoOwnerManagementPage> {
   void initState() {
     super.initState();
     _loadCoOwners();
-    _checkUserRole();
+    _checkUserPermissions();
   }
 
-  Future<void> _checkUserRole() async {
-    final user = Provider.of<AuthProvider>(context, listen: false).user;
-    setState(() {
-      _isCreator = user?.uid == widget.pet.creator;
-    });
+  Future<void> _checkUserPermissions() async {
+    try {
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) {
+        setState(() {
+          _isCreator = false;
+        });
+        return;
+      }
+
+      // Hayvan dokümanını getir ve yetkiyi kontrol et
+      final petDoc = await FirebaseFirestore.instance
+          .collection('hayvanlar')
+          .doc(widget.pet.id)
+          .get();
+      
+      if (petDoc.exists) {
+        final petData = petDoc.data()!;
+        final ownerIds = List<String>.from(petData['owners'] ?? []);
+        final creatorId = petData['creator'] as String?;
+        
+        setState(() {
+          _isCreator = ownerIds.contains(currentUser.uid);
+        });
+      }
+    } catch (e) {
+      print('Yetki kontrolü sırasında hata: $e');
+      setState(() {
+        _isCreator = false;
+      });
+    }
   }
 
   Future<void> _loadCoOwners() async {
@@ -62,7 +89,10 @@ class _CoOwnerManagementPageState extends State<CoOwnerManagementPage> {
     final email = _emailController.text.trim();
     if (email.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Lütfen email adresi girin')),
+        const SnackBar(
+          content: Text('Lütfen email adresi girin'),
+          backgroundColor: Colors.orange,
+        ),
       );
       return;
     }
@@ -76,11 +106,35 @@ class _CoOwnerManagementPageState extends State<CoOwnerManagementPage> {
       _emailController.clear();
       await _loadCoOwners();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Eş sahip başarıyla eklendi')),
+        const SnackBar(
+          content: Text('✅ Eş sahip başarıyla eklendi'),
+          backgroundColor: Colors.green,
+        ),
       );
     } catch (e) {
+      final errorMessage = e.toString().replaceAll('Exception: ', '');
+      final isPermissionError = errorMessage.contains('Yetki hatası') || 
+                               errorMessage.contains('permission-denied');
+      
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Eş sahip eklenirken hata: $e')),
+        SnackBar(
+          content: Text(errorMessage),
+          backgroundColor: isPermissionError ? Colors.red : Colors.orange,
+          duration: const Duration(seconds: 5),
+          action: isPermissionError ? SnackBarAction(
+            label: 'Yenile',
+            textColor: Colors.white,
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CoOwnerManagementPage(pet: widget.pet),
+                ),
+              );
+            },
+          ) : null,
+        ),
       );
     } finally {
       setState(() {
@@ -118,11 +172,22 @@ class _CoOwnerManagementPageState extends State<CoOwnerManagementPage> {
         await FirestoreService.removeCoOwner(widget.pet.id!, userId);
         await _loadCoOwners();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Eş sahip kaldırıldı')),
+          const SnackBar(
+            content: Text('✅ Eş sahip kaldırıldı'),
+            backgroundColor: Colors.green,
+          ),
         );
       } catch (e) {
+        final errorMessage = e.toString().replaceAll('Exception: ', '');
+        final isPermissionError = errorMessage.contains('Yetki hatası') || 
+                                 errorMessage.contains('permission-denied');
+        
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Eş sahip kaldırılırken hata: $e')),
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: isPermissionError ? Colors.red : Colors.orange,
+            duration: const Duration(seconds: 5),
+          ),
         );
       } finally {
         setState(() {
@@ -149,11 +214,22 @@ class _CoOwnerManagementPageState extends State<CoOwnerManagementPage> {
       await FirestoreService.sendMessageToCoOwners(widget.pet.id!, message);
       _messageController.clear();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Mesaj tüm eş sahiplere gönderildi')),
-      );
+        const SnackBar(
+            content: Text('✅ Mesaj tüm eş sahiplere gönderildi'),
+            backgroundColor: Colors.green,
+          ),
+        );
     } catch (e) {
+      final errorMessage = e.toString().replaceAll('Exception: ', '');
+      final isPermissionError = errorMessage.contains('Yetki hatası') || 
+                                 errorMessage.contains('permission-denied');
+        
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Mesaj gönderilirken hata: $e')),
+        SnackBar(
+          content: Text(errorMessage),
+          backgroundColor: isPermissionError ? Colors.red : Colors.orange,
+          duration: const Duration(seconds: 5),
+        ),
       );
     } finally {
       setState(() {
@@ -183,6 +259,51 @@ class _CoOwnerManagementPageState extends State<CoOwnerManagementPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Bilgi Kartı
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.blue.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.blue.withOpacity(0.3)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        color: Colors.blue,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Eş Sahip Yönetimi Hakkında',
+                        style: TextStyle(
+                          color: Colors.blue,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    _isCreator 
+                        ? 'Bu hayvana eş sahip ekleyebilir ve kaldırabilirsiniz. Eş sahipler hayvan hakkında bilgi alabilir ve mesaj gönderebilir.'
+                        : 'Bu hayvana eş sahip ekleme yetkiniz yok. Sadece hayvan sahipleri eş sahip ekleyebilir.',
+                    style: TextStyle(
+                      color: Colors.grey[300],
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+
             // Eş Sahip Ekle Butonu (Sadece yönetici)
             if (_isCreator) ...[
               Container(
@@ -387,7 +508,7 @@ class _CoOwnerManagementPageState extends State<CoOwnerManagementPage> {
             ),
             const SizedBox(height: 16),
 
-            // Eş Sahipler Listesi
+            // Eş Sahipler Listesi - Expanded ile sarıldı
             Expanded(
               child: _isLoading
                   ? const Center(

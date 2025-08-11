@@ -597,6 +597,20 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
+  String get deletePet => 'Hayvanı Sil';
+
+  @override
+  String get deletePetConfirm => 'Bu hayvanı silmek istediğinize emin misiniz? Bu işlem geri alınamaz.';
+
+  @override
+  String get petDeleted => 'Hayvan başarıyla silindi!';
+
+  @override
+  String petDeleteError(Object error) {
+    return 'Hayvan silinirken hata oluştu: $error';
+  }
+
+  @override
   String error(Object error) {
     return 'Hata: $error';
   }
@@ -695,6 +709,24 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get faqSearchHint => 'Soru ara...';
+
+  @override
+  String get faqStillNeedHelp => 'Hala yardıma mı ihtiyacınız var?';
+
+  @override
+  String get faqContactSupportTeam => 'Destek ekibimizle iletişime geçin';
+
+  @override
+  String get faqEmail => 'E-posta';
+
+  @override
+  String get faqFeedback => 'Geri Bildirim';
+
+  @override
+  String get faqEmailDialogTitle => 'E-posta Gönder';
+
+  @override
+  String get faqEmailDialogContent => 'E-posta uygulamanız açılacak ve info@patitakip.com adresine mesaj gönderebileceksiniz';
 
   @override
   String get faqGeneral => 'Genel Sorular';

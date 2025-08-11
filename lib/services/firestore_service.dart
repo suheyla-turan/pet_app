@@ -134,6 +134,27 @@ class FirestoreService {
 
   static Future<void> addCoOwner(String petId, String email) async {
     try {
+      // Mevcut kullanıcıyı kontrol et
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) {
+        throw Exception('Kullanıcı oturumu yok. Lütfen tekrar giriş yapın.');
+      }
+
+      // Hayvan dokümanını getir ve yetkiyi kontrol et
+      final petDoc = await FirebaseFirestore.instance.collection('hayvanlar').doc(petId).get();
+      if (!petDoc.exists) {
+        throw Exception('Hayvan bulunamadı');
+      }
+
+      final petData = petDoc.data()!;
+      final ownerIds = List<String>.from(petData['owners'] ?? []);
+      final creatorId = petData['creator'] as String?;
+
+      // Kullanıcının bu hayvana sahip olup olmadığını kontrol et
+      if (!ownerIds.contains(currentUser.uid)) {
+        throw Exception('Bu hayvana eş sahip ekleme yetkiniz yok. Sadece hayvan sahipleri eş sahip ekleyebilir.');
+      }
+
       // Email ile kullanıcıyı bul
       final usersSnapshot = await FirebaseFirestore.instance
           .collection('users')
@@ -141,11 +162,21 @@ class FirestoreService {
           .get();
       
       if (usersSnapshot.docs.isEmpty) {
-        throw Exception('Bu email adresi ile kayıtlı kullanıcı bulunamadı');
+        throw Exception('Bu email adresi ile kayıtlı kullanıcı bulunamadı. Kullanıcının önce uygulamaya kayıt olması gerekiyor.');
       }
       
       final userDoc = usersSnapshot.docs.first;
       final userId = userDoc.id;
+      
+      // Kendini eş sahip olarak eklemeye çalışıyorsa engelle
+      if (userId == currentUser.uid) {
+        throw Exception('Kendinizi eş sahip olarak ekleyemezsiniz.');
+      }
+
+      // Kullanıcı zaten eş sahip mi kontrol et
+      if (ownerIds.contains(userId)) {
+        throw Exception('Bu kullanıcı zaten eş sahip.');
+      }
       
       // Hayvana eş sahip olarak ekle
       await FirebaseFirestore.instance.collection('hayvanlar').doc(petId).update({
@@ -155,12 +186,49 @@ class FirestoreService {
       print('✅ Eş sahip eklendi: $email');
     } catch (e) {
       print('❌ HATA - Eş sahip eklenemedi: $e');
-      throw e;
+      
+      // Hata türüne göre özel mesajlar
+      if (e.toString().contains('permission-denied')) {
+        throw Exception('Yetki hatası: Bu işlemi gerçekleştirmek için gerekli izinleriniz yok. Lütfen tekrar giriş yapın veya uygulama ayarlarını kontrol edin.');
+      } else if (e.toString().contains('not-found')) {
+        throw Exception('Hayvan bulunamadı. Lütfen sayfayı yenileyin.');
+      } else if (e.toString().contains('unavailable')) {
+        throw Exception('Sunucu hatası. Lütfen internet bağlantınızı kontrol edin ve tekrar deneyin.');
+      } else {
+        throw Exception('Eş sahip eklenirken beklenmeyen bir hata oluştu: ${e.toString()}');
+      }
     }
   }
 
   static Future<void> removeCoOwner(String petId, String userId) async {
     try {
+      // Mevcut kullanıcıyı kontrol et
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) {
+        throw Exception('Kullanıcı oturumu yok. Lütfen tekrar giriş yapın.');
+      }
+
+      // Hayvan dokümanını getir ve yetkiyi kontrol et
+      final petDoc = await FirebaseFirestore.instance.collection('hayvanlar').doc(petId).get();
+      if (!petDoc.exists) {
+        throw Exception('Hayvan bulunamadı');
+      }
+
+      final petData = petDoc.data()!;
+      final ownerIds = List<String>.from(petData['owners'] ?? []);
+      final creatorId = petData['creator'] as String?;
+
+      // Kullanıcının bu hayvana sahip olup olmadığını kontrol et
+      if (!ownerIds.contains(currentUser.uid)) {
+        throw Exception('Bu hayvandan eş sahip kaldırma yetkiniz yok. Sadece hayvan sahipleri eş sahip kaldırabilir.');
+      }
+
+      // Kendini kaldırmaya çalışıyorsa engelle (en az bir sahip kalmalı)
+      if (userId == currentUser.uid && ownerIds.length <= 1) {
+        throw Exception('Kendinizi kaldıramazsınız. En az bir sahip kalmalı.');
+      }
+      
+      // Hayvandan eş sahip kaldır
       await FirebaseFirestore.instance.collection('hayvanlar').doc(petId).update({
         'owners': FieldValue.arrayRemove([userId])
       });
@@ -168,7 +236,15 @@ class FirestoreService {
       print('✅ Eş sahip kaldırıldı: $userId');
     } catch (e) {
       print('❌ HATA - Eş sahip kaldırılamadı: $e');
-      throw e;
+      
+      // Hata türüne göre özel mesajlar
+      if (e.toString().contains('permission-denied')) {
+        throw Exception('Yetki hatası: Bu işlemi gerçekleştirmek için gerekli izinleriniz yok. Lütfen tekrar giriş yapın veya uygulama ayarlarını kontrol edin.');
+      } else if (e.toString().contains('not-found')) {
+        throw Exception('Hayvan bulunamadı. Lütfen sayfayı yenileyin.');
+      } else {
+        throw Exception('Eş sahip kaldırılırken beklenmeyen bir hata oluştu: ${e.toString()}');
+      }
     }
   }
 

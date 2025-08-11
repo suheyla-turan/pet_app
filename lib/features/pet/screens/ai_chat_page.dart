@@ -1,4 +1,8 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:pati_takip/services/media_service.dart';
+import 'package:pati_takip/services/voice_service.dart';
 
 class AIChatPage extends StatefulWidget {
   const AIChatPage({super.key});
@@ -11,16 +15,151 @@ class _AIChatPageState extends State<AIChatPage> {
   final TextEditingController _messageController = TextEditingController();
   final List<ChatMessage> _messages = [];
   bool _isTyping = false;
+  
+  // Servisler
+  final MediaService _mediaService = MediaService();
+  final VoiceService _voiceService = VoiceService();
+  
+  // Durum değişkenleri
+  bool _isRecording = false;
+  bool _isSpeaking = false;
+  int _recordingDuration = 0;
 
   @override
   void initState() {
     super.initState();
+    _initializeServices();
+    
     // Add welcome message
     _messages.add(ChatMessage(
       text: "Merhaba! Evcil hayvanınız hakkında sorularınızı sorabilirsiniz. Size nasıl yardımcı olabilirim?",
       isUser: false,
       timestamp: DateTime.now(),
     ));
+  }
+
+  Future<void> _initializeServices() async {
+    try {
+      // MediaService'i başlat
+      await _mediaService.initialize();
+      
+      // VoiceService'i başlat
+      await _voiceService.initialize();
+      
+      // Callback'leri ayarla
+      _setupMediaServiceCallbacks();
+      _setupVoiceServiceCallbacks();
+      
+      print('✅ AI Chat servisleri başlatıldı');
+    } catch (e) {
+      print('❌ AI Chat servisleri başlatılamadı: $e');
+    }
+  }
+
+  void _setupMediaServiceCallbacks() {
+    _mediaService.onImageSelected = (String imagePath) {
+      setState(() {
+        _messages.add(ChatMessage(
+          text: "Görsel gönderildi",
+          isUser: true,
+          timestamp: DateTime.now(),
+          imagePath: imagePath,
+        ));
+      });
+      
+      // AI yanıtı simüle et ve sesli okut
+      final aiResponse = "Görselinizi aldım. Bu görsel hakkında size nasıl yardımcı olabilirim?";
+      _simulateAIResponse(aiResponse);
+      
+      // AI yanıtını sesli okut
+      Future.delayed(const Duration(seconds: 3), () {
+        if (mounted) {
+          _speakAIResponse(aiResponse);
+        }
+      });
+    };
+
+    _mediaService.onVoiceRecorded = (String audioPath, int duration) {
+      setState(() {
+        _messages.add(ChatMessage(
+          text: "Sesli mesaj gönderildi (${_mediaService.formatDuration(duration)})",
+          isUser: true,
+          timestamp: DateTime.now(),
+          audioPath: audioPath,
+        ));
+        _isRecording = false;
+        _recordingDuration = 0;
+      });
+      
+      // AI yanıtı simüle et ve sesli okut
+      final aiResponse = "Sesli mesajınızı aldım. Size nasıl yardımcı olabilirim?";
+      _simulateAIResponse(aiResponse);
+      
+      // AI yanıtını sesli okut
+      Future.delayed(const Duration(seconds: 3), () {
+        if (mounted) {
+          _speakAIResponse(aiResponse);
+        }
+      });
+    };
+
+    _mediaService.onRecordingStarted = () {
+      setState(() {
+        _isRecording = true;
+        _recordingDuration = 0;
+      });
+    };
+
+    _mediaService.onRecordingStopped = () {
+      setState(() {
+        _isRecording = false;
+      });
+    };
+
+    _mediaService.onRecordingDurationChanged = (int duration) {
+      setState(() {
+        _recordingDuration = duration;
+      });
+    };
+
+    _mediaService.onError = (String error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error), backgroundColor: Colors.red),
+      );
+    };
+  }
+
+  void _setupVoiceServiceCallbacks() {
+    _voiceService.onSpeakingStarted = () {
+      setState(() {
+        _isSpeaking = true;
+      });
+    };
+
+    _voiceService.onSpeakingStopped = () {
+      setState(() {
+        _isSpeaking = false;
+      });
+    };
+  }
+
+  void _simulateAIResponse(String response) {
+    setState(() {
+      _isTyping = true;
+    });
+
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) {
+        setState(() {
+          _isTyping = false;
+          _messages.add(ChatMessage(
+            text: response,
+            isUser: false,
+            timestamp: DateTime.now(),
+          ));
+        });
+      }
+    });
   }
 
   @override
@@ -69,6 +208,40 @@ class _AIChatPageState extends State<AIChatPage> {
     ];
     
     return responses[userMessage.length % responses.length];
+  }
+
+  // Görsel seçme
+  Future<void> _pickImage({ImageSource source = ImageSource.gallery}) async {
+    try {
+      final imagePath = await _mediaService.pickImage(source: source);
+      if (imagePath != null) {
+        print('✅ Görsel seçildi: $imagePath');
+      }
+    } catch (e) {
+      print('❌ Görsel seçme hatası: $e');
+    }
+  }
+
+  // Ses kayıt başlatma/durdurma
+  Future<void> _toggleVoiceRecording() async {
+    try {
+      if (_isRecording) {
+        await _mediaService.stopVoiceRecording();
+      } else {
+        await _mediaService.startVoiceRecording();
+      }
+    } catch (e) {
+      print('❌ Ses kayıt hatası: $e');
+    }
+  }
+
+  // AI yanıtını sesli okutma
+  Future<void> _speakAIResponse(String text) async {
+    try {
+      await _voiceService.speak(text);
+    } catch (e) {
+      print('❌ Sesli okuma hatası: $e');
+    }
   }
 
   void _showMenu() {
@@ -176,17 +349,20 @@ class _AIChatPageState extends State<AIChatPage> {
     return Scaffold(
       backgroundColor: const Color(0xFF0A0A0A),
       appBar: _buildEnhancedAppBar(),
-      body: Column(
-        children: [
-          // Main content area with robot icon
-          Expanded(
-            child: _messages.isEmpty
-                ? _buildWelcomeSection()
-                : _buildChatSection(),
-          ),
-          // Input section
-          _buildInputSection(),
-        ],
+      body: SafeArea(
+        bottom: false, // Alt kısmı SafeArea'dan çıkar çünkü kendi padding'imizi ekleyeceğiz
+        child: Column(
+          children: [
+            // Main content area with robot icon
+            Expanded(
+              child: _messages.isEmpty
+                  ? _buildWelcomeSection()
+                  : _buildChatSection(),
+            ),
+            // Input section
+            _buildInputSection(),
+          ],
+        ),
       ),
     );
   }
@@ -518,12 +694,87 @@ class _AIChatPageState extends State<AIChatPage> {
                 color: message.isUser ? Colors.purple : const Color(0xFF2C2C2C),
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: Text(
-                message.text,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Görsel varsa göster
+                  if (message.imagePath != null) ...[
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.file(
+                          File(message.imagePath!),
+                          width: 200,
+                          height: 150,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              width: 200,
+                              height: 150,
+                              decoration: BoxDecoration(
+                                color: Colors.grey[800],
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(
+                                Icons.image_not_supported,
+                                color: Colors.grey,
+                                size: 40,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                  
+                  // Ses dosyası varsa göster
+                  if (message.audioPath != null) ...[
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            onPressed: () => _mediaService.playVoiceFile(message.audioPath!),
+                            icon: const Icon(Icons.play_arrow, color: Colors.white),
+                          ),
+                          const Text(
+                            "Sesli mesaj",
+                            style: TextStyle(color: Colors.white, fontSize: 14),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                  
+                  // Metin ve sesli okuma butonu
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          message.text,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                      // AI yanıtları için sesli okuma butonu
+                      if (!message.isUser) ...[
+                        const SizedBox(width: 8),
+                        IconButton(
+                          onPressed: _isSpeaking ? null : () => _speakAIResponse(message.text),
+                          icon: Icon(
+                            _isSpeaking ? Icons.volume_off : Icons.volume_up,
+                            color: _isSpeaking ? Colors.grey : Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
               ),
             ),
           ),
@@ -624,14 +875,41 @@ class _AIChatPageState extends State<AIChatPage> {
           const SizedBox(width: 12),
           Container(
             decoration: BoxDecoration(
-              color: Colors.purple.withOpacity(0.2),
+              color: _isRecording ? Colors.red.withOpacity(0.3) : Colors.purple.withOpacity(0.2),
               borderRadius: BorderRadius.circular(25),
             ),
-            child: IconButton(
-              onPressed: () {
-                // TODO: Implement voice input
-              },
-              icon: const Icon(Icons.mic, color: Colors.purple, size: 24),
+            child: Stack(
+              children: [
+                IconButton(
+                  onPressed: _toggleVoiceRecording,
+                  icon: Icon(
+                    _isRecording ? Icons.stop : Icons.mic,
+                    color: _isRecording ? Colors.red : Colors.purple,
+                    size: 24,
+                  ),
+                ),
+                // Kayıt süresi göstergesi
+                if (_isRecording)
+                  Positioned(
+                    right: 8,
+                    top: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        _mediaService.formatDuration(_recordingDuration),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
           const SizedBox(width: 8),
@@ -640,11 +918,31 @@ class _AIChatPageState extends State<AIChatPage> {
               color: Colors.purple.withOpacity(0.2),
               borderRadius: BorderRadius.circular(25),
             ),
-            child: IconButton(
-              onPressed: () {
-                // TODO: Implement camera input
-              },
+            child: PopupMenuButton<ImageSource>(
               icon: const Icon(Icons.camera_alt, color: Colors.purple, size: 24),
+              onSelected: (ImageSource source) => _pickImage(source: source),
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: ImageSource.camera,
+                  child: Row(
+                    children: [
+                      Icon(Icons.camera_alt, color: Colors.purple),
+                      SizedBox(width: 8),
+                      Text('Kamera'),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: ImageSource.gallery,
+                  child: Row(
+                    children: [
+                      Icon(Icons.photo_library, color: Colors.purple),
+                      SizedBox(width: 8),
+                      Text('Galeri'),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
           const SizedBox(width: 8),
@@ -673,10 +971,14 @@ class ChatMessage {
   final String text;
   final bool isUser;
   final DateTime timestamp;
+  final String? imagePath;
+  final String? audioPath;
 
   ChatMessage({
     required this.text,
     required this.isUser,
     required this.timestamp,
+    this.imagePath,
+    this.audioPath,
   });
 }

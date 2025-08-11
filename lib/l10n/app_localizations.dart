@@ -1247,6 +1247,30 @@ abstract class AppLocalizations {
   /// **'Error deleting note: {error}'**
   String noteDeleteError(Object error);
 
+  /// No description provided for @deletePet.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Pet'**
+  String get deletePet;
+
+  /// No description provided for @deletePetConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this pet? This action cannot be undone.'**
+  String get deletePetConfirm;
+
+  /// No description provided for @petDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Pet deleted successfully!'**
+  String get petDeleted;
+
+  /// Pet deletion error message.
+  ///
+  /// In en, this message translates to:
+  /// **'Error deleting pet: {error}'**
+  String petDeleteError(Object error);
+
   /// Generic error message.
   ///
   /// In en, this message translates to:
@@ -1438,6 +1462,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Search questions...'**
   String get faqSearchHint;
+
+  /// No description provided for @faqStillNeedHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Still need help?'**
+  String get faqStillNeedHelp;
+
+  /// No description provided for @faqContactSupportTeam.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact our support team'**
+  String get faqContactSupportTeam;
+
+  /// No description provided for @faqEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get faqEmail;
+
+  /// No description provided for @faqFeedback.
+  ///
+  /// In en, this message translates to:
+  /// **'Feedback'**
+  String get faqFeedback;
+
+  /// No description provided for @faqEmailDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Send Email'**
+  String get faqEmailDialogTitle;
+
+  /// No description provided for @faqEmailDialogContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Your email app will open and you can send a message to info@patitakip.com'**
+  String get faqEmailDialogContent;
 
   /// No description provided for @faqGeneral.
   ///

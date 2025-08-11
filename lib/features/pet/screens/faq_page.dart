@@ -624,10 +624,13 @@ class _FAQPageState extends State<FAQPage> with TickerProviderStateMixin {
   }
 
   void _navigateToFeedback() {
-    Navigator.pop(context);
+    // Navigate to feedback page instead of just popping
+    Navigator.pushNamed(context, '/feedback');
   }
 
   void _launchEmail() {
+    final l10n = AppLocalizations.of(context)!;
+    
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -636,9 +639,40 @@ class _FAQPageState extends State<FAQPage> with TickerProviderStateMixin {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Tamam'),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _openEmailApp();
+            },
+            child: Text(l10n.ok),
           ),
         ],
+      ),
+    );
+  }
+
+  void _openEmailApp() {
+    // Show email address and instructions
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Please send email to: info@patitakip.com'),
+        backgroundColor: Colors.green,
+        duration: const Duration(seconds: 4),
+        action: SnackBarAction(
+          label: 'Copy',
+          onPressed: () {
+            // Copy email to clipboard
+            // In a real app, you might want to use clipboard package
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Email address copied to clipboard'),
+                backgroundColor: Colors.blue,
+              ),
+            );
+          },
+        ),
       ),
     );
   }

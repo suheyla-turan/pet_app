@@ -72,10 +72,14 @@ class VoiceService {
 
   Future<void> speak(String text, {String? voice, double? rate, double? pitch}) async {
     print('🎤 Sesli okuma başlatılıyor: $text');
+    
+    // Eğer zaten konuşuyorsa durdur
     if (_isSpeaking) {
       print('⚠️ Zaten konuşuyor, durduruluyor');
       await _flutterTts.stop();
+      _isSpeaking = false;
     }
+    
     try {
       final cleanText = text.trim();
       if (cleanText.isEmpty) {
@@ -93,6 +97,15 @@ class VoiceService {
       print('✅ TTS okuma başlatıldı');
     } catch (e) {
       print('❌ TTS okuma hatası: $e');
+      _isSpeaking = false;
+      onSpeakingStopped?.call();
+    }
+  }
+
+  // Ses oynatma sırasında TTS'i durdur
+  Future<void> pauseForAudio() async {
+    if (_isSpeaking) {
+      await _flutterTts.stop();
       _isSpeaking = false;
       onSpeakingStopped?.call();
     }

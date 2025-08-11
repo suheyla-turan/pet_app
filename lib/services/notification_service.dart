@@ -10,7 +10,7 @@ class NotificationService {
   static Future<void> initialize() async {
     if (_initialized) return;
 
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings = AndroidInitializationSettings('@mipmap/launcher_icon');
     const iosSettings = DarwinInitializationSettings();
     
     const initSettings = InitializationSettings(
@@ -32,6 +32,7 @@ class NotificationService {
       channelDescription: 'Evcil hayvan kritik durum bildirimleri',
       importance: Importance.high,
       priority: Priority.high,
+      icon: '@mipmap/launcher_icon',
       sound: customSound != null ? RawResourceAndroidNotificationSound(customSound) : null,
       color: const Color(0xFFFF0000), // Kırmızı renk
     );
@@ -63,6 +64,7 @@ class NotificationService {
       channelDescription: 'Evcil hayvan doğum günü bildirimleri',
       importance: Importance.high,
       priority: Priority.high,
+      icon: '@mipmap/launcher_icon',
       sound: customSound != null ? RawResourceAndroidNotificationSound(customSound) : null,
       color: const Color(0xFFFFD700), // Altın sarısı
     );
@@ -94,6 +96,7 @@ class NotificationService {
       channelDescription: 'Evcil hayvan aşı hatırlatma bildirimleri',
       importance: Importance.high,
       priority: Priority.high,
+      icon: '@mipmap/launcher_icon',
       sound: customSound != null ? RawResourceAndroidNotificationSound(customSound) : null,
       color: const Color(0xFF00BFFF), // Mavi
     );
@@ -125,6 +128,7 @@ class NotificationService {
       channelDescription: 'Eş sahiplerden gelen mesaj bildirimleri',
       importance: Importance.defaultImportance,
       priority: Priority.defaultPriority,
+      icon: '@mipmap/ic_launcher',
       sound: customSound != null ? RawResourceAndroidNotificationSound(customSound) : null,
       color: const Color(0xFF32CD32), // Yeşil
     );
@@ -159,6 +163,7 @@ class NotificationService {
       channelDescription: 'Evcil hayvan bakım bildirimleri',
       importance: Importance.defaultImportance,
       priority: Priority.defaultPriority,
+      icon: '@mipmap/ic_launcher',
       sound: customSound != null ? RawResourceAndroidNotificationSound(customSound) : null,
     );
     
@@ -195,6 +200,7 @@ class NotificationService {
       channelDescription: 'Zamanlanmış bildirimler',
       importance: Importance.high,
       priority: Priority.high,
+      icon: '@mipmap/ic_launcher',
       sound: androidSound != null ? RawResourceAndroidNotificationSound(androidSound) : null,
     );
     final iosDetails = DarwinNotificationDetails(
@@ -233,6 +239,7 @@ class NotificationService {
       channelDescription: 'Kullanıcı tanımlı bildirimler',
       importance: Importance.high,
       priority: Priority.high,
+      icon: '@mipmap/ic_launcher',
       sound: androidSound != null ? RawResourceAndroidNotificationSound(androidSound) : null,
     );
     final iosDetails = DarwinNotificationDetails(

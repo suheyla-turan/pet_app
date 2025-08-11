@@ -233,6 +233,16 @@
       "error": {}
     }
   },
+  "deletePet": "Hayvanı Sil",
+  "deletePetConfirm": "Bu hayvanı silmek istediğinize emin misiniz? Bu işlem geri alınamaz.",
+  "petDeleted": "Hayvan başarıyla silindi!",
+  "petDeleteError": "Hayvan silinirken hata oluştu: {error}",
+  "@petDeleteError": {
+    "description": "Hayvan silme hata mesajı.",
+    "placeholders": {
+      "error": {}
+    }
+  },
   "error": "Hata: {error}",
   "@error": {
     "description": "Genel hata mesajı.",
@@ -281,6 +291,12 @@
   "faqTitle": "Sık Sorulan Sorular",
   "faqDescription": "Uygulama hakkında sık sorulan sorular ve cevapları",
   "faqSearchHint": "Soru ara...",
+  "faqStillNeedHelp": "Hala yardıma mı ihtiyacınız var?",
+  "faqContactSupportTeam": "Destek ekibimizle iletişime geçin",
+  "faqEmail": "E-posta",
+  "faqFeedback": "Geri Bildirim",
+  "faqEmailDialogTitle": "E-posta Gönder",
+  "faqEmailDialogContent": "E-posta uygulamanız açılacak ve info@patitakip.com adresine mesaj gönderebileceksiniz",
   "faqGeneral": "Genel Sorular",
   "faqFeatures": "Özellikler",
   "faqPetCareHealth": "Evcil Hayvan Bakımı & Sağlık",

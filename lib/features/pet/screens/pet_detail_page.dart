@@ -313,7 +313,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
         Scaffold(
           backgroundColor: const Color(0xFF1A1A1A),
           appBar: AppBar(
-            backgroundColor: Colors.transparent,
+            backgroundColor: const Color(0xFF1A1A1A),
             elevation: 0,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -1922,7 +1922,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
 
     if (confirm == true && _pet.id != null) {
       try {
-        await FirestoreService.deletePet(_pet.id!);
+        await FirestoreService.hayvanSil(_pet.id!);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(AppLocalizations.of(context)!.petDeleted)),
         );

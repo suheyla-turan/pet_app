@@ -27,7 +27,11 @@ void main() async {
   );
   
   await NotificationService.initialize();
-  await MediaService().initialize();
+  
+  // Servisleri sıralı başlat
+  final mediaService = MediaService();
+  await mediaService.initialize();
+  
   runApp(const PatiTakipApp());
 }
 

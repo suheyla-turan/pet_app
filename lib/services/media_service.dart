@@ -3,6 +3,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:pati_takip/services/voice_service.dart';
 
 
 class MediaService {
@@ -81,8 +82,6 @@ class MediaService {
   // Ses kayıt başlatma
   Future<void> startVoiceRecording() async {
     try {
-
-
       // Mikrofon izni kontrolü
       final status = await Permission.microphone.request();
       if (status != PermissionStatus.granted) {
@@ -93,8 +92,6 @@ class MediaService {
       if (_isRecording) {
         await stopVoiceRecording();
       }
-
-
 
       // Kayıt dosyası yolu oluştur
       final directory = await getTemporaryDirectory();
@@ -156,6 +153,15 @@ class MediaService {
   // Ses dosyasını oynatma
   Future<void> playVoiceFile(String filePath) async {
     try {
+      // Eğer kayıt yapılıyorsa durdur
+      if (_isRecording) {
+        await stopVoiceRecording();
+      }
+      
+      // TTS'i durdur
+      final voiceService = VoiceService();
+      await voiceService.pauseForAudio();
+      
       final player = FlutterSoundPlayer();
       await player.openPlayer();
       

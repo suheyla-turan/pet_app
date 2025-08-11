@@ -597,6 +597,20 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get deletePet => 'Delete Pet';
+
+  @override
+  String get deletePetConfirm => 'Are you sure you want to delete this pet? This action cannot be undone.';
+
+  @override
+  String get petDeleted => 'Pet deleted successfully!';
+
+  @override
+  String petDeleteError(Object error) {
+    return 'Error deleting pet: $error';
+  }
+
+  @override
   String error(Object error) {
     return 'Error: $error';
   }
@@ -695,6 +709,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get faqSearchHint => 'Search questions...';
+
+  @override
+  String get faqStillNeedHelp => 'Still need help?';
+
+  @override
+  String get faqContactSupportTeam => 'Contact our support team';
+
+  @override
+  String get faqEmail => 'Email';
+
+  @override
+  String get faqFeedback => 'Feedback';
+
+  @override
+  String get faqEmailDialogTitle => 'Send Email';
+
+  @override
+  String get faqEmailDialogContent => 'Your email app will open and you can send a message to info@patitakip.com';
 
   @override
   String get faqGeneral => 'General Questions';
