@@ -128,7 +128,7 @@ class NotificationService {
       channelDescription: 'Eş sahiplerden gelen mesaj bildirimleri',
       importance: Importance.defaultImportance,
       priority: Priority.defaultPriority,
-      icon: '@mipmap/ic_launcher',
+      icon: '@mipmap/launcher_icon',
       sound: customSound != null ? RawResourceAndroidNotificationSound(customSound) : null,
       color: const Color(0xFF32CD32), // Yeşil
     );
@@ -163,7 +163,7 @@ class NotificationService {
       channelDescription: 'Evcil hayvan bakım bildirimleri',
       importance: Importance.defaultImportance,
       priority: Priority.defaultPriority,
-      icon: '@mipmap/ic_launcher',
+      icon: '@mipmap/launcher_icon',
       sound: customSound != null ? RawResourceAndroidNotificationSound(customSound) : null,
     );
     
@@ -200,7 +200,7 @@ class NotificationService {
       channelDescription: 'Zamanlanmış bildirimler',
       importance: Importance.high,
       priority: Priority.high,
-      icon: '@mipmap/ic_launcher',
+      icon: '@mipmap/launcher_icon',
       sound: androidSound != null ? RawResourceAndroidNotificationSound(androidSound) : null,
     );
     final iosDetails = DarwinNotificationDetails(
@@ -239,7 +239,7 @@ class NotificationService {
       channelDescription: 'Kullanıcı tanımlı bildirimler',
       importance: Importance.high,
       priority: Priority.high,
-      icon: '@mipmap/ic_launcher',
+      icon: '@mipmap/launcher_icon',
       sound: androidSound != null ? RawResourceAndroidNotificationSound(androidSound) : null,
     );
     final iosDetails = DarwinNotificationDetails(

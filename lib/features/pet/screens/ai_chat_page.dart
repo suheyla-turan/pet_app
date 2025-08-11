@@ -456,7 +456,12 @@ class _AIChatPageState extends State<AIChatPage> {
 
   Widget _buildWelcomeSection() {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.only(
+        left: 24,
+        right: 24,
+        top: 24,
+        bottom: 24, // Alt padding'i azalttım çünkü input section'da zaten var
+      ),
       child: Column(
         children: [
           const SizedBox(height: 40),
@@ -662,7 +667,12 @@ class _AIChatPageState extends State<AIChatPage> {
 
   Widget _buildChatSection() {
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.only(
+        left: 16,
+        right: 16,
+        top: 16,
+        bottom: 16, // Alt padding'i azalttım çünkü input section'da zaten var
+      ),
       itemCount: _messages.length + (_isTyping ? 1 : 0),
       itemBuilder: (context, index) {
         if (index == _messages.length && _isTyping) {
@@ -836,8 +846,18 @@ class _AIChatPageState extends State<AIChatPage> {
   }
 
   Widget _buildInputSection() {
+    // Ekran boyutlarını al
+    final mediaQuery = MediaQuery.of(context);
+    final bottomPadding = mediaQuery.padding.bottom;
+    final viewInsets = mediaQuery.viewInsets.bottom;
+    
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.only(
+        left: 16,
+        right: 16,
+        top: 16,
+        bottom: 16 + bottomPadding + viewInsets, // Alt padding + güvenli alan + klavye yüksekliği
+      ),
       decoration: const BoxDecoration(
         color: Color(0xFF1A1A1A),
         border: Border(
