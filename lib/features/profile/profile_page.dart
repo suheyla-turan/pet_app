@@ -78,14 +78,12 @@ class ProfilePage extends StatelessWidget {
                                             shape: const CircleBorder(),
                                             child: InkWell(
                                               customBorder: const CircleBorder(),
-                                              onTap: user == null
-                                                  ? null
-                                                  : () async {
-                                                      await showDialog(
-                                                        context: context,
-                                                        builder: (context) => EditProfileDialog(),
-                                                      );
-                                                    },
+                                              onTap: () async {
+                                                await showDialog(
+                                                  context: context,
+                                                  builder: (context) => EditProfileDialog(),
+                                                );
+                                              },
                                               child: const Padding(
                                                 padding: EdgeInsets.all(8.0),
                                                 child: Icon(Icons.edit, color: Colors.white, size: 22),
