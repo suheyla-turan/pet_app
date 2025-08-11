@@ -60,7 +60,22 @@ class AppLocalizationsTr extends AppLocalizations {
   String get ok => 'Tamam';
 
   @override
-  String get askHint => 'Sorunuzu yazın...';
+  String get aiAskTitle => 'Yapay Zekaya Soru Sor';
+
+  @override
+  String get recognizedText => 'Tanınan Metin';
+
+  @override
+  String get askHint => 'Sorunuzu yazın veya sesli sorun...';
+
+  @override
+  String get voiceAsk => 'Sesli Sor';
+
+  @override
+  String get stopListening => 'Dinlemeyi Durdur';
+
+  @override
+  String get aiThinking => 'AI düşünüyor...';
 
   @override
   String get cancel => 'İptal';
@@ -113,7 +128,35 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get themeSystemDesc => 'Cihazın tema ayarını kullan';
 
-  
+  @override
+  String get aiConversationStyle => 'AI Konuşma Stili';
+
+  @override
+  String get aiConversationStyleDesc => 'AI asistanın size nasıl yanıt vereceğini seçin';
+
+  @override
+  String get aiFriendly => 'Dostane';
+
+  @override
+  String get aiFriendlyDesc => 'Sıcak ve samimi bir ton kullanır';
+
+  @override
+  String get aiProfessional => 'Profesyonel';
+
+  @override
+  String get aiProfessionalDesc => 'Resmi ve bilgilendirici bir ton kullanır';
+
+  @override
+  String get aiFun => 'Eğlenceli';
+
+  @override
+  String get aiFunDesc => 'Eğlenceli ve oyuncu bir ton kullanır';
+
+  @override
+  String get aiCompassionate => 'Şefkatli';
+
+  @override
+  String get aiCompassionateDesc => 'Şefkatli ve koruyucu bir ton kullanır';
 
   @override
   String get voiceSettings => 'Sesli Konuşma';
@@ -651,10 +694,22 @@ class AppLocalizationsTr extends AppLocalizations {
   String get faqDescription => 'Uygulama hakkında sık sorulan sorular ve cevapları';
 
   @override
+  String get faqSearchHint => 'Soru ara...';
+
+  @override
   String get faqGeneral => 'Genel Sorular';
 
   @override
   String get faqFeatures => 'Özellikler';
+
+  @override
+  String get faqPetCareHealth => 'Evcil Hayvan Bakımı & Sağlık';
+
+  @override
+  String get faqPetLifestyle => 'Evcil Hayvan Yaşam Tarzı';
+
+  @override
+  String get faqTravelSocial => 'Seyahat & Sosyal';
 
   @override
   String get faqTechnical => 'Teknik Sorular';
@@ -739,6 +794,72 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get faqTermsOfServiceAnswer => 'Uygulamayı kullanarak kullanım şartlarımızı kabul etmiş olursunuz. Tam metni uygulama içinde bulabilirsiniz.';
+
+  @override
+  String get faqPetHealth => 'Evcil hayvanımın sağlığını nasıl takip edebilirim?';
+
+  @override
+  String get faqPetHealthAnswer => 'Uygulama evcil hayvanınızın tokluk, mutluluk, enerji ve bakım seviyelerini takip eder. Bu durumları evcil hayvan detay sayfasında görüntüleyebilir ve dikkat gerektirdiğinde bildirim alabilirsiniz.';
+
+  @override
+  String get faqPetPhotos => 'Evcil hayvanımın profiline fotoğraf ekleyebilir miyim?';
+
+  @override
+  String get faqPetPhotosAnswer => 'Evet, evcil hayvanınızın profiline fotoğraf ekleyebilirsiniz. Yeni fotoğraf çekebilir veya galerinizden seçebilirsiniz. Fotoğraflar bulutta güvenle saklanır.';
+
+  @override
+  String get faqPetNotes => 'Evcil hayvanım hakkında günlük notlar nasıl eklerim?';
+
+  @override
+  String get faqPetNotesAnswer => 'Evcil hayvanınızın davranışı, sağlığı veya aktiviteleri hakkında günlük notlar ekleyebilirsiniz. Bu notlar zaman damgası ile kaydedilir ve hayvanın geçmişinde görüntülenebilir.';
+
+  @override
+  String get faqPetReminders => 'Uygulama ne tür hatırlatıcılar sağlar?';
+
+  @override
+  String get faqPetRemindersAnswer => 'Uygulama beslenme zamanları, bakım programları, aşı tarihleri ve diğer önemli evcil hayvan bakım aktiviteleri için hatırlatıcılar sağlar. Bu hatırlatıcıları ayarlardan özelleştirebilirsiniz.';
+
+  @override
+  String get faqPetTraining => 'Uygulama evcil hayvan eğitiminde yardımcı olabilir mi?';
+
+  @override
+  String get faqPetTrainingAnswer => 'Uygulama doğrudan eğitim programları sağlamaz, ancak evcil hayvanınızın ilerlemesini takip edebilir, eğitim hedefleri belirleyebilir ve eğitim tavsiyeleri ve ipuçları için AI sohbeti kullanabilirsiniz.';
+
+  @override
+  String get faqPetSocial => 'Evcil hayvanımın başarılarını başkalarıyla paylaşabilir miyim?';
+
+  @override
+  String get faqPetSocialAnswer => 'Şu anda uygulama bireysel evcil hayvan takibine odaklanır. Ancak evcil hayvanınızın fotoğraflarını ve başarılarını cihazınızın paylaşım özellikleri aracılığıyla paylaşabilirsiniz.';
+
+  @override
+  String get faqPetEmergency => 'Evcil hayvan acil durumunda ne yapmalıyım?';
+
+  @override
+  String get faqPetEmergencyAnswer => 'Uygulama veteriner bakımının yerini tutmaz. Acil durumda veterinerinizle hemen iletişime geçin. Uygulama belirtileri takip etmenize ve veterinerinizle bilgi paylaşmanıza yardımcı olabilir.';
+
+  @override
+  String get faqPetTravel => 'Evcil hayvanımla seyahat ederken uygulamayı nasıl kullanabilirim?';
+
+  @override
+  String get faqPetTravelAnswer => 'Uygulama internet bağlantısı olan her yerde çalışır. Evcil hayvanınızın bakım programını takip etmeye devam edebilir, seyahat notları ekleyebilir ve yoldayken tüm özelliklere erişebilirsiniz.';
+
+  @override
+  String get faqPetGrooming => 'Tıraş randevularını takip edebilir miyim?';
+
+  @override
+  String get faqPetGroomingAnswer => 'Evet, tıraş randevularını özel bakım aktiviteleri olarak ekleyebilirsiniz. Tıraş seansları için hatırlatıcılar ayarlayın ve evcil hayvanınızın tıraş geçmişini takip edin.';
+
+  @override
+  String get faqPetExercise => 'Evcil hayvanımın egzersiz rutinini nasıl takip edebilirim?';
+
+  @override
+  String get faqPetExerciseAnswer => 'Evcil hayvanınızın günlük notlarına egzersiz aktiviteleri ekleyebilirsiniz. Egzersiz süresini, türünü ve evcil hayvanınızın egzersiz öncesi ve sonrası enerji seviyelerini takip edin.';
+
+  @override
+  String get faqPetDiet => 'Evcil hayvanımın diyetini ve beslenme programını takip edebilir miyim?';
+
+  @override
+  String get faqPetDietAnswer => 'Evet, uygulama beslenme zamanlarını ve tokluk seviyelerini takip eder. Diyet değişiklikleri, yemek tercihleri ve beslenme miktarları hakkında günlük notlarda not ekleyebilirsiniz.';
 
   @override
   String get aboutAppVersion => 'Uygulama Sürümü';

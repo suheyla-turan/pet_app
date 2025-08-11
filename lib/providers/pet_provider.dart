@@ -29,6 +29,7 @@ class PetProvider with ChangeNotifier {
     _timer = Timer.periodic(const Duration(minutes: 1), (_) {
       _updatePetValues();
       _checkLowValues();
+      _checkVaccines();
     });
   }
 
@@ -59,33 +60,83 @@ class PetProvider with ChangeNotifier {
 
   void _checkLowValues() {
     for (final pet in _pets) {
-      if (pet.satiety <= 2) {
+      // Kritik durum kontrolü (değer 1 veya 0)
+      if (pet.satiety <= 1) {
+        NotificationService.showCriticalStatusNotification(
+          pet.name, 
+          'tokluk',
+          customSound: _settingsProvider?.notificationSound,
+        );
+      } else if (pet.satiety <= 2) {
         NotificationService.showLowValueNotification(
           pet.name, 
           'tokluk',
           customSound: _settingsProvider?.notificationSound,
         );
       }
-      if (pet.happiness <= 2) {
+      
+      if (pet.happiness <= 1) {
+        NotificationService.showCriticalStatusNotification(
+          pet.name, 
+          'mutluluk',
+          customSound: _settingsProvider?.notificationSound,
+        );
+      } else if (pet.happiness <= 2) {
         NotificationService.showLowValueNotification(
           pet.name, 
           'mutluluk',
           customSound: _settingsProvider?.notificationSound,
         );
       }
-      if (pet.energy <= 2) {
+      
+      if (pet.energy <= 1) {
+        NotificationService.showCriticalStatusNotification(
+          pet.name, 
+          'enerji',
+          customSound: _settingsProvider?.notificationSound,
+        );
+      } else if (pet.energy <= 2) {
         NotificationService.showLowValueNotification(
           pet.name, 
           'enerji',
           customSound: _settingsProvider?.notificationSound,
         );
       }
-      if (pet.care <= 2) {
+      
+      if (pet.care <= 1) {
+        NotificationService.showCriticalStatusNotification(
+          pet.name, 
+          'bakım',
+          customSound: _settingsProvider?.notificationSound,
+        );
+      } else if (pet.care <= 2) {
         NotificationService.showLowValueNotification(
           pet.name, 
           'bakım',
           customSound: _settingsProvider?.notificationSound,
         );
+      }
+    }
+  }
+
+  /// Aşı vakti kontrolü
+  void _checkVaccines() {
+    for (final pet in _pets) {
+      final now = DateTime.now();
+      
+      for (final vaccine in pet.vaccines) {
+        if (!vaccine.isDone) {
+          final daysUntilDue = vaccine.date.difference(now).inDays;
+          
+          // Aşı vakti geldi veya geçti
+          if (daysUntilDue <= 0) {
+            NotificationService.showVaccineDueNotification(
+              pet.name,
+              vaccine.name,
+              customSound: _settingsProvider?.notificationSound,
+            );
+          }
+        }
       }
     }
   }

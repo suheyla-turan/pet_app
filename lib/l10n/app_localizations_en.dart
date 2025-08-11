@@ -694,10 +694,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get faqDescription => 'Common questions and answers about the app';
 
   @override
+  String get faqSearchHint => 'Search questions...';
+
+  @override
   String get faqGeneral => 'General Questions';
 
   @override
   String get faqFeatures => 'Features';
+
+  @override
+  String get faqPetCareHealth => 'Pet Care & Health';
+
+  @override
+  String get faqPetLifestyle => 'Pet Lifestyle';
+
+  @override
+  String get faqTravelSocial => 'Travel & Social';
 
   @override
   String get faqTechnical => 'Technical Questions';
@@ -782,6 +794,72 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get faqTermsOfServiceAnswer => 'By using the app, you accept our terms of service. You can find the full text in the app.';
+
+  @override
+  String get faqPetHealth => 'How can I monitor my pet\'s health?';
+
+  @override
+  String get faqPetHealthAnswer => 'The app tracks your pet\'s satiety, happiness, energy, and care levels. You can view these statuses on the pet detail page and receive notifications when they need attention.';
+
+  @override
+  String get faqPetPhotos => 'Can I add photos to my pet\'s profile?';
+
+  @override
+  String get faqPetPhotosAnswer => 'Yes, you can add photos to your pet\'s profile. You can take a new photo or select one from your gallery. Photos are stored securely in the cloud.';
+
+  @override
+  String get faqPetNotes => 'How do I add daily notes about my pet?';
+
+  @override
+  String get faqPetNotesAnswer => 'You can add daily notes about your pet\'s behavior, health, or activities. These notes are saved with timestamps and can be viewed in the pet\'s history.';
+
+  @override
+  String get faqPetReminders => 'What kind of reminders does the app provide?';
+
+  @override
+  String get faqPetRemindersAnswer => 'The app provides reminders for feeding times, care schedules, vaccination dates, and other important pet care activities. You can customize these reminders in the settings.';
+
+  @override
+  String get faqPetTraining => 'Can the app help with pet training?';
+
+  @override
+  String get faqPetTrainingAnswer => 'While the app doesn\'t provide direct training programs, you can track your pet\'s progress, set training goals, and use the AI chat to ask for training advice and tips.';
+
+  @override
+  String get faqPetSocial => 'Can I share my pet\'s achievements with others?';
+
+  @override
+  String get faqPetSocialAnswer => 'Currently, the app focuses on individual pet tracking. However, you can share your pet\'s photos and achievements through your device\'s sharing features.';
+
+  @override
+  String get faqPetEmergency => 'What should I do in case of a pet emergency?';
+
+  @override
+  String get faqPetEmergencyAnswer => 'The app is not a substitute for veterinary care. In case of emergency, contact your veterinarian immediately. The app can help you track symptoms and share information with your vet.';
+
+  @override
+  String get faqPetTravel => 'How can I use the app when traveling with my pet?';
+
+  @override
+  String get faqPetTravelAnswer => 'The app works anywhere with internet connection. You can continue tracking your pet\'s care schedule, add travel notes, and access all features while on the go.';
+
+  @override
+  String get faqPetGrooming => 'Can I track grooming appointments?';
+
+  @override
+  String get faqPetGroomingAnswer => 'Yes, you can add grooming appointments as custom care activities. Set reminders for grooming sessions and track your pet\'s grooming history.';
+
+  @override
+  String get faqPetExercise => 'How can I track my pet\'s exercise routine?';
+
+  @override
+  String get faqPetExerciseAnswer => 'You can add exercise activities to your pet\'s daily notes. Track exercise duration, type, and your pet\'s energy levels before and after exercise.';
+
+  @override
+  String get faqPetDiet => 'Can I track my pet\'s diet and feeding schedule?';
+
+  @override
+  String get faqPetDietAnswer => 'Yes, the app tracks feeding times and satiety levels. You can add notes about diet changes, food preferences, and feeding amounts in the daily notes.';
 
   @override
   String get aboutAppVersion => 'App Version';

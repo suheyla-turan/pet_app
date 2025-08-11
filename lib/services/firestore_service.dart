@@ -101,6 +101,106 @@ class FirestoreService {
     }
   }
 
+  // Eş sahip yönetimi metodları
+  static Future<List<Map<String, dynamic>>> getCoOwners(String petId) async {
+    try {
+      final petDoc = await FirebaseFirestore.instance.collection('hayvanlar').doc(petId).get();
+      if (!petDoc.exists) throw Exception('Hayvan bulunamadı');
+      
+      final petData = petDoc.data()!;
+      final ownerIds = List<String>.from(petData['owners'] ?? []);
+      
+      if (ownerIds.isEmpty) return [];
+      
+      // Kullanıcı bilgilerini getir
+      final usersSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .where(FieldPath.documentId, whereIn: ownerIds)
+          .get();
+      
+      return usersSnapshot.docs.map((doc) {
+        final userData = doc.data();
+        return {
+          'uid': doc.id,
+          'email': userData['email'] ?? '',
+          'displayName': userData['displayName'] ?? 'İsimsiz Kullanıcı',
+        };
+      }).toList();
+    } catch (e) {
+      print('❌ HATA - Eş sahipler getirilemedi: $e');
+      return [];
+    }
+  }
+
+  static Future<void> addCoOwner(String petId, String email) async {
+    try {
+      // Email ile kullanıcıyı bul
+      final usersSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .where('email', isEqualTo: email)
+          .get();
+      
+      if (usersSnapshot.docs.isEmpty) {
+        throw Exception('Bu email adresi ile kayıtlı kullanıcı bulunamadı');
+      }
+      
+      final userDoc = usersSnapshot.docs.first;
+      final userId = userDoc.id;
+      
+      // Hayvana eş sahip olarak ekle
+      await FirebaseFirestore.instance.collection('hayvanlar').doc(petId).update({
+        'owners': FieldValue.arrayUnion([userId])
+      });
+      
+      print('✅ Eş sahip eklendi: $email');
+    } catch (e) {
+      print('❌ HATA - Eş sahip eklenemedi: $e');
+      throw e;
+    }
+  }
+
+  static Future<void> removeCoOwner(String petId, String userId) async {
+    try {
+      await FirebaseFirestore.instance.collection('hayvanlar').doc(petId).update({
+        'owners': FieldValue.arrayRemove([userId])
+      });
+      
+      print('✅ Eş sahip kaldırıldı: $userId');
+    } catch (e) {
+      print('❌ HATA - Eş sahip kaldırılamadı: $e');
+      throw e;
+    }
+  }
+
+  static Future<void> sendMessageToCoOwners(String petId, String message) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) throw Exception('Kullanıcı oturumu yok');
+      
+      final petDoc = await FirebaseFirestore.instance.collection('hayvanlar').doc(petId).get();
+      if (!petDoc.exists) throw Exception('Hayvan bulunamadı');
+      
+      final petData = petDoc.data()!;
+      final ownerIds = List<String>.from(petData['owners'] ?? []);
+      
+      // Mesajı kaydet
+      await FirebaseFirestore.instance.collection('messages').add({
+        'petId': petId,
+        'senderId': user.uid,
+        'senderName': user.displayName ?? 'İsimsiz Kullanıcı',
+        'message': message,
+        'timestamp': FieldValue.serverTimestamp(),
+        'recipients': ownerIds,
+        'type': 'co_owner_message',
+      });
+      
+      print('✅ Mesaj tüm eş sahiplere gönderildi');
+    } catch (e) {
+      print('❌ HATA - Mesaj gönderilemedi: $e');
+      throw e;
+    }
+  }
+
   static Future<bool> addOwnerToPetByEmail(String petId, String email) async {
     try {
       final userQuery = await FirebaseFirestore.instance

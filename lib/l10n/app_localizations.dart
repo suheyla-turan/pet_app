@@ -197,11 +197,41 @@ abstract class AppLocalizations {
   /// **'OK'**
   String get ok;
 
+  /// No description provided for @aiAskTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask AI a Question'**
+  String get aiAskTitle;
+
+  /// No description provided for @recognizedText.
+  ///
+  /// In en, this message translates to:
+  /// **'Recognized Text'**
+  String get recognizedText;
+
   /// No description provided for @askHint.
   ///
   /// In en, this message translates to:
-  /// **'Type your question...'**
+  /// **'Type or ask your question...'**
   String get askHint;
+
+  /// No description provided for @voiceAsk.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice Ask'**
+  String get voiceAsk;
+
+  /// No description provided for @stopListening.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop Listening'**
+  String get stopListening;
+
+  /// No description provided for @aiThinking.
+  ///
+  /// In en, this message translates to:
+  /// **'AI is thinking...'**
+  String get aiThinking;
 
   /// No description provided for @cancel.
   ///
@@ -305,7 +335,65 @@ abstract class AppLocalizations {
   /// **'Use device theme'**
   String get themeSystemDesc;
 
+  /// No description provided for @aiConversationStyle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Conversation Style'**
+  String get aiConversationStyle;
 
+  /// No description provided for @aiConversationStyleDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose how the AI assistant responds to you'**
+  String get aiConversationStyleDesc;
+
+  /// No description provided for @aiFriendly.
+  ///
+  /// In en, this message translates to:
+  /// **'Friendly'**
+  String get aiFriendly;
+
+  /// No description provided for @aiFriendlyDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Uses a warm and friendly tone'**
+  String get aiFriendlyDesc;
+
+  /// No description provided for @aiProfessional.
+  ///
+  /// In en, this message translates to:
+  /// **'Professional'**
+  String get aiProfessional;
+
+  /// No description provided for @aiProfessionalDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Uses a formal and informative tone'**
+  String get aiProfessionalDesc;
+
+  /// No description provided for @aiFun.
+  ///
+  /// In en, this message translates to:
+  /// **'Fun'**
+  String get aiFun;
+
+  /// No description provided for @aiFunDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Uses a playful and fun tone'**
+  String get aiFunDesc;
+
+  /// No description provided for @aiCompassionate.
+  ///
+  /// In en, this message translates to:
+  /// **'Compassionate'**
+  String get aiCompassionate;
+
+  /// No description provided for @aiCompassionateDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Uses a caring and protective tone'**
+  String get aiCompassionateDesc;
 
   /// No description provided for @voiceSettings.
   ///
@@ -985,7 +1073,11 @@ abstract class AppLocalizations {
   /// **'Vaccines taken'**
   String get vaccinesTaken;
 
-
+  /// No description provided for @askQuestionChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask a question in chat'**
+  String get askQuestionChat;
 
   /// No description provided for @owners.
   ///
@@ -1023,7 +1115,11 @@ abstract class AppLocalizations {
   /// **'Chat History'**
   String get chatHistory;
 
-
+  /// No description provided for @aiChat.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Chat'**
+  String get aiChat;
 
   /// No description provided for @newChat.
   ///
@@ -1031,7 +1127,11 @@ abstract class AppLocalizations {
   /// **'New Chat'**
   String get newChat;
 
-
+  /// No description provided for @speakQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Speak your question'**
+  String get speakQuestion;
 
   /// No description provided for @chatHint.
   ///
@@ -1309,7 +1409,11 @@ abstract class AppLocalizations {
   /// **'Take Photo'**
   String get takePhoto;
 
-
+  /// No description provided for @useRecognizedText.
+  ///
+  /// In en, this message translates to:
+  /// **'Use This Text'**
+  String get useRecognizedText;
 
   /// No description provided for @faq.
   ///
@@ -1329,6 +1433,12 @@ abstract class AppLocalizations {
   /// **'Common questions and answers about the app'**
   String get faqDescription;
 
+  /// No description provided for @faqSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search questions...'**
+  String get faqSearchHint;
+
   /// No description provided for @faqGeneral.
   ///
   /// In en, this message translates to:
@@ -1340,6 +1450,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Features'**
   String get faqFeatures;
+
+  /// No description provided for @faqPetCareHealth.
+  ///
+  /// In en, this message translates to:
+  /// **'Pet Care & Health'**
+  String get faqPetCareHealth;
+
+  /// No description provided for @faqPetLifestyle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pet Lifestyle'**
+  String get faqPetLifestyle;
+
+  /// No description provided for @faqTravelSocial.
+  ///
+  /// In en, this message translates to:
+  /// **'Travel & Social'**
+  String get faqTravelSocial;
 
   /// No description provided for @faqTechnical.
   ///
@@ -1362,7 +1490,7 @@ abstract class AppLocalizations {
   /// No description provided for @faqWhatIsPatiTakipAnswer.
   ///
   /// In en, this message translates to:
-  /// **'PatiTakip is a comprehensive mobile app designed to make pet care easier. It offers vaccination tracking, daily notes, and voice command features.'**
+  /// **'PatiTakip is a comprehensive mobile app designed to make pet care easier. It offers vaccination tracking, daily notes, AI-powered chat, and voice command features.'**
   String get faqWhatIsPatiTakipAnswer;
 
   /// No description provided for @faqHowToAddPet.
@@ -1389,7 +1517,29 @@ abstract class AppLocalizations {
   /// **'Go to the \'Vaccines\' tab on the pet detail page to add new vaccines or view existing ones. You can mark completed vaccines as done.'**
   String get faqHowToTrackVaccinesAnswer;
 
+  /// No description provided for @faqHowToUseAI.
+  ///
+  /// In en, this message translates to:
+  /// **'How do I use the AI chat feature?'**
+  String get faqHowToUseAI;
 
+  /// No description provided for @faqHowToUseAIAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'Click the AI button in the bottom right corner of the main page to chat with artificial intelligence. You can ask questions both in writing and by voice.'**
+  String get faqHowToUseAIAnswer;
+
+  /// No description provided for @faqVoiceCommands.
+  ///
+  /// In en, this message translates to:
+  /// **'How do voice commands work?'**
+  String get faqVoiceCommands;
+
+  /// No description provided for @faqVoiceCommandsAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'Press the microphone button on the AI chat page to ask questions by voice. The app converts your voice to text and AI responds.'**
+  String get faqVoiceCommandsAnswer;
 
   /// No description provided for @faqNotifications.
   ///
@@ -1486,6 +1636,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'By using the app, you accept our terms of service. You can find the full text in the app.'**
   String get faqTermsOfServiceAnswer;
+
+  /// No description provided for @faqPetHealth.
+  ///
+  /// In en, this message translates to:
+  /// **'How can I monitor my pet\'s health?'**
+  String get faqPetHealth;
+
+  /// No description provided for @faqPetHealthAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'The app tracks your pet\'s satiety, happiness, energy, and care levels. You can view these statuses on the pet detail page and receive notifications when they need attention.'**
+  String get faqPetHealthAnswer;
+
+  /// No description provided for @faqPetPhotos.
+  ///
+  /// In en, this message translates to:
+  /// **'Can I add photos to my pet\'s profile?'**
+  String get faqPetPhotos;
+
+  /// No description provided for @faqPetPhotosAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, you can add photos to your pet\'s profile. You can take a new photo or select one from your gallery. Photos are stored securely in the cloud.'**
+  String get faqPetPhotosAnswer;
+
+  /// No description provided for @faqPetNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'How do I add daily notes about my pet?'**
+  String get faqPetNotes;
+
+  /// No description provided for @faqPetNotesAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'You can add daily notes about your pet\'s behavior, health, or activities. These notes are saved with timestamps and can be viewed in the pet\'s history.'**
+  String get faqPetNotesAnswer;
+
+  /// No description provided for @faqPetReminders.
+  ///
+  /// In en, this message translates to:
+  /// **'What kind of reminders does the app provide?'**
+  String get faqPetReminders;
+
+  /// No description provided for @faqPetRemindersAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'The app provides reminders for feeding times, care schedules, vaccination dates, and other important pet care activities. You can customize these reminders in the settings.'**
+  String get faqPetRemindersAnswer;
+
+  /// No description provided for @faqPetTraining.
+  ///
+  /// In en, this message translates to:
+  /// **'Can the app help with pet training?'**
+  String get faqPetTraining;
+
+  /// No description provided for @faqPetTrainingAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'While the app doesn\'t provide direct training programs, you can track your pet\'s progress, set training goals, and use the AI chat to ask for training advice and tips.'**
+  String get faqPetTrainingAnswer;
+
+  /// No description provided for @faqPetSocial.
+  ///
+  /// In en, this message translates to:
+  /// **'Can I share my pet\'s achievements with others?'**
+  String get faqPetSocial;
+
+  /// No description provided for @faqPetSocialAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'Currently, the app focuses on individual pet tracking. However, you can share your pet\'s photos and achievements through your device\'s sharing features.'**
+  String get faqPetSocialAnswer;
+
+  /// No description provided for @faqPetEmergency.
+  ///
+  /// In en, this message translates to:
+  /// **'What should I do in case of a pet emergency?'**
+  String get faqPetEmergency;
+
+  /// No description provided for @faqPetEmergencyAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'The app is not a substitute for veterinary care. In case of emergency, contact your veterinarian immediately. The app can help you track symptoms and share information with your vet.'**
+  String get faqPetEmergencyAnswer;
+
+  /// No description provided for @faqPetTravel.
+  ///
+  /// In en, this message translates to:
+  /// **'How can I use the app when traveling with my pet?'**
+  String get faqPetTravel;
+
+  /// No description provided for @faqPetTravelAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'The app works anywhere with internet connection. You can continue tracking your pet\'s care schedule, add travel notes, and access all features while on the go.'**
+  String get faqPetTravelAnswer;
+
+  /// No description provided for @faqPetGrooming.
+  ///
+  /// In en, this message translates to:
+  /// **'Can I track grooming appointments?'**
+  String get faqPetGrooming;
+
+  /// No description provided for @faqPetGroomingAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, you can add grooming appointments as custom care activities. Set reminders for grooming sessions and track your pet\'s grooming history.'**
+  String get faqPetGroomingAnswer;
+
+  /// No description provided for @faqPetExercise.
+  ///
+  /// In en, this message translates to:
+  /// **'How can I track my pet\'s exercise routine?'**
+  String get faqPetExercise;
+
+  /// No description provided for @faqPetExerciseAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'You can add exercise activities to your pet\'s daily notes. Track exercise duration, type, and your pet\'s energy levels before and after exercise.'**
+  String get faqPetExerciseAnswer;
+
+  /// No description provided for @faqPetDiet.
+  ///
+  /// In en, this message translates to:
+  /// **'Can I track my pet\'s diet and feeding schedule?'**
+  String get faqPetDiet;
+
+  /// No description provided for @faqPetDietAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, the app tracks feeding times and satiety levels. You can add notes about diet changes, food preferences, and feeding amounts in the daily notes.'**
+  String get faqPetDietAnswer;
 
   /// No description provided for @aboutAppVersion.
   ///

@@ -1,4 +1,5 @@
 import 'package:firebase_database/firebase_database.dart';
+import 'notification_service.dart';
 
 
 class RealtimeService {
@@ -34,13 +35,25 @@ class PetMessage {
 }
 
 extension PetChatRealtime on RealtimeService {
-  Future<void> addPetMessage(String petId, String senderUid, String text) async {
+  Future<void> addPetMessage(String petId, String senderUid, String text, {
+    String? petName,
+    String? senderName,
+  }) async {
     final msgRef = _db.child('pet_chats').child(petId).child('messages').push();
     await msgRef.set({
       'sender': senderUid,
       'text': text,
       'timestamp': DateTime.now().millisecondsSinceEpoch,
     });
+    
+    // Eş sahipten mesaj geldiğinde bildirim gönder
+    if (petName != null && senderName != null) {
+      await NotificationService.showCoOwnerMessageNotification(
+        petName,
+        senderName,
+        text,
+      );
+    }
   }
 
   Stream<List<PetMessage>> getPetMessagesStream(String petId) {

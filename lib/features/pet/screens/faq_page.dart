@@ -16,6 +16,10 @@ class _FAQPageState extends State<FAQPage> with TickerProviderStateMixin {
   final Map<int, bool> _categoryExpanded = {};
   final Map<String, bool> _questionExpanded = {};
   
+  // Search functionality
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+  
   // FAQ Categories
   List<FAQCategory> _getFAQCategories(AppLocalizations l10n) {
     return [
@@ -47,10 +51,82 @@ class _FAQPageState extends State<FAQPage> with TickerProviderStateMixin {
             question: l10n.faqHowToTrackVaccines,
             answer: l10n.faqHowToTrackVaccinesAnswer,
           ),
-
+          FAQItem(
+            question: l10n.faqHowToUseAI,
+            answer: l10n.faqHowToUseAIAnswer,
+          ),
+          FAQItem(
+            question: l10n.faqVoiceCommands,
+            answer: l10n.faqVoiceCommandsAnswer,
+          ),
           FAQItem(
             question: l10n.faqNotifications,
             answer: l10n.faqNotificationsAnswer,
+          ),
+        ],
+      ),
+      FAQCategory(
+        title: l10n.faqPetCareHealth,
+        icon: Icons.favorite,
+        color: Colors.red,
+        questions: [
+          FAQItem(
+            question: l10n.faqPetHealth,
+            answer: l10n.faqPetHealthAnswer,
+          ),
+          FAQItem(
+            question: l10n.faqPetPhotos,
+            answer: l10n.faqPetPhotosAnswer,
+          ),
+          FAQItem(
+            question: l10n.faqPetNotes,
+            answer: l10n.faqPetNotesAnswer,
+          ),
+          FAQItem(
+            question: l10n.faqPetReminders,
+            answer: l10n.faqPetRemindersAnswer,
+          ),
+        ],
+      ),
+      FAQCategory(
+        title: l10n.faqPetLifestyle,
+        icon: Icons.pets,
+        color: Colors.teal,
+        questions: [
+          FAQItem(
+            question: l10n.faqPetTraining,
+            answer: l10n.faqPetTrainingAnswer,
+          ),
+          FAQItem(
+            question: l10n.faqPetExercise,
+            answer: l10n.faqPetExerciseAnswer,
+          ),
+          FAQItem(
+            question: l10n.faqPetDiet,
+            answer: l10n.faqPetDietAnswer,
+          ),
+          FAQItem(
+            question: l10n.faqPetGrooming,
+            answer: l10n.faqPetGroomingAnswer,
+          ),
+        ],
+      ),
+      FAQCategory(
+        title: l10n.faqTravelSocial,
+        icon: Icons.flight,
+        color: Colors.indigo,
+        questions: [
+          FAQItem(
+            question: l10n.faqPetTravel,
+            answer: l10n.faqPetTravelAnswer,
+          ),
+          FAQItem(
+            question: l10n.faqPetSocial,
+            answer: l10n.faqPetSocialAnswer,
+          ),
+          FAQItem(
+            question: l10n.faqPetEmergency,
+            answer: l10n.faqPetEmergencyAnswer,
           ),
         ],
       ),
@@ -95,6 +171,34 @@ class _FAQPageState extends State<FAQPage> with TickerProviderStateMixin {
     ];
   }
 
+  // Filter FAQ categories based on search query
+  List<FAQCategory> _getFilteredFAQCategories(AppLocalizations l10n) {
+    if (_searchQuery.isEmpty) {
+      return _getFAQCategories(l10n);
+    }
+    
+    final allCategories = _getFAQCategories(l10n);
+    final filteredCategories = <FAQCategory>[];
+    
+    for (final category in allCategories) {
+      final filteredQuestions = category.questions.where((question) {
+        return question.question.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+               question.answer.toLowerCase().contains(_searchQuery.toLowerCase());
+      }).toList();
+      
+      if (filteredQuestions.isNotEmpty) {
+        filteredCategories.add(FAQCategory(
+          title: category.title,
+          icon: category.icon,
+          color: category.color,
+          questions: filteredQuestions,
+        ));
+      }
+    }
+    
+    return filteredCategories;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -111,6 +215,7 @@ class _FAQPageState extends State<FAQPage> with TickerProviderStateMixin {
   @override
   void dispose() {
     _animationController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -215,19 +320,39 @@ class _FAQPageState extends State<FAQPage> with TickerProviderStateMixin {
                             ],
                           ),
                           child: TextField(
+                            controller: _searchController,
                             decoration: InputDecoration(
-                              hintText: 'Soru ara...',
+                              hintText: l10n.faqSearchHint ?? 'Search questions...',
                               border: InputBorder.none,
                               icon: Icon(
                                 Icons.search,
                                 color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
                               ),
+                              suffixIcon: _searchQuery.isNotEmpty
+                                  ? IconButton(
+                                      icon: Icon(
+                                        Icons.clear,
+                                        color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                                      ),
+                                      onPressed: () {
+                                        setState(() {
+                                          _searchController.clear();
+                                          _searchQuery = '';
+                                        });
+                                      },
+                                    )
+                                  : null,
                             ),
                             style: TextStyle(
                               color: isDark ? Colors.white : Colors.black,
                             ),
                             maxLines: 1,
                             textInputAction: TextInputAction.search,
+                            onChanged: (value) {
+                              setState(() {
+                                _searchQuery = value;
+                              });
+                            },
                           ),
                         ),
                         
@@ -255,7 +380,7 @@ class _FAQPageState extends State<FAQPage> with TickerProviderStateMixin {
   Widget _buildFAQExpansionPanel(AppLocalizations l10n) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final faqCategories = _getFAQCategories(l10n);
+    final faqCategories = _getFilteredFAQCategories(l10n);
     
     return ExpansionPanelList(
       elevation: 8,

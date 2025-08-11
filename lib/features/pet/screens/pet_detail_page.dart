@@ -9,6 +9,8 @@ import 'package:pati_takip/features/pet/models/pet.dart';
 import 'package:pati_takip/features/pet/widgets/progress_indicator.dart';
 import 'package:pati_takip/features/pet/screens/vaccine_page.dart';
 import 'package:pati_takip/features/pet/screens/pet_form_page.dart';
+import 'package:pati_takip/features/pet/screens/ai_chat_page.dart';
+import 'package:pati_takip/features/pet/screens/co_owner_management_page.dart';
 
 import 'package:pati_takip/providers/pet_provider.dart';
 import 'package:pati_takip/services/notification_service.dart';
@@ -38,10 +40,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
-  DateTime? _feedingTime;
-  bool _isSavingFeedingTime = false;
   final TextEditingController _chatController = TextEditingController();
-  String? _creatorName;
   // Sesli komut için eklenenler
   // late stt.SpeechToText _speech; // KALDIRILDI
   // bool _isListening = false; // KALDIRILDI
@@ -86,8 +85,6 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
         speak('Doğum günün kutlu olsun ${_pet.name}!');
       });
     }
-    _loadFeedingTime();
-    _loadCreatorName();
     // _speech = stt.SpeechToText(); // KALDIRILDI
     
     // Media service'i başlat
@@ -182,43 +179,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
     super.dispose();
   }
 
-  Future<void> _loadFeedingTime() async {
-    final provider = context.read<PetProvider>();
-    final time = await provider.getPetFeedingTime(_pet.name);
-    if (mounted) {
-      setState(() {
-        _feedingTime = time;
-      });
-    }
-  }
 
-  Future<void> _selectFeedingTime(BuildContext context) async {
-    final now = TimeOfDay.now();
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: _feedingTime != null
-          ? TimeOfDay(hour: _feedingTime!.hour, minute: _feedingTime!.minute)
-          : now,
-    );
-    if (picked != null) {
-      final today = DateTime.now();
-      final selected = DateTime(today.year, today.month, today.day, picked.hour, picked.minute);
-      setState(() {
-        _feedingTime = selected;
-      });
-    }
-  }
-
-  Future<void> _saveFeedingTime() async {
-    if (_feedingTime == null) return;
-    setState(() { _isSavingFeedingTime = true; });
-    final provider = context.read<PetProvider>();
-    await provider.setPetFeedingTime(_pet.name, _feedingTime!);
-    setState(() { _isSavingFeedingTime = false; });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(AppLocalizations.of(context)!.feedingTimeSaved)),
-    );
-  }
 
   void _checkBirthday() async {
     if (_pet.isBirthday) {
@@ -338,72 +299,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
     );
   }
 
-  Future<void> _addOwnerDialog() async {
-    final controller = TextEditingController();
-    final result = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(AppLocalizations.of(context)!.addUser),
-        content: TextField(
-          controller: controller,
-          decoration: InputDecoration(hintText: AppLocalizations.of(context)!.userEmailHint),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(AppLocalizations.of(context)!.cancel),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, controller.text.trim()),
-            child: Text(AppLocalizations.of(context)!.add),
-          ),
-        ],
-      ),
-    );
-    if (result != null && result.isNotEmpty) {
-      if (_pet.id == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.petIdNotFound)),
-        );
-        return;
-      }
-      final success = await FirestoreService.addOwnerToPetByEmail(_pet.id!, result);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(success ? AppLocalizations.of(context)!.userAdded : AppLocalizations.of(context)!.userNotFound)),
-      );
-    }
-  }
 
-  Future<void> _removeOwner(String uid) async {
-    if (_pet.id == null) return;
-    final user = Provider.of<AuthProvider>(context, listen: false).user;
-    final isCreator = user?.uid == _pet.creator;
-    // Sadece creator başkasını çıkarabilir, kullanıcı sadece kendini çıkarabilir
-    if (uid == user?.uid || isCreator) {
-      // Creator kendini çıkaramaz
-      if (uid == _pet.creator) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.mainUserCannotRemoveSelf)),
-        );
-        return;
-      }
-      final docRef = FirebaseFirestore.instance.collection('hayvanlar').doc(_pet.id!);
-      await docRef.update({
-        'owners': FieldValue.arrayRemove([uid])
-      });
-      if (uid == user?.uid) {
-        Navigator.pop(context); // Kendini çıkaran kullanıcı için sayfadan çık
-      } else {
-        setState(() {
-          _pet.owners.remove(uid);
-        });
-      }
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.onlyMainUserCanRemove)),
-      );
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -415,38 +311,73 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
     return Stack(
       children: [
         Scaffold(
+          backgroundColor: const Color(0xFF1A1A1A),
           appBar: AppBar(
             backgroundColor: Colors.transparent,
             elevation: 0,
-            title: const Text('PatiTakip'),
             leading: IconButton(
-              icon: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  Icons.arrow_back,
-                  color: theme.colorScheme.primary,
-                ),
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            title: Text(
+              _pet.name,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
               ),
-              onPressed: () => Navigator.pop(context),
             ),
             actions: [
-              if (isCreator)
-                IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red),
-                  tooltip: 'Hayvanı Sil',
-                  onPressed: () async {
-                    if (_pet.id != null) {
-                      await FirestoreService.hayvanSil(_pet.id!);
-                      Navigator.pop(context);
-                    }
-                  },
-                ),
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert, color: Colors.white),
+                onSelected: (value) async {
+                  switch (value) {
+                    case 'edit':
+                      final result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => PetFormPage(pet: _pet),
+                        ),
+                      );
+                      if (result != null && result is Pet) {
+                        setState(() {
+                          _pet = result;
+                        });
+                        context.read<PetProvider>().updatePetValues(_pet);
+                      }
+                      break;
+                    case 'delete':
+                      await _showDeletePetDialog();
+                      break;
+                  }
+                },
+                itemBuilder: (context) => [
+                  if (isCreator) // Sadece hayvanın yaratıcısı düzenleyebilir
+                    PopupMenuItem<String>(
+                      value: 'edit',
+                      child: Row(
+                        children: [
+                          Icon(Icons.edit, color: Colors.blue.shade600),
+                          const SizedBox(width: 12),
+                          const Text('Hayvanı Düzenle'),
+                        ],
+                      ),
+                    ),
+                  if (isCreator) // Sadece hayvanın yaratıcısı silebilir
+                    PopupMenuItem<String>(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          Icon(Icons.delete, color: Colors.red.shade600),
+                          const SizedBox(width: 12),
+                          const Text('Hayvanı Sil'),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
             ],
           ),
+          floatingActionButton: _buildAIChatButton(),
           body: Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -468,63 +399,6 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
             child: SafeArea(
               child: Column(
                 children: [
-                  // Beautiful Header
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            children: [
-                              Text(
-                                _pet.name,
-                                style: TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.w800,
-                                  color: isDark ? Colors.white : const Color(0xFF2D3748),
-                                ),
-                              ),
-                              Text(
-                                'Detaylar',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: isDark ? Colors.grey.shade300 : Colors.grey.shade600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        IconButton(
-                          icon: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.primary.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Icon(
-                              Icons.edit,
-                              color: theme.colorScheme.primary,
-                            ),
-                          ),
-                          onPressed: () async {
-                            final result = await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => PetFormPage(pet: _pet),
-                              ),
-                            );
-                            if (result != null) {
-                              setState(() {
-                                _pet = result;
-                              });
-                              context.read<PetProvider>().updatePetValues(_pet);
-                            }
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                  
                   // Content
                   Expanded(
                     child: FadeTransition(
@@ -535,47 +409,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                           padding: const EdgeInsets.symmetric(horizontal: 20),
                           child: Column(
                             children: [
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                                child: _buildOwnersList(),
-                              ),
-                              // FEEDING TIME CARD (moved here)
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
-                                child: Card(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(16.0),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            const Icon(Icons.access_time, color: Colors.orange),
-                                            const SizedBox(width: 8),
-                                            Text(AppLocalizations.of(context)!.feedingTimeLabel, style: const TextStyle(fontWeight: FontWeight.bold)),
-                                            const Spacer(),
-                                            Text(_feedingTime != null
-                                                ? DateFormat('HH:mm').format(_feedingTime!)
-                                                : AppLocalizations.of(context)!.notSet),
-                                            IconButton(
-                                              icon: const Icon(Icons.edit),
-                                              onPressed: () => _selectFeedingTime(context),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 8),
-                                        ElevatedButton.icon(
-                                          onPressed: _isSavingFeedingTime ? null : _saveFeedingTime,
-                                          icon: const Icon(Icons.save),
-                                          label: _isSavingFeedingTime
-                                              ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                                              : Text(AppLocalizations.of(context)!.save),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
+
                               // Doğum günü mesajı
                               if (_pet.isBirthday)
                                 Container(
@@ -611,282 +445,322 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                                   ),
                                 ),
                               
-                              // Pet Image and Info Card
-                              Card(
-                                elevation: 12,
-                                shadowColor: theme.colorScheme.primary.withOpacity(0.3),
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(20),
-                                    gradient: LinearGradient(
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                      colors: isDark
-                                          ? [
-                                              Colors.grey.shade800,
-                                              Colors.grey.shade700,
-                                            ]
-                                          : [
-                                              Colors.white,
-                                              Colors.grey.shade50,
-                                            ],
-                                    ),
-                                  ),
-                                  padding: const EdgeInsets.all(24),
-                                  child: Column(
-                                    children: [
-                                      // Pet Image
-                                      if (_pet.imagePath != null)
-                                        Container(
-                                          width: 120,
-                                          height: 120,
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(20),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Colors.black.withOpacity(0.2),
-                                                blurRadius: 15,
-                                                offset: const Offset(0, 8),
-                                              ),
-                                            ],
-                                          ),
-                                          child: ClipRRect(
-                                            borderRadius: BorderRadius.circular(20),
-                                            child: Image.file(
-                                              File(_pet.imagePath!),
-                                              fit: BoxFit.cover,
-                                            ),
-                                          ),
-                                        )
-                                      else
-                                        Container(
-                                          width: 120,
-                                          height: 120,
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(20),
-                                            gradient: LinearGradient(
-                                              colors: [
-                                                theme.colorScheme.primary,
-                                                theme.colorScheme.primary.withOpacity(0.7),
-                                              ],
-                                            ),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: theme.colorScheme.primary.withOpacity(0.3),
-                                                blurRadius: 15,
-                                                offset: const Offset(0, 8),
-                                              ),
-                                            ],
-                                          ),
-                                          child: const Icon(
-                                            Icons.pets,
-                                            color: Colors.white,
-                                            size: 60,
-                                          ),
-                                        ),
-                                      const SizedBox(height: 20),
-                                      // Pet Info
-                                      _buildInfoRow(AppLocalizations.of(context)!.petType, getLocalizedPetType(_pet.type, context), Icons.pets),
-                                      _buildInfoRow(AppLocalizations.of(context)!.breed, _pet.breed?.isNotEmpty == true ? _pet.breed! : '-', Icons.label),
-                                      _buildInfoRow(AppLocalizations.of(context)!.gender, getLocalizedGender(_pet.gender, context), Icons.person),
-                                      _buildInfoRow(AppLocalizations.of(context)!.birthDateLabel, '${_pet.birthDate.day}.${_pet.birthDate.month}.${_pet.birthDate.year}', Icons.calendar_today),
-                                      _buildInfoRow(AppLocalizations.of(context)!.age, AppLocalizations.of(context)!.yearsOld(_pet.age), Icons.cake),
-                                    ],
-                                  ),
-                                ),
-                              ),
-
-                              // SABİT AŞILARI GÖRÜNTÜLE BUTONU
-                              const SizedBox(height: 16),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: ElevatedButton.icon(
-                                      icon: const Icon(Icons.event_available),
-                                      label: Text(AppLocalizations.of(context)!.vaccinesToBeTaken),
-                                      style: ElevatedButton.styleFrom(
-                                        padding: const EdgeInsets.symmetric(vertical: 16),
-                                        backgroundColor: Colors.orange,
-                                        foregroundColor: Colors.white,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(16),
-                                        ),
-                                        elevation: 4,
-                                      ),
-                                      onPressed: () async {
-                                        final result = await Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) => VaccinePage(
-                                              vaccines: _pet.vaccines, // Tüm listeyi gönder
-                                              showDone: false,
-                                            ),
-                                          ),
-                                        );
-                                        if (result != null && result is List<Vaccine>) {
-                                          setState(() {
-                                            _pet.vaccines = result; // Güncel listeyi doğrudan ata
-                                          });
-                                          context.read<PetProvider>().updatePetValues(_pet);
-                                        }
-                                      },
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: ElevatedButton.icon(
-                                      icon: const Icon(Icons.verified),
-                                      label: Text(AppLocalizations.of(context)!.vaccinesTaken),
-                                      style: ElevatedButton.styleFrom(
-                                        padding: const EdgeInsets.symmetric(vertical: 16),
-                                        backgroundColor: Colors.green,
-                                        foregroundColor: Colors.white,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(16),
-                                        ),
-                                        elevation: 4,
-                                      ),
-                                      onPressed: () async {
-                                        final result = await Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) => VaccinePage(
-                                              vaccines: _pet.vaccines, // Tüm listeyi gönder
-                                              showDone: true,
-                                            ),
-                                          ),
-                                        );
-                                        if (result != null && result is List<Vaccine>) {
-                                          setState(() {
-                                            _pet.vaccines = result; // Güncel listeyi doğrudan ata
-                                          });
-                                          context.read<PetProvider>().updatePetValues(_pet);
-                                        }
-                                      },
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 20),
-                              
-                              // Status Indicators Card
-                              StreamBuilder<Map<String, dynamic>?>(
-                                stream: RealtimeService().getPetStatusStream(_pet.id ?? _pet.name),
-                                builder: (context, snapshot) {
-                                  final status = snapshot.data;
-                                  final satiety = status?['satiety'] ?? _pet.satiety;
-                                  final happiness = status?['happiness'] ?? _pet.happiness;
-                                  final energy = status?['energy'] ?? _pet.energy;
-                                  return Card(
-                                    elevation: 8,
-                                    shadowColor: theme.colorScheme.primary.withOpacity(0.2),
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(20),
-                                        gradient: LinearGradient(
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                          colors: isDark
-                                              ? [
-                                                  Colors.grey.shade800,
-                                                  Colors.grey.shade700,
-                                                ]
-                                              : [
-                                                  Colors.white,
-                                                  Colors.grey.shade50,
+                                                             // Pet Image and Info Card - Yeni tasarım
+                               Card(
+                                 elevation: 12,
+                                 shadowColor: theme.colorScheme.primary.withOpacity(0.3),
+                                 child: Container(
+                                   decoration: BoxDecoration(
+                                     borderRadius: BorderRadius.circular(20),
+                                     gradient: LinearGradient(
+                                       begin: Alignment.topLeft,
+                                       end: Alignment.bottomRight,
+                                       colors: isDark
+                                           ? [
+                                               Colors.grey.shade800,
+                                               Colors.grey.shade700,
+                                             ]
+                                           : [
+                                               Colors.white,
+                                               Colors.grey.shade50,
+                                             ],
+                                     ),
+                                   ),
+                                   padding: const EdgeInsets.all(24),
+                                   child: Row(
+                                     children: [
+                                       // Sol taraf - Pet Image
+                                       if (_pet.imagePath != null)
+                                         Container(
+                                           width: 120,
+                                           height: 120,
+                                           decoration: BoxDecoration(
+                                             borderRadius: BorderRadius.circular(20),
+                                             boxShadow: [
+                                               BoxShadow(
+                                                 color: Colors.black.withOpacity(0.2),
+                                                 blurRadius: 15,
+                                                 offset: const Offset(0, 8),
+                                               ),
+                                             ],
+                                           ),
+                                           child: ClipRRect(
+                                             borderRadius: BorderRadius.circular(20),
+                                             child: Image.file(
+                                               File(_pet.imagePath!),
+                                               fit: BoxFit.cover,
+                                             ),
+                                           ),
+                                         )
+                                       else
+                                         Container(
+                                           width: 120,
+                                           height: 120,
+                                           decoration: BoxDecoration(
+                                             borderRadius: BorderRadius.circular(20),
+                                             gradient: LinearGradient(
+                                               colors: [
+                                                 Colors.purple,
+                                                 Colors.purple.withOpacity(0.7),
+                                               ],
+                                             ),
+                                             boxShadow: [
+                                               BoxShadow(
+                                                 color: Colors.purple.withOpacity(0.3),
+                                                 blurRadius: 15,
+                                                 offset: const Offset(0, 8),
+                                               ),
+                                             ],
+                                           ),
+                                           child: const Icon(
+                                             Icons.pets,
+                                             color: Colors.white,
+                                             size: 60,
+                                           ),
+                                         ),
+                                       const SizedBox(width: 20),
+                                       
+                                       // Sağ taraf - Pet Info
+                                       Expanded(
+                                         child: Column(
+                                           crossAxisAlignment: CrossAxisAlignment.start,
+                                           children: [
+                                             // Hayvan adı
+                                             Text(
+                                               _pet.name,
+                                               style: const TextStyle(
+                                                 fontSize: 20,
+                                                 fontWeight: FontWeight.bold,
+                                                 color: Colors.white,
+                                               ),
+                                             ),
+                                             const SizedBox(height: 12),
+                                             
+                                                                                           // Bilgi etiketleri - Görüntüdeki gibi
+                                              Wrap(
+                                                spacing: 8,
+                                                runSpacing: 8,
+                                                children: [
+                                                  _buildInfoTag(
+                                                    icon: Icons.cake,
+                                                    text: '${_pet.age} yaşında',
+                                                    color: Colors.orange,
+                                                  ),
+                                                  _buildInfoTag(
+                                                    icon: Icons.pets,
+                                                    text: _getLocalizedGender(_pet.gender),
+                                                    color: Colors.pink,
+                                                  ),
+                                                  _buildInfoTag(
+                                                    icon: Icons.pets,
+                                                    text: _getLocalizedPetType(_pet.type),
+                                                    color: Colors.green,
+                                                  ),
+                                                  if (_pet.breed != null && _pet.breed!.isNotEmpty)
+                                                    _buildInfoTag(
+                                                      icon: Icons.label,
+                                                      text: _pet.breed!,
+                                                      color: Colors.blue,
+                                                    ),
                                                 ],
-                                        ),
-                                      ),
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(20),
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              AppLocalizations.of(context)!.statusInfoTitle,
-                                              style: TextStyle(
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.w700,
-                                                color: isDark ? Colors.white : const Color(0xFF2D3748),
                                               ),
-                                            ),
-                                            const SizedBox(height: 16),
-                                            StatusIndicator(icon: Icons.restaurant, value: satiety),
-                                            StatusIndicator(icon: Icons.favorite, value: happiness),
-                                            StatusIndicator(icon: Icons.battery_charging_full, value: energy),
-                                            StatusIndicator(icon: Icons.healing, value: _pet.care),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
+                                           ],
+                                         ),
+                                       ),
+                                     ],
+                                   ),
+                                 ),
+                               ),
+
+                              
+                              
+                                                             // Durum Bilgileri Kartı - Görüntüdeki tasarım
+                               StreamBuilder<Map<String, dynamic>?>(
+                                 stream: RealtimeService().getPetStatusStream(_pet.id ?? _pet.name),
+                                 builder: (context, snapshot) {
+                                   final status = snapshot.data;
+                                   final satiety = status?['satiety'] ?? _pet.satiety;
+                                   final happiness = status?['happiness'] ?? _pet.happiness;
+                                   final energy = status?['energy'] ?? _pet.energy;
+                                   return Card(
+                                     elevation: 8,
+                                     shadowColor: theme.colorScheme.primary.withOpacity(0.2),
+                                     child: Container(
+                                       decoration: BoxDecoration(
+                                         borderRadius: BorderRadius.circular(20),
+                                         color: Colors.grey.shade800,
+                                       ),
+                                       child: Padding(
+                                         padding: const EdgeInsets.all(20),
+                                         child: Column(
+                                           crossAxisAlignment: CrossAxisAlignment.start,
+                                           children: [
+                                             // Başlık
+                                             Text(
+                                               'Durum Bilgileri',
+                                               style: TextStyle(
+                                                 fontSize: 18,
+                                                 fontWeight: FontWeight.w700,
+                                                 color: Colors.white,
+                                               ),
+                                             ),
+                                             const SizedBox(height: 20),
+                                             
+                                             // Durum göstergeleri
+                                             _buildStatusRow(
+                                               icon: Icons.restaurant,
+                                               label: 'Açlık',
+                                               value: satiety,
+                                               color: Colors.orange,
+                                             ),
+                                             const SizedBox(height: 16),
+                                             _buildStatusRow(
+                                               icon: Icons.favorite,
+                                               label: 'Mutluluk',
+                                               value: happiness,
+                                               color: Colors.pink,
+                                             ),
+                                             const SizedBox(height: 16),
+                                             _buildStatusRow(
+                                               icon: Icons.battery_charging_full,
+                                               label: 'Enerji',
+                                               value: energy,
+                                               color: Colors.blue,
+                                             ),
+                                             const SizedBox(height: 16),
+                                             _buildStatusRow(
+                                               icon: Icons.healing,
+                                               label: 'Bakım',
+                                               value: _pet.care,
+                                               color: Colors.green,
+                                             ),
+                                             
+                                             const SizedBox(height: 20),
+                                             
+                                             // Alt kısım - Online sahip bilgisi
+                                             Container(
+                                               width: double.infinity,
+                                               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                               decoration: BoxDecoration(
+                                                 color: Colors.green.shade700,
+                                                 borderRadius: BorderRadius.circular(12),
+                                               ),
+                                               child: Row(
+                                                 children: [
+                                                   Container(
+                                                     width: 8,
+                                                     height: 8,
+                                                     decoration: BoxDecoration(
+                                                       color: Colors.green.shade300,
+                                                       shape: BoxShape.circle,
+                                                     ),
+                                                   ),
+                                                   const SizedBox(width: 8),
+                                                   Text(
+                                                     '1 eş sahip çevrimiçi',
+                                                     style: TextStyle(
+                                                       color: Colors.white,
+                                                       fontSize: 14,
+                                                       fontWeight: FontWeight.w500,
+                                                     ),
+                                                   ),
+                                                 ],
+                                               ),
+                                             ),
+                                           ],
+                                         ),
+                                       ),
+                                     ),
+                                   );
+                                 },
+                               ),
                               
                               const SizedBox(height: 20),
                               
-                              // Action Buttons Card
+                              // Hızlı İşlemler Kartı - Yeni tasarım
                               Card(
                                 elevation: 8,
                                 shadowColor: theme.colorScheme.primary.withOpacity(0.2),
                                 child: Container(
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(20),
-                                    gradient: LinearGradient(
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                      colors: isDark
-                                          ? [
-                                              Colors.grey.shade800,
-                                              Colors.grey.shade700,
-                                            ]
-                                          : [
-                                              Colors.white,
-                                              Colors.grey.shade50,
-                                            ],
-                                    ),
+                                    color: Colors.grey.shade800,
                                   ),
                                   child: Padding(
                                     padding: const EdgeInsets.all(20),
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Text(
-                                          AppLocalizations.of(context)!.quickActions,
-                                          style: TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.w700,
-                                            color: isDark ? Colors.white : const Color(0xFF2D3748),
-                                          ),
-                                        ),
-                                        const SizedBox(height: 16),
-                                        Wrap(
-                                          spacing: 12,
-                                          runSpacing: 12,
+                                        // Başlık
+                                        Row(
                                           children: [
-                                            _buildActionButton(
-                                              onPressed: besle,
-                                              icon: Icons.restaurant,
-                                              label: AppLocalizations.of(context)!.feed,
-                                              color: Colors.green,
+                                            Container(
+                                              width: 40,
+                                              height: 40,
+                                              decoration: BoxDecoration(
+                                                color: Colors.orange,
+                                                borderRadius: BorderRadius.circular(8),
+                                              ),
+                                              child: const Icon(
+                                                Icons.calendar_today,
+                                                color: Colors.white,
+                                                size: 20,
+                                              ),
                                             ),
-                                            _buildActionButton(
-                                              onPressed: sev,
-                                              icon: Icons.favorite,
-                                              label: AppLocalizations.of(context)!.pet,
-                                              color: Colors.pink,
+                                            const SizedBox(width: 12),
+                                            const Text(
+                                              'Hızlı İşlemler',
+                                              style: TextStyle(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.w700,
+                                                color: Colors.white,
+                                              ),
                                             ),
-                                            _buildActionButton(
-                                              onPressed: dinlendir,
-                                              icon: Icons.battery_charging_full,
-                                              label: AppLocalizations.of(context)!.rest,
-                                              color: Colors.blue,
+                                          ],
+                                        ),
+                                        const SizedBox(height: 20),
+                                        
+                                        // Hızlı işlem butonları (2x2 grid)
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: _buildQuickActionButton(
+                                                onPressed: besle,
+                                                icon: Icons.restaurant,
+                                                label: 'Besle',
+                                                color: Colors.orange,
+                                              ),
                                             ),
-                                            _buildActionButton(
-                                              onPressed: bakim,
-                                              icon: Icons.healing,
-                                              label: AppLocalizations.of(context)!.care,
-                                              color: Colors.purple,
+                                            const SizedBox(width: 12),
+                                            Expanded(
+                                              child: _buildQuickActionButton(
+                                                onPressed: sev,
+                                                icon: Icons.favorite,
+                                                label: 'Sev',
+                                                color: Colors.pink,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 12),
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: _buildQuickActionButton(
+                                                onPressed: dinlendir,
+                                                icon: Icons.nightlight_round,
+                                                label: 'Dinlendir',
+                                                color: Colors.blue,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Expanded(
+                                              child: _buildQuickActionButton(
+                                                onPressed: bakim,
+                                                icon: Icons.build,
+                                                label: 'Bakım',
+                                                color: Colors.green,
+                                              ),
                                             ),
                                           ],
                                         ),
@@ -898,11 +772,183 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                               
                               const SizedBox(height: 20),
                               
+                              // Aşı Bilgileri Kartı - Yeni tasarım
+                               Card(
+                                 elevation: 8,
+                                 shadowColor: theme.colorScheme.primary.withOpacity(0.2),
+                                 child: Container(
+                                   decoration: BoxDecoration(
+                                     borderRadius: BorderRadius.circular(20),
+                                     color: Colors.grey.shade800,
+                                   ),
+                                   child: Padding(
+                                     padding: const EdgeInsets.all(20),
+                                     child: Column(
+                                       crossAxisAlignment: CrossAxisAlignment.start,
+                                       children: [
+                                         // Başlık
+                                         Row(
+                                           children: [
+                                             Container(
+                                               width: 40,
+                                               height: 40,
+                                               decoration: BoxDecoration(
+                                                 color: Colors.blue,
+                                                 borderRadius: BorderRadius.circular(8),
+                                               ),
+                                               child: const Icon(
+                                                 Icons.vaccines,
+                                                 color: Colors.white,
+                                                 size: 20,
+                                               ),
+                                             ),
+                                             const SizedBox(width: 12),
+                                             const Text(
+                                               'Aşı Bilgileri',
+                                               style: TextStyle(
+                                                 fontSize: 18,
+                                                 fontWeight: FontWeight.w700,
+                                                 color: Colors.white,
+                                               ),
+                                             ),
+                                           ],
+                                         ),
+                                         const SizedBox(height: 20),
+                                         
+                                         // Aşı butonları
+                                         Row(
+                                           children: [
+                                             Expanded(
+                                               child: _buildVaccineButton(
+                                                 onPressed: () async {
+                                                   final result = await Navigator.push(
+                                                     context,
+                                                     MaterialPageRoute(
+                                                       builder: (_) => VaccinePage(
+                                                         vaccines: _pet.vaccines,
+                                                         showDone: false,
+                                                       ),
+                                                     ),
+                                                   );
+                                                   if (result != null && result is List<Vaccine>) {
+                                                     setState(() {
+                                                       _pet.vaccines = result;
+                                                     });
+                                                     context.read<PetProvider>().updatePetValues(_pet);
+                                                   }
+                                                 },
+                                                 icon: Icons.event_available,
+                                                 label: 'Yapılacak Aşılar',
+                                                 color: Colors.orange,
+                                               ),
+                                             ),
+                                             const SizedBox(width: 12),
+                                             Expanded(
+                                               child: _buildVaccineButton(
+                                                 onPressed: () async {
+                                                   final result = await Navigator.push(
+                                                     context,
+                                                     MaterialPageRoute(
+                                                       builder: (_) => VaccinePage(
+                                                         vaccines: _pet.vaccines,
+                                                         showDone: true,
+                                                       ),
+                                                     ),
+                                                   );
+                                                   if (result != null && result is List<Vaccine>) {
+                                                     setState(() {
+                                                       _pet.vaccines = result;
+                                                     });
+                                                     context.read<PetProvider>().updatePetValues(_pet);
+                                                   }
+                                                 },
+                                                 icon: Icons.verified,
+                                                 label: 'Yapılan Aşılar',
+                                                 color: Colors.green,
+                                               ),
+                                             ),
+                                           ],
+                                         ),
+                                       ],
+                                     ),
+                                   ),
+                                                                ),
+                             ),
+                             
+                             const SizedBox(height: 20),
+                             
+                             // Eş Sahip Yönetimi Kartı
+                             Card(
+                               elevation: 8,
+                               shadowColor: theme.colorScheme.primary.withOpacity(0.2),
+                               child: Container(
+                                 decoration: BoxDecoration(
+                                   borderRadius: BorderRadius.circular(20),
+                                   color: Colors.grey.shade800,
+                                 ),
+                                 child: Padding(
+                                   padding: const EdgeInsets.all(20),
+                                   child: Column(
+                                     crossAxisAlignment: CrossAxisAlignment.start,
+                                     children: [
+                                       // Başlık
+                                       Row(
+                                         children: [
+                                           Container(
+                                             width: 40,
+                                             height: 40,
+                                             decoration: BoxDecoration(
+                                               color: Colors.purple,
+                                               borderRadius: BorderRadius.circular(8),
+                                             ),
+                                             child: const Icon(
+                                               Icons.people,
+                                               color: Colors.white,
+                                               size: 20,
+                                             ),
+                                           ),
+                                           const SizedBox(width: 12),
+                                           const Text(
+                                             'Eş Sahip Yönetimi',
+                                             style: TextStyle(
+                                               fontSize: 18,
+                                               fontWeight: FontWeight.w700,
+                                               color: Colors.white,
+                                             ),
+                                           ),
+                                         ],
+                                       ),
+                                       const SizedBox(height: 20),
+                                       
+                                       // Eş sahip yönetimi butonu
+                                       SizedBox(
+                                         width: double.infinity,
+                                         child: _buildQuickActionButton(
+                                           onPressed: () {
+                                             Navigator.push(
+                                               context,
+                                               MaterialPageRoute(
+                                                 builder: (_) => CoOwnerManagementPage(pet: _pet),
+                                               ),
+                                             );
+                                           },
+                                           icon: Icons.people,
+                                           label: 'Eş Sahip Yönetimi',
+                                           color: Colors.purple,
+                                         ),
+                                       ),
+                                       
+                                       // Mevcut eş sahip bilgileri
 
-                              
-                              const SizedBox(height: 20),
-                              
-                              // Günlük Notları (Pet Chat) kısmı tekrar eklendi
+                                     ],
+                                   ),
+                                 ),
+                               ),
+                             ),
+                             
+                             const SizedBox(height: 20),
+                            
+                            // Günlük Notları (Pet Chat) kısmı tekrar eklendi
                               _buildPetChat(),
                               
                               const SizedBox(height: 20),
@@ -996,68 +1042,257 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
     );
   }
 
-  Future<void> _loadCreatorName() async {
-    if (_pet.creator != null) {
-      final doc = await FirebaseFirestore.instance.collection('profiller').doc(_pet.creator).get();
-      if (doc.exists) {
-        setState(() {
-          _creatorName = doc.data()?['name'] ?? 'Ana Kullanıcı';
-        });
-      } else {
-        setState(() {
-          _creatorName = 'Ana Kullanıcı';
-        });
-      }
+  Widget _buildQuickActionButton({
+    required VoidCallback onPressed,
+    required IconData icon,
+    required String label,
+    required Color color,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey.shade700.withOpacity(0.8),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: color,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: Colors.white,
+                    size: 18,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                const Icon(
+                  Icons.arrow_forward_ios,
+                  color: Colors.white,
+                  size: 16,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVaccineButton({
+    required VoidCallback onPressed,
+    required IconData icon,
+    required String label,
+    required Color color,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey.shade700.withOpacity(0.8),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: color,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: Colors.white,
+                    size: 18,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                const Icon(
+                  Icons.arrow_forward_ios,
+                  color: Colors.white,
+                  size: 16,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _getLocalizedPetType(String type) {
+    switch (type.toLowerCase()) {
+      case 'dog':
+      case 'köpek':
+        return 'Köpek';
+      case 'cat':
+      case 'kedi':
+        return 'Kedi';
+      case 'bird':
+      case 'kuş':
+        return 'Kuş';
+      case 'fish':
+      case 'balık':
+        return 'Balık';
+      case 'hamster':
+        return 'Hamster';
+      case 'rabbit':
+      case 'tavşan':
+        return 'Tavşan';
+      case 'cow':
+      case 'inek':
+        return 'İnek';
+      case 'horse':
+      case 'at':
+        return 'At';
+      case 'other':
+      case 'diğer':
+        return 'Diğer';
+      default:
+        return type.isNotEmpty ? type : 'Hayvan';
     }
   }
 
-  Widget _buildOwnersList() {
-    final user = Provider.of<AuthProvider>(context, listen: false).user;
-    final isCreator = user?.uid == _pet.creator;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 8),
-        Text(AppLocalizations.of(context)!.owners, style: const TextStyle(fontWeight: FontWeight.bold)),
-        ..._pet.owners.map((uid) => FutureBuilder<DocumentSnapshot>(
-          future: FirebaseFirestore.instance.collection('profiller').doc(uid).get(),
-          builder: (context, snapshot) {
-            String displayName;
-            if (uid == _pet.creator) {
-              displayName = _creatorName ?? 'Ana Kullanıcı';
-            } else if (snapshot.connectionState == ConnectionState.waiting) {
-              displayName = 'Yükleniyor...';
-            } else if (!snapshot.hasData || !snapshot.data!.exists) {
-              displayName = 'Bilinmeyen Kullanıcı';
-            } else {
-              final data = snapshot.data!.data() as Map<String, dynamic>?;
-              displayName = data?['name'] ?? data?['email'] ?? 'Bilinmeyen Kullanıcı';
-            }
-            return ListTile(
-              title: Text(displayName),
-              trailing: (
-                (isCreator && uid != _pet.creator) || (!isCreator && uid == user?.uid)
-              )
-                  ? IconButton(
-                      icon: const Icon(Icons.remove_circle, color: Colors.red),
-                      onPressed: () => _removeOwner(uid),
-                    )
-                  : null,
-            );
-          },
-        )),
-        if (isCreator)
-          Padding(
-            padding: const EdgeInsets.only(top: 8.0),
-            child: ElevatedButton.icon(
-              onPressed: _addOwnerDialog,
-              icon: const Icon(Icons.group_add),
-              label: Text(AppLocalizations.of(context)!.addUser),
+  String _getLocalizedGender(String gender) {
+    switch (gender.toLowerCase()) {
+      case 'male':
+      case 'erkek':
+        return 'Erkek';
+      case 'female':
+      case 'dişi':
+        return 'Dişi';
+      default:
+        return gender.isNotEmpty ? gender : 'Belirsiz';
+    }
+  }
+
+  Widget _buildInfoTag({
+    required IconData icon,
+    required String text,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withOpacity(0.5)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: 6),
+          Text(
+            text,
+            style: TextStyle(
+              color: color,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatusRow({
+    required IconData icon,
+    required String label,
+    required int value,
+    required Color color,
+  }) {
+    return Row(
+      children: [
+        // İkon
+        Icon(
+          icon,
+          color: color,
+          size: 24,
+        ),
+        const SizedBox(width: 12),
+        // Etiket
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const Spacer(),
+        // Progress bar
+        Container(
+          width: 120,
+          height: 8,
+          decoration: BoxDecoration(
+            color: Colors.grey.shade600,
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: FractionallySizedBox(
+            alignment: Alignment.centerLeft,
+            widthFactor: value / 10,
+            child: Container(
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        // Değer
+        Text(
+          '$value/10',
+          style: TextStyle(
+            color: color,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ],
     );
   }
+
+
+
+
 
   Widget _buildPetChat() {
     if (_pet.id == null) {
@@ -1072,24 +1307,101 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
         Text(AppLocalizations.of(context)!.diaryChat, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
         Container(
-          height: 250,
+          height: 300,
           decoration: BoxDecoration(
-            color: Colors.grey.shade100,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.shade300),
+            color: Theme.of(context).brightness == Brightness.dark 
+                ? Colors.grey.shade900 
+                : Colors.grey.shade50,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: Theme.of(context).brightness == Brightness.dark 
+                  ? Colors.grey.shade700 
+                  : Colors.grey.shade300,
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
           child: StreamBuilder<List<PetMessage>>(
             stream: realtime.getPetMessagesStream(_pet.id!),
             builder: (context, snapshot) {
               if (snapshot.hasError) {
-                return Center(child: Text(AppLocalizations.of(context)!.errorOccurred));
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        size: 48,
+                        color: Colors.red.shade400,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        AppLocalizations.of(context)!.errorOccurred,
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.red.shade600,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
               }
               if (!snapshot.hasData) {
-                return const Center(child: CircularProgressIndicator());
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const CircularProgressIndicator(),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Mesajlar yükleniyor...',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
               }
               final messages = snapshot.data ?? [];
               if (messages.isEmpty) {
-                return Center(child: Text(AppLocalizations.of(context)!.noMessages));
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.chat_bubble_outline,
+                        size: 48,
+                        color: Colors.grey.shade400,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        AppLocalizations.of(context)!.noMessages,
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey.shade600,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'İlk mesajınızı yazmaya başlayın!',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey.shade500,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
               }
               return ListView.builder(
                 itemCount: messages.length,
@@ -1106,32 +1418,82 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                     child: GestureDetector(
                       onLongPress: isMe ? () => _showDeleteMessageDialog(msg) : null,
                       child: Container(
-                        margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                        padding: const EdgeInsets.all(10),
+                        margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                        padding: const EdgeInsets.all(12),
+                        constraints: BoxConstraints(
+                          maxWidth: MediaQuery.of(context).size.width * 0.75,
+                        ),
                         decoration: BoxDecoration(
-                          color: isMe ? Colors.blue.shade100 : Colors.grey.shade200,
-                          borderRadius: BorderRadius.circular(10),
+                          color: isMe 
+                              ? Theme.of(context).brightness == Brightness.dark 
+                                  ? Colors.blue.shade700 
+                                  : Colors.blue.shade100
+                              : Theme.of(context).brightness == Brightness.dark 
+                                  ? Colors.grey.shade700 
+                                  : Colors.grey.shade200,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.1),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            // Message text with better wrapping
+                            Text(
+                              msg.text,
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w500,
+                                color: isMe 
+                                    ? Theme.of(context).brightness == Brightness.dark 
+                                        ? Colors.white 
+                                        : Colors.black87
+                                    : Theme.of(context).brightness == Brightness.dark 
+                                        ? Colors.white 
+                                        : Colors.black87,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            // Timestamp and delete button row
                             Row(
-                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Expanded(child: Text(msg.text)),
+                                Text(
+                                  _formatMessageTime(msg.timestamp),
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: isMe 
+                                        ? Theme.of(context).brightness == Brightness.dark 
+                                            ? Colors.blue.shade200 
+                                            : Colors.blue.shade600
+                                        : Theme.of(context).brightness == Brightness.dark 
+                                            ? Colors.grey.shade400 
+                                            : Colors.grey.shade600,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                ),
                                 if (isMe && msg.key != null)
                                   IconButton(
-                                    icon: const Icon(Icons.delete, size: 16, color: Colors.red),
+                                    icon: Icon(
+                                      Icons.delete_outline, 
+                                      size: 18, 
+                                      color: isMe 
+                                          ? Theme.of(context).brightness == Brightness.dark 
+                                              ? Colors.red.shade300 
+                                              : Colors.red.shade600
+                                          : Colors.red.shade400,
+                                    ),
                                     onPressed: () => _showDeleteMessageDialog(msg),
                                     padding: EdgeInsets.zero,
                                     constraints: const BoxConstraints(),
+                                    tooltip: 'Mesajı Sil',
                                   ),
                               ],
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              DateTime.fromMillisecondsSinceEpoch(msg.timestamp).toString().substring(0, 16),
-                              style: const TextStyle(fontSize: 10, color: Colors.grey),
                             ),
                           ],
                         ),
@@ -1207,13 +1569,45 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                           hintText: _isRecording 
                               ? 'Kayıt yapılıyor...' 
                               : AppLocalizations.of(context)!.writeMessage,
+                          hintStyle: TextStyle(
+                            color: Colors.grey.shade500,
+                            fontSize: 14,
+                          ),
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(24),
+                            borderSide: BorderSide(
+                              color: Colors.grey.shade400,
+                              width: 1.5,
+                            ),
                           ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(24),
+                            borderSide: BorderSide(
+                              color: Colors.grey.shade400,
+                              width: 1.5,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(24),
+                            borderSide: BorderSide(
+                              color: Theme.of(context).colorScheme.primary,
+                              width: 2,
+                            ),
+                          ),
+                          filled: true,
+                          fillColor: Theme.of(context).brightness == Brightness.dark 
+                              ? Colors.grey.shade800 
+                              : Colors.white,
                           contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
+                            horizontal: 20,
+                            vertical: 16,
                           ),
+                        ),
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: Theme.of(context).brightness == Brightness.dark 
+                              ? Colors.white 
+                              : Colors.black87,
                         ),
                         maxLines: null,
                         textInputAction: TextInputAction.send,
@@ -1247,47 +1641,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
     );
   }
 
-  String getLocalizedPetType(String type, BuildContext context) {
-    final loc = AppLocalizations.of(context)!;
-    switch (type) {
-      case 'dog':
-      case 'Köpek':
-        return loc.dog;
-      case 'cat':
-      case 'Kedi':
-        return loc.cat;
-      case 'bird':
-      case 'Kuş':
-        return loc.bird;
-      case 'fish':
-      case 'Balık':
-        return loc.fish;
-      case 'hamster':
-        return loc.hamster;
-      case 'rabbit':
-      case 'Tavşan':
-        return loc.rabbit;
-      case 'other':
-      case 'Diğer':
-        return loc.other;
-      default:
-        return type;
-    }
-  }
 
-  String getLocalizedGender(String gender, BuildContext context) {
-    final loc = AppLocalizations.of(context)!;
-    switch (gender) {
-      case 'male':
-      case 'Erkek':
-        return loc.male;
-      case 'female':
-      case 'Dişi':
-        return loc.female;
-      default:
-        return gender;
-    }
-  }
 
   // _startListening fonksiyonu kaldırıldı
   // void _startListening() async {
@@ -1471,6 +1825,45 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
     );
   }
 
+  // AI Chat butonu
+  Widget _buildAIChatButton() {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 80), // Chat input alanının üstünde konumlandır
+      child: FloatingActionButton(
+        onPressed: () => _showAIChatDialog(),
+        backgroundColor: Colors.purple,
+        foregroundColor: Colors.white,
+        elevation: 8,
+        child: Container(
+          width: 56,
+          height: 56,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(28),
+            gradient: const LinearGradient(
+              colors: [Colors.purple, Colors.blue],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: const Icon(
+            Icons.smart_toy,
+            size: 28,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // AI Chat sayfasına yönlendir
+  void _showAIChatDialog() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const AIChatPage(),
+      ),
+    );
+  }
+
   // Not silme dialog'u
   Future<void> _showDeleteMessageDialog(PetMessage message) async {
     final confirm = await showDialog<bool>(
@@ -1505,6 +1898,67 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
       }
     }
   }
+
+  // Hayvanı silme dialog'u
+  Future<void> _showDeletePetDialog() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(AppLocalizations.of(context)!.deletePet),
+        content: Text(AppLocalizations.of(context)!.deletePetConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(AppLocalizations.of(context)!.cancel),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(AppLocalizations.of(context)!.delete),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && _pet.id != null) {
+      try {
+        await FirestoreService.deletePet(_pet.id!);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.petDeleted)),
+        );
+        Navigator.of(context).pop(); // Ana sayfaya dön
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.petDeleteError(e.toString()))),
+        );
+      }
+    }
+  }
+
+
+
+
+
+
+
+  // Mesaj zamanını formatla
+  String _formatMessageTime(int timestamp) {
+    final now = DateTime.now();
+    final messageTime = DateTime.fromMillisecondsSinceEpoch(timestamp);
+    final difference = now.difference(messageTime);
+    
+    if (difference.inDays > 0) {
+      return '${difference.inDays} gün önce';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours} saat önce';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes} dakika önce';
+    } else {
+      return 'Az önce';
+    }
+  }
+
+
 }
 
 // Geçici placeholder (ileride gerçek sayfa ile değiştirilecek)

@@ -8,6 +8,7 @@ import '../../profile/profile_page.dart';
 import 'about_page.dart';
 import 'feedback_page.dart';
 import 'faq_page.dart';
+import 'notification_test_page.dart';
 
 import 'package:pati_takip/l10n/app_localizations.dart';
 
@@ -478,6 +479,38 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                             },
                           ),
                         ),
+                        
+                        // Bildirim Test Linki
+                        const SizedBox(height: 16),
+                        Container(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => const NotificationTestPage(),
+                                ),
+                              );
+                            },
+                            icon: const Icon(Icons.science, color: Colors.white),
+                            label: const Text(
+                              '🧪 Bildirimleri Test Et',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.purple,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                        ),
+                        
                         const SizedBox(height: 20),
                         
                         // Update Settings Card
