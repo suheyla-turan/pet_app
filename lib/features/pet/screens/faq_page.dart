@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pati_takip/l10n/app_localizations.dart';
+import 'feedback_page.dart';
 
 class FAQPage extends StatefulWidget {
   const FAQPage({super.key});
@@ -40,6 +41,14 @@ class _FAQPageState extends State<FAQPage> with TickerProviderStateMixin {
             question: l10n.faqMultiplePets,
             answer: l10n.faqMultiplePetsAnswer,
           ),
+          FAQItem(
+            question: "Uygulama ücretsiz mi?",
+            answer: "Evet, PatiTakip tamamen ücretsizdir. Tüm temel özellikler herkes tarafından kullanılabilir.",
+          ),
+          FAQItem(
+            question: "Hangi cihazlarda çalışır?",
+            answer: "PatiTakip Android ve iOS cihazlarda çalışır. Web versiyonu da yakında gelecektir.",
+          ),
         ],
       ),
       FAQCategory(
@@ -62,6 +71,14 @@ class _FAQPageState extends State<FAQPage> with TickerProviderStateMixin {
           FAQItem(
             question: l10n.faqNotifications,
             answer: l10n.faqNotificationsAnswer,
+          ),
+          FAQItem(
+            question: "Çoklu kullanıcı desteği nasıl çalışır?",
+            answer: "Evcil hayvan detay sayfasında 'Sahipler' bölümünden diğer kullanıcıları ekleyebilirsiniz. Bu sayede aile üyeleri de hayvan bakımına katılabilir ve aynı bilgilere erişebilir.",
+          ),
+          FAQItem(
+            question: "Verilerim güvenli mi?",
+            answer: "Evet, tüm verileriniz Firebase güvenli bulut sunucularında şifrelenmiş olarak saklanır. Hesabınıza giriş yaptığınızda verileriniz her zaman erişilebilir.",
           ),
         ],
       ),
@@ -86,6 +103,14 @@ class _FAQPageState extends State<FAQPage> with TickerProviderStateMixin {
             question: l10n.faqPetReminders,
             answer: l10n.faqPetRemindersAnswer,
           ),
+          FAQItem(
+            question: "Evcil hayvanımın ağırlığını takip edebilir miyim?",
+            answer: "Evet, evcil hayvanınızın ağırlığını günlük notlarda kaydedebilirsiniz. Bu sayede kilo değişimlerini takip edebilir ve sağlık durumunu izleyebilirsiniz.",
+          ),
+          FAQItem(
+            question: "Veteriner randevularını takip edebilir miyim?",
+            answer: "Evet, veteriner randevularını özel bakım aktiviteleri olarak ekleyebilir ve hatırlatıcılar ayarlayabilirsiniz.",
+          ),
         ],
       ),
       FAQCategory(
@@ -109,6 +134,14 @@ class _FAQPageState extends State<FAQPage> with TickerProviderStateMixin {
             question: l10n.faqPetGrooming,
             answer: l10n.faqPetGroomingAnswer,
           ),
+          FAQItem(
+            question: "Evcil hayvanımın uyku düzenini takip edebilir miyim?",
+            answer: "Evet, evcil hayvanınızın uyku düzenini günlük notlarda kaydedebilirsiniz. Uyku süresi ve kalitesi hakkında notlar alabilirsiniz.",
+          ),
+          FAQItem(
+            question: "Sosyal aktiviteleri nasıl kaydedebilirim?",
+            answer: "Evcil hayvanınızın diğer hayvanlarla oyun zamanlarını, park ziyaretlerini ve sosyal aktivitelerini günlük notlarda kaydedebilirsiniz.",
+          ),
         ],
       ),
       FAQCategory(
@@ -127,6 +160,10 @@ class _FAQPageState extends State<FAQPage> with TickerProviderStateMixin {
           FAQItem(
             question: l10n.faqPetEmergency,
             answer: l10n.faqPetEmergencyAnswer,
+          ),
+          FAQItem(
+            question: "Farklı ülkelerde aşı gereksinimleri hakkında bilgi alabilir miyim?",
+            answer: "AI sohbet özelliğini kullanarak farklı ülkelerdeki aşı gereksinimleri hakkında bilgi alabilirsiniz. Ancak her zaman resmi veteriner kaynaklarını kontrol etmenizi öneririz.",
           ),
         ],
       ),
@@ -147,6 +184,18 @@ class _FAQPageState extends State<FAQPage> with TickerProviderStateMixin {
             question: l10n.faqShareAccount,
             answer: l10n.faqShareAccountAnswer,
           ),
+          FAQItem(
+            question: "İnternet bağlantısı olmadan uygulamayı kullanabilir miyim?",
+            answer: "Temel özellikler offline olarak çalışır, ancak veri senkronizasyonu ve AI sohbet için internet bağlantısı gereklidir.",
+          ),
+          FAQItem(
+            question: "Verilerimi dışa aktarabilir miyim?",
+            answer: "Evet, evcil hayvan verilerinizi PDF formatında dışa aktarabilirsiniz. Bu özellik yakında gelecektir.",
+          ),
+          FAQItem(
+            question: "Uygulama ne kadar yer kaplar?",
+            answer: "PatiTakip yaklaşık 50-100 MB yer kaplar. Fotoğraflar bulutta saklandığı için cihazınızda çok yer kaplamaz.",
+          ),
         ],
       ),
       FAQCategory(
@@ -165,6 +214,18 @@ class _FAQPageState extends State<FAQPage> with TickerProviderStateMixin {
           FAQItem(
             question: l10n.faqTermsOfService,
             answer: l10n.faqTermsOfServiceAnswer,
+          ),
+          FAQItem(
+            question: "Hata raporu nasıl gönderirim?",
+            answer: "Uygulama içindeki 'Geri Bildirim' bölümünü kullanarak hata raporu gönderebilirsiniz. Detaylı açıklama yaparsanız daha hızlı yardım edebiliriz.",
+          ),
+          FAQItem(
+            question: "Özellik önerisi nasıl yapabilirim?",
+            answer: "Yeni özellik önerilerinizi 'Geri Bildirim' bölümünden gönderebilirsiniz. Tüm öneriler değerlendirilir ve en popüler olanlar geliştirilir.",
+          ),
+          FAQItem(
+            question: "Topluluk forumu var mı?",
+            answer: "Evet, yakında PatiTakip kullanıcıları için bir topluluk forumu açılacaktır. Burada deneyimlerinizi paylaşabilir ve diğer kullanıcılardan tavsiye alabilirsiniz.",
           ),
         ],
       ),
@@ -227,6 +288,16 @@ class _FAQPageState extends State<FAQPage> with TickerProviderStateMixin {
     final l10n = AppLocalizations.of(context)!;
     
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: const Text('PatiTakip'),
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -248,44 +319,24 @@ class _FAQPageState extends State<FAQPage> with TickerProviderStateMixin {
         child: SafeArea(
           child: Column(
             children: [
-              // Beautiful Header
+              // Page Title
               Container(
                 padding: const EdgeInsets.all(20),
-                child: Row(
+                child: Column(
                   children: [
-                    IconButton(
-                      icon: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(
-                          Icons.arrow_back,
-                          color: theme.colorScheme.primary,
-                        ),
+                    Text(
+                      l10n.faqTitle,
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w800,
+                        color: isDark ? Colors.white : const Color(0xFF2D3748),
                       ),
-                      onPressed: () => Navigator.pop(context),
                     ),
-                    Expanded(
-                      child: Column(
-                        children: [
-                          Text(
-                            l10n.faqTitle,
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w800,
-                              color: isDark ? Colors.white : const Color(0xFF2D3748),
-                            ),
-                          ),
-                          Text(
-                            l10n.faqDescription,
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: isDark ? Colors.grey.shade300 : Colors.grey.shade600,
-                            ),
-                          ),
-                        ],
+                    Text(
+                      l10n.faqDescription,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: isDark ? Colors.grey.shade300 : Colors.grey.shade600,
                       ),
                     ),
                   ],
@@ -313,7 +364,7 @@ class _FAQPageState extends State<FAQPage> with TickerProviderStateMixin {
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.1),
+                                color: Colors.black.withAlpha(25),
                                 blurRadius: 10,
                                 offset: const Offset(0, 4),
                               ),
@@ -322,7 +373,7 @@ class _FAQPageState extends State<FAQPage> with TickerProviderStateMixin {
                           child: TextField(
                             controller: _searchController,
                             decoration: InputDecoration(
-                              hintText: l10n.faqSearchHint ?? 'Search questions...',
+                              hintText: l10n.faqSearchHint,
                               border: InputBorder.none,
                               icon: Icon(
                                 Icons.search,
@@ -361,8 +412,8 @@ class _FAQPageState extends State<FAQPage> with TickerProviderStateMixin {
                         
                         const SizedBox(height: 30),
                         
-                        // Contact Support Section
-                        _buildContactSupportSection(l10n),
+                        // Contact Support Section - REMOVED
+                        // _buildContactSupportSection(l10n),
                         
                         const SizedBox(height: 20),
                       ],
@@ -382,57 +433,100 @@ class _FAQPageState extends State<FAQPage> with TickerProviderStateMixin {
     final isDark = theme.brightness == Brightness.dark;
     final faqCategories = _getFilteredFAQCategories(l10n);
     
-    return ExpansionPanelList(
-      elevation: 8,
-      expandedHeaderPadding: const EdgeInsets.all(16),
-      expansionCallback: (int panelIndex, bool isExpanded) {
-        setState(() {
-          _categoryExpanded[panelIndex] = !isExpanded;
-        });
-      },
+    return Column(
       children: faqCategories.asMap().entries.map((entry) {
         final index = entry.key;
         final category = entry.value;
         final isExpanded = _categoryExpanded[index] ?? false;
         
-        return ExpansionPanel(
-          headerBuilder: (context, isExpanded) {
-            return Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: category.color.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(
-                      category.icon,
-                      color: category.color,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Text(
-                      category.title,
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: isDark ? Colors.white : const Color(0xFF2D3748),
-                      ),
-                    ),
-                  ),
-                ],
+        return Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          decoration: BoxDecoration(
+            color: isDark ? Colors.grey.shade800 : Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withAlpha(25),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
-            );
-          },
-          body: Column(
-            children: category.questions.map((faq) => _buildFAQItem(faq)).toList(),
+            ],
           ),
-          isExpanded: isExpanded,
-          backgroundColor: isDark ? Colors.grey.shade800 : Colors.white,
+          child: Column(
+            children: [
+              // Category Header - Clickable to expand/collapse
+              InkWell(
+                onTap: () {
+                  setState(() {
+                    _categoryExpanded[index] = !isExpanded;
+                  });
+                },
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(16),
+                  topRight: Radius.circular(16),
+                ),
+                child: Container(
+                  padding: const EdgeInsets.all(20),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: category.color.withAlpha(25),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          category.icon,
+                          color: category.color,
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Text(
+                          category.title,
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: isDark ? Colors.white : const Color(0xFF2D3748),
+                          ),
+                        ),
+                      ),
+                      // Single chevron icon that rotates
+                      AnimatedRotation(
+                        turns: isExpanded ? 0.5 : 0.0,
+                        duration: const Duration(milliseconds: 200),
+                        child: Icon(
+                          Icons.keyboard_arrow_down,
+                          color: category.color,
+                          size: 28,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              
+              // Questions and Answers - Animated expansion
+              AnimatedCrossFade(
+                firstChild: const SizedBox.shrink(),
+                secondChild: Container(
+                  padding: const EdgeInsets.only(
+                    left: 20,
+                    right: 20,
+                    bottom: 20,
+                  ),
+                  child: Column(
+                    children: category.questions.map((faq) => _buildFAQItem(faq)).toList(),
+                  ),
+                ),
+                crossFadeState: isExpanded 
+                    ? CrossFadeState.showSecond 
+                    : CrossFadeState.showFirst,
+                duration: const Duration(milliseconds: 300),
+              ),
+            ],
+          ),
         );
       }).toList(),
     );
@@ -445,7 +539,7 @@ class _FAQPageState extends State<FAQPage> with TickerProviderStateMixin {
     final isExpanded = _questionExpanded[questionKey] ?? false;
     
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: isDark ? Colors.grey.shade700 : Colors.grey.shade50,
         borderRadius: BorderRadius.circular(12),
@@ -453,37 +547,81 @@ class _FAQPageState extends State<FAQPage> with TickerProviderStateMixin {
           color: isDark ? Colors.grey.shade600 : Colors.grey.shade200,
         ),
       ),
-      child: ExpansionTile(
-        title: Text(
-          faq.question,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: isDark ? Colors.white : const Color(0xFF2D3748),
-          ),
-        ),
-        initiallyExpanded: isExpanded,
-        onExpansionChanged: (expanded) {
-          setState(() {
-            _questionExpanded[questionKey] = expanded;
-          });
-        },
+      child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: isDark ? Colors.grey.shade600 : Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(8),
+          // Question Header - Clickable to expand/collapse
+          InkWell(
+            onTap: () {
+              setState(() {
+                _questionExpanded[questionKey] = !isExpanded;
+              });
+            },
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(12),
+              topRight: Radius.circular(12),
             ),
-            child: Text(
-              faq.answer,
-              style: TextStyle(
-                fontSize: 14,
-                color: isDark ? Colors.grey.shade300 : Colors.grey.shade700,
-                height: 1.5,
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.question_answer,
+                    color: theme.colorScheme.primary,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      faq.question,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? Colors.white : const Color(0xFF2D3748),
+                      ),
+                    ),
+                  ),
+                  // Single chevron icon that rotates
+                  AnimatedRotation(
+                    turns: isExpanded ? 0.5 : 0.0,
+                    duration: const Duration(milliseconds: 200),
+                    child: Icon(
+                      Icons.keyboard_arrow_down,
+                      color: theme.colorScheme.primary,
+                      size: 24,
+                    ),
+                  ),
+                ],
               ),
             ),
+          ),
+          
+          // Answer - Animated expansion
+          AnimatedCrossFade(
+            firstChild: const SizedBox.shrink(),
+            secondChild: Container(
+              padding: const EdgeInsets.all(16),
+              margin: const EdgeInsets.only(
+                left: 16,
+                right: 16,
+                bottom: 16,
+              ),
+              decoration: BoxDecoration(
+                color: isDark ? Colors.grey.shade600 : Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                faq.answer,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: isDark ? Colors.grey.shade300 : Colors.grey.shade700,
+                  height: 1.5,
+                ),
+              ),
+            ),
+            crossFadeState: isExpanded 
+                ? CrossFadeState.showSecond 
+                : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 200),
           ),
         ],
       ),
@@ -496,7 +634,7 @@ class _FAQPageState extends State<FAQPage> with TickerProviderStateMixin {
     
     return Card(
       elevation: 8,
-      shadowColor: Colors.purple.withValues(alpha: 0.2),
+      shadowColor: Colors.purple.withAlpha(51),
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
@@ -524,7 +662,7 @@ class _FAQPageState extends State<FAQPage> with TickerProviderStateMixin {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: Colors.purple.withValues(alpha: 0.1),
+                      color: Colors.purple.withAlpha(25),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(
@@ -601,9 +739,9 @@ class _FAQPageState extends State<FAQPage> with TickerProviderStateMixin {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
+          color: color.withAlpha(25),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withValues(alpha: 0.3)),
+          border: Border.all(color: color.withAlpha(76)),
         ),
         child: Column(
           children: [
@@ -625,7 +763,10 @@ class _FAQPageState extends State<FAQPage> with TickerProviderStateMixin {
 
   void _navigateToFeedback() {
     // Navigate to feedback page instead of just popping
-    Navigator.pushNamed(context, '/feedback');
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const FeedbackPage()),
+    );
   }
 
   void _launchEmail() {

@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 
 import 'package:pati_takip/features/pet/models/pet.dart';
 import 'package:pati_takip/providers/pet_provider.dart';
+import 'package:pati_takip/providers/auth_provider.dart';
 import 'package:pati_takip/l10n/app_localizations.dart';
 
 class PetFormPage extends StatefulWidget {
@@ -29,7 +30,7 @@ class _PetFormPageState extends State<PetFormPage> with TickerProviderStateMixin
   int _happinessInterval = 60;
   int _energyInterval = 60;
   int _careInterval = 1440;
-  String? _type;
+  String? _type = 'dog';
   String? _imagePath;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -40,29 +41,50 @@ class _PetFormPageState extends State<PetFormPage> with TickerProviderStateMixin
 
   String getLocalizedPetType(String type, BuildContext context) {
     final loc = AppLocalizations.of(context)!;
-    switch (type) {
+    // Handle both English and Turkish type values
+    switch (type.toLowerCase()) {
       case 'dog':
-      case 'Köpek':
+      case 'köpek':
         return loc.dog;
       case 'cat':
-      case 'Kedi':
+      case 'kedi':
         return loc.cat;
       case 'bird':
-      case 'Kuş':
+      case 'kuş':
         return loc.bird;
       case 'fish':
-      case 'Balık':
+      case 'balık':
         return loc.fish;
       case 'hamster':
         return loc.hamster;
       case 'rabbit':
-      case 'Tavşan':
+      case 'tavşan':
         return loc.rabbit;
       case 'other':
-      case 'Diğer':
+      case 'diğer':
         return loc.other;
       default:
         return type;
+    }
+  }
+
+  // Helper function to get the English type value for consistency
+  String getEnglishType(String localizedType) {
+    switch (localizedType.toLowerCase()) {
+      case 'köpek':
+        return 'dog';
+      case 'kedi':
+        return 'cat';
+      case 'kuş':
+        return 'bird';
+      case 'balık':
+        return 'fish';
+      case 'tavşan':
+        return 'rabbit';
+      case 'diğer':
+        return 'other';
+      default:
+        return localizedType;
     }
   }
 
@@ -105,7 +127,8 @@ class _PetFormPageState extends State<PetFormPage> with TickerProviderStateMixin
       _happinessInterval = widget.pet!.happinessInterval;
       _energyInterval = widget.pet!.energyInterval;
       _careInterval = widget.pet!.careInterval;
-      _type = widget.pet!.type;
+      // Convert Turkish type to English for consistency with dropdown
+      _type = getEnglishType(widget.pet!.type);
       _imagePath = widget.pet!.imagePath;
       _breedController.text = widget.pet!.breed ?? '';
     }
@@ -129,6 +152,14 @@ class _PetFormPageState extends State<PetFormPage> with TickerProviderStateMixin
 
   Future<void> _savePet() async {
     if (_formKey.currentState!.validate() && _birthDate != null) {
+      // Mevcut kullanıcı bilgilerini al
+      final currentUser = context.read<AuthProvider>().user;
+      final currentUserId = currentUser?.uid;
+      
+      // Mevcut hayvanın bilgilerini koru veya yeni değerler ata
+      final existingOwners = widget.pet?.owners ?? [];
+      final existingCreator = widget.pet?.creator;
+      
       final pet = Pet(
         name: _nameController.text,
         gender: _gender!,
@@ -142,9 +173,12 @@ class _PetFormPageState extends State<PetFormPage> with TickerProviderStateMixin
         energyInterval: _energyInterval,
         careInterval: _careInterval,
         vaccines: widget.pet?.vaccines ?? [],
-        type: _type ?? 'Köpek',
+        type: _type ?? 'dog',
         breed: _breedController.text.trim(),
         imagePath: _imagePath,
+        owners: existingOwners.isNotEmpty ? existingOwners : (currentUserId != null ? [currentUserId] : []),
+        creator: existingCreator ?? currentUserId,
+        id: widget.pet?.id,
       );
 
       try {
@@ -171,8 +205,114 @@ class _PetFormPageState extends State<PetFormPage> with TickerProviderStateMixin
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final user = Provider.of<AuthProvider>(context, listen: false).user;
+    
+    // Sahiplik kontrolü - sadece sahipler düzenleyebilir
+    if (widget.pet != null) {
+      final isCreator = user?.uid == widget.pet!.creator;
+      final isOwner = widget.pet!.owners.contains(user?.uid);
+      final canEdit = isCreator || isOwner;
+      
+      if (!canEdit) {
+        // Sahip olmayan kullanıcılar için erişim engellendi sayfası
+        return Scaffold(
+          backgroundColor: isDark ? Colors.grey.shade900 : Colors.grey.shade50,
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            title: const Text('Erişim Engellendi'),
+            centerTitle: true,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ),
+          body: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: isDark 
+                  ? [
+                      const Color(0xFF1A202C),
+                      const Color(0xFF2D3748),
+                      const Color(0xFF4A5568),
+                    ]
+                  : [
+                      const Color(0xFFF7FAFC),
+                      const Color(0xFFEDF2F7),
+                      const Color(0xFFE2E8F0),
+                    ],
+              ),
+            ),
+            child: SafeArea(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(32),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.lock,
+                        size: 80,
+                        color: Colors.orange.shade400,
+                      ),
+                      const SizedBox(height: 24),
+                      Text(
+                        'Erişim Engellendi',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : Colors.black87,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Bu hayvanı düzenleme yetkiniz bulunmamaktadır. Sadece hayvanın sahipleri düzenleyebilir.',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: isDark ? Colors.grey.shade300 : Colors.grey.shade600,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 32),
+                      ElevatedButton.icon(
+                        onPressed: () => Navigator.pop(context),
+                        icon: const Icon(Icons.arrow_back),
+                        label: const Text('Geri Dön'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.orange,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      }
+    }
     
     return Scaffold(
+      // Klavye açılırken performans optimizasyonu
+      resizeToAvoidBottomInset: false,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: const Text('PatiTakip'),
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -194,44 +334,24 @@ class _PetFormPageState extends State<PetFormPage> with TickerProviderStateMixin
         child: SafeArea(
           child: Column(
             children: [
-              // Beautiful Header
+              // Page Title
               Container(
                 padding: const EdgeInsets.all(20),
-                child: Row(
+                child: Column(
                   children: [
-                    IconButton(
-                      icon: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(
-                          Icons.arrow_back,
-                          color: theme.colorScheme.primary,
-                        ),
+                    Text(
+                      widget.pet == null ? AppLocalizations.of(context)!.addPet : AppLocalizations.of(context)!.editPet,
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w800,
+                        color: isDark ? Colors.white : const Color(0xFF2D3748),
                       ),
-                      onPressed: () => Navigator.pop(context),
                     ),
-                    Expanded(
-                      child: Column(
-                        children: [
-                          Text(
-                            widget.pet == null ? AppLocalizations.of(context)!.addPet : AppLocalizations.of(context)!.editPet,
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w800,
-                              color: isDark ? Colors.white : const Color(0xFF2D3748),
-                            ),
-                          ),
-                          Text(
-                            AppLocalizations.of(context)!.enterPetInfo,
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: isDark ? Colors.grey.shade300 : Colors.grey.shade600,
-                            ),
-                          ),
-                        ],
+                    Text(
+                      AppLocalizations.of(context)!.enterPetInfo,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: isDark ? Colors.grey.shade300 : Colors.grey.shade600,
                       ),
                     ),
                   ],
@@ -387,7 +507,7 @@ class _PetFormPageState extends State<PetFormPage> with TickerProviderStateMixin
                                     
                                     // Pet Type
                                     DropdownButtonFormField<String>(
-                                      value: _type,
+                                      value: _type != null && _petTypes.contains(_type) ? _type : null,
                                       decoration: InputDecoration(
                                         labelText: AppLocalizations.of(context)!.petType,
                                         prefixIcon: const Icon(Icons.pets),

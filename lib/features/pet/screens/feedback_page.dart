@@ -20,6 +20,8 @@ class _FeedbackPageState extends State<FeedbackPage> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     return Scaffold(
+      // Klavye açılırken performans optimizasyonu
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: const Text('PatiTakip'),
         backgroundColor: Colors.transparent,

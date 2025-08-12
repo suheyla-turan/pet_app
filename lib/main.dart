@@ -63,13 +63,29 @@ class _PatiTakipAppState extends State<PatiTakipApp> {
       ],
       child: Consumer2<ThemeProvider, SettingsProvider>(
         builder: (context, themeProvider, settingsProvider, child) {
-          return MaterialApp(
-            key: ValueKey(settingsProvider.locale?.languageCode ?? 'system'),
-            title: 'PatiTakip',
-            theme: themeProvider.lightTheme,
-            darkTheme: themeProvider.darkTheme,
-            themeMode: themeProvider.themeMode,
-            home: Consumer<AuthProvider>(
+                      return MaterialApp(
+              key: ValueKey(settingsProvider.locale?.languageCode ?? 'system'),
+              title: 'PatiTakip',
+              theme: themeProvider.lightTheme,
+              darkTheme: themeProvider.darkTheme,
+              themeMode: themeProvider.themeMode,
+              // Klavye performans optimizasyonları
+              builder: (context, child) {
+                return MediaQuery(
+                  data: MediaQuery.of(context).copyWith(
+                    // Klavye animasyon süresini optimize et
+                    viewInsets: MediaQuery.of(context).viewInsets,
+                    // Klavye açılırken daha yumuşak geçiş
+                    viewPadding: MediaQuery.of(context).viewPadding,
+                  ),
+                  child: child!,
+                );
+              },
+              // Klavye açılırken daha iyi performans
+              showPerformanceOverlay: false,
+              // Klavye animasyonlarını optimize et
+              showSemanticsDebugger: false,
+              home: Consumer<AuthProvider>(
               builder: (context, authProvider, _) {
                 return Stack(
                   children: [

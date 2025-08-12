@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 
 import 'package:pati_takip/features/pet/models/pet.dart';
 import 'package:pati_takip/providers/auth_provider.dart';
@@ -33,7 +33,7 @@ class _CoOwnerManagementPageState extends State<CoOwnerManagementPage> {
 
   Future<void> _checkUserPermissions() async {
     try {
-      final currentUser = FirebaseAuth.instance.currentUser;
+      final currentUser = firebase_auth.FirebaseAuth.instance.currentUser;
       if (currentUser == null) {
         setState(() {
           _isCreator = false;
@@ -238,16 +238,112 @@ class _CoOwnerManagementPageState extends State<CoOwnerManagementPage> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildAccessDeniedPage(bool isDark, String message) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1A1A1A),
+      backgroundColor: isDark ? Colors.black : Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text(
-          'Eş Sahip Yönetimi',
-          style: TextStyle(color: Colors.white),
+        title: Column(
+          children: [
+            const Text(
+              'PatiTakip',
+              style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
+            ),
+            const Text(
+              'Erişim Reddedildi',
+              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.lock_outline,
+              color: isDark ? Colors.white : Colors.red,
+              size: 80,
+            ),
+            const SizedBox(height: 20),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: isDark ? Colors.grey[300] : Colors.grey[700],
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isDark ? Colors.white : Colors.red,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: Text(
+                  'Geri Dön',
+                  style: TextStyle(
+                    color: isDark ? Colors.black : Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final user = Provider.of<AuthProvider>(context, listen: false).user;
+    
+    // Sahiplik kontrolü - sadece sahipler eş sahip yönetimi yapabilir
+    if (user == null) {
+      return _buildAccessDeniedPage(isDark, 'Kullanıcı girişi yapılmamış');
+    }
+    
+    final isCreator = user.uid == widget.pet.creator;
+    final isOwner = widget.pet.owners.contains(user.uid);
+    final canManage = isCreator || isOwner;
+    
+    if (!canManage) {
+      return _buildAccessDeniedPage(isDark, 'Bu hayvanın eş sahip yönetimini yapma yetkiniz bulunmamaktadır');
+    }
+    
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: Column(
+          children: [
+            const Text(
+              'PatiTakip',
+              style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
+            ),
+            const Text(
+              'Eş Sahip Yönetimi',
+              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+          ],
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),

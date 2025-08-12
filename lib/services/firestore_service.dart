@@ -71,6 +71,12 @@ class FirestoreService {
         } else {
           // Yeni format
           data['id'] = doc.id;
+          
+          // Creator alanı null ise mevcut kullanıcıyı ata
+          if (data['creator'] == null && data['owners'] != null && (data['owners'] as List).isNotEmpty) {
+            data['creator'] = (data['owners'] as List).first;
+          }
+          
           return Pet.fromMap(data);
         }
       }).toList();

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ThemeProvider with ChangeNotifier {
@@ -22,6 +23,13 @@ class ThemeProvider with ChangeNotifier {
       useMaterial3: true,
       colorSchemeSeed: const Color(0xFF6B46C1), // Beautiful purple
       brightness: Brightness.light,
+      // Klavye performans optimizasyonları
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+        },
+      ),
       appBarTheme: const AppBarTheme(
         elevation: 0,
         centerTitle: true,
@@ -83,6 +91,13 @@ class ThemeProvider with ChangeNotifier {
       useMaterial3: true,
       colorSchemeSeed: const Color(0xFF9F7AEA), // Lighter purple for dark mode
       brightness: Brightness.dark,
+      // Klavye performans optimizasyonları
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+        },
+      ),
       appBarTheme: const AppBarTheme(
         elevation: 0,
         centerTitle: true,

@@ -92,6 +92,7 @@ class _VaccinePageState extends State<VaccinePage> {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('PatiTakip'),
+          centerTitle: true,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () {

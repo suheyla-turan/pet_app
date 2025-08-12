@@ -52,7 +52,7 @@ class Pet {
     this.energyInterval = 60,
     this.careInterval = 1440,
     List<Vaccine>? vaccines,
-    this.type = 'Köpek',
+    this.type = 'dog',
     this.breed,
     this.imagePath,
     DateTime? lastUpdate,
@@ -124,6 +124,8 @@ class Pet {
   }
 
   factory Pet.fromMap(Map<String, dynamic> map) {
+    final owners = (map['owners'] as List? ?? []).map((e) => e.toString()).toList();
+    
     return Pet(
       name: map['name'] ?? '',
       gender: map['gender'] ?? '',
@@ -137,13 +139,13 @@ class Pet {
       energyInterval: map['energyInterval'] ?? 60,
       careInterval: map['careInterval'] ?? 1440,
       vaccines: (map['vaccines'] as List? ?? []).map((v) => Vaccine.fromMap(v)).toList(),
-      type: map['type'] ?? 'Köpek',
+      type: map['type'] ?? 'dog',
       breed: map['breed'],
       imagePath: map['imagePath'],
       lastUpdate: map['lastUpdate'] != null ? DateTime.parse(map['lastUpdate']) : DateTime.now(),
-      owners: (map['owners'] as List? ?? []).map((e) => e.toString()).toList(),
+      owners: owners,
       id: map['id'],
-      creator: map['creator'],
+      creator: map['creator'] ?? (owners.isNotEmpty ? owners.first : null),
     );
   }
 }

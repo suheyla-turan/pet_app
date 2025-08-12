@@ -32,13 +32,18 @@ class NotificationService {
       channelDescription: 'Evcil hayvan kritik durum bildirimleri',
       importance: Importance.high,
       priority: Priority.high,
-      icon: '@mipmap/launcher_icon',
-      sound: customSound != null ? RawResourceAndroidNotificationSound(customSound) : null,
-      color: const Color(0xFFFF0000), // Kırmızı renk
+      icon: 'paw_notification_icon', // Mavi arka plan üzerinde pati ikonu
+      largeIcon: const DrawableResourceAndroidBitmap('@mipmap/launcher_icon'), // Büyük uygulama ikonu
+      color: const Color(0xFF3B82F6), // Mavi renk (pati ikonu ile uyumlu)
+      showWhen: true,
+      when: DateTime.now().millisecondsSinceEpoch,
     );
     
     final iosDetails = DarwinNotificationDetails(
       sound: customSound != null ? '$customSound.wav' : null,
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
     );
     
     final details = NotificationDetails(
@@ -64,13 +69,18 @@ class NotificationService {
       channelDescription: 'Evcil hayvan doğum günü bildirimleri',
       importance: Importance.high,
       priority: Priority.high,
-      icon: '@mipmap/launcher_icon',
-      sound: customSound != null ? RawResourceAndroidNotificationSound(customSound) : null,
-      color: const Color(0xFFFFD700), // Altın sarısı
+      icon: 'paw_notification_icon', // Mavi arka plan üzerinde pati ikonu
+      largeIcon: const DrawableResourceAndroidBitmap('@mipmap/launcher_icon'), // Büyük uygulama ikonu
+      color: const Color(0xFF3B82F6), // Mavi renk (pati ikonu ile uyumlu)
+      showWhen: true,
+      when: DateTime.now().millisecondsSinceEpoch,
     );
     
     final iosDetails = DarwinNotificationDetails(
       sound: customSound != null ? '$customSound.wav' : null,
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
     );
     
     final details = NotificationDetails(
@@ -96,13 +106,18 @@ class NotificationService {
       channelDescription: 'Evcil hayvan aşı hatırlatma bildirimleri',
       importance: Importance.high,
       priority: Priority.high,
-      icon: '@mipmap/launcher_icon',
-      sound: customSound != null ? RawResourceAndroidNotificationSound(customSound) : null,
-      color: const Color(0xFF00BFFF), // Mavi
+      icon: 'paw_notification_icon', // Mavi arka plan üzerinde pati ikonu
+      largeIcon: const DrawableResourceAndroidBitmap('@mipmap/launcher_icon'), // Büyük uygulama ikonu
+      color: const Color(0xFF3B82F6), // Mavi renk (pati ikonu ile uyumlu)
+      showWhen: true,
+      when: DateTime.now().millisecondsSinceEpoch,
     );
     
     final iosDetails = DarwinNotificationDetails(
       sound: customSound != null ? '$customSound.wav' : null,
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
     );
     
     final details = NotificationDetails(
@@ -128,13 +143,18 @@ class NotificationService {
       channelDescription: 'Eş sahiplerden gelen mesaj bildirimleri',
       importance: Importance.defaultImportance,
       priority: Priority.defaultPriority,
-      icon: '@mipmap/launcher_icon',
-      sound: customSound != null ? RawResourceAndroidNotificationSound(customSound) : null,
-      color: const Color(0xFF32CD32), // Yeşil
+      icon: 'paw_notification_icon', // Mavi arka plan üzerinde pati ikonu
+      largeIcon: const DrawableResourceAndroidBitmap('@mipmap/launcher_icon'), // Büyük uygulama ikonu
+      color: const Color(0xFF3B82F6), // Mavi renk (pati ikonu ile uyumlu)
+      showWhen: true,
+      when: DateTime.now().millisecondsSinceEpoch,
     );
     
     final iosDetails = DarwinNotificationDetails(
       sound: customSound != null ? '$customSound.wav' : null,
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
     );
     
     final details = NotificationDetails(
@@ -163,12 +183,18 @@ class NotificationService {
       channelDescription: 'Evcil hayvan bakım bildirimleri',
       importance: Importance.defaultImportance,
       priority: Priority.defaultPriority,
-      icon: '@mipmap/launcher_icon',
-      sound: customSound != null ? RawResourceAndroidNotificationSound(customSound) : null,
+      icon: 'paw_notification_icon', // Mavi arka plan üzerinde pati ikonu
+      largeIcon: const DrawableResourceAndroidBitmap('@mipmap/launcher_icon'), // Büyük uygulama ikonu
+      color: const Color(0xFF3B82F6), // Mavi renk (pati ikonu ile uyumlu)
+      showWhen: true,
+      when: DateTime.now().millisecondsSinceEpoch,
     );
     
     final iosDetails = DarwinNotificationDetails(
       sound: customSound != null ? '$customSound.wav' : null,
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
     );
     
     final details = NotificationDetails(
@@ -200,11 +226,18 @@ class NotificationService {
       channelDescription: 'Zamanlanmış bildirimler',
       importance: Importance.high,
       priority: Priority.high,
-      icon: '@mipmap/launcher_icon',
+      icon: 'paw_notification_icon', // Mavi arka plan üzerinde pati ikonu
+      largeIcon: const DrawableResourceAndroidBitmap('@mipmap/launcher_icon'), // Büyük uygulama ikonu
+      color: const Color(0xFF3B82F6), // Mavi renk (pati ikonu ile uyumlu)
       sound: androidSound != null ? RawResourceAndroidNotificationSound(androidSound) : null,
+      showWhen: true,
+      when: scheduledTime.millisecondsSinceEpoch,
     );
     final iosDetails = DarwinNotificationDetails(
       sound: iosSound,
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
     );
     final details = NotificationDetails(
       android: androidDetails,
@@ -239,11 +272,18 @@ class NotificationService {
       channelDescription: 'Kullanıcı tanımlı bildirimler',
       importance: Importance.high,
       priority: Priority.high,
-      icon: '@mipmap/launcher_icon',
+      icon: 'paw_notification_icon', // Mavi arka plan üzerinde pati ikonu
+      largeIcon: const DrawableResourceAndroidBitmap('@mipmap/launcher_icon'), // Büyük uygulama ikonu
+      color: const Color(0xFF3B82F6), // Mavi renk (pati ikonu ile uyumlu)
       sound: androidSound != null ? RawResourceAndroidNotificationSound(androidSound) : null,
+      showWhen: true,
+      when: DateTime.now().millisecondsSinceEpoch,
     );
     final iosDetails = DarwinNotificationDetails(
       sound: iosSound,
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
     );
     final details = NotificationDetails(
       android: androidDetails,

@@ -175,6 +175,12 @@ class _LoginScreenState extends State<LoginScreen> {
       padding: const EdgeInsets.all(24.0),
       child: Center(
         child: SingleChildScrollView(
+          // Klavye açılırken scroll performansını artır
+          physics: const ClampingScrollPhysics(),
+          // Klavye açılırken padding'i optimize et
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
           child: Form(
             key: _formKey,
             child: Column(
@@ -292,6 +298,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
       padding: const EdgeInsets.all(24.0),
       child: Center(
         child: SingleChildScrollView(
+          // Klavye açılırken scroll performansını artır
+          physics: const ClampingScrollPhysics(),
+          // Klavye açılırken padding'i optimize et
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
           child: Form(
             key: _formKey,
             child: Column(
@@ -398,11 +410,22 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
     return Scaffold(
-              appBar: AppBar(title: const Text('PatiTakip')),
+            appBar: AppBar(
+        title: const Text('PatiTakip'),
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Center(
           child: SingleChildScrollView(
+            // Klavye açılırken scroll performansını artır
+            physics: const ClampingScrollPhysics(),
+            // Klavye açılırken padding'i optimize et
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+            ),
             child: Form(
               key: _formKey,
               child: Column(

@@ -1,11 +1,16 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 import 'package:pati_takip/services/media_service.dart';
 import 'package:pati_takip/services/voice_service.dart';
+import 'package:pati_takip/features/pet/models/pet.dart';
+import 'package:pati_takip/providers/auth_provider.dart';
 
 class AIChatPage extends StatefulWidget {
-  const AIChatPage({super.key});
+  final Pet? pet;
+  
+  const AIChatPage({super.key, this.pet});
 
   @override
   State<AIChatPage> createState() => _AIChatPageState();
@@ -30,12 +35,53 @@ class _AIChatPageState extends State<AIChatPage> {
     super.initState();
     _initializeServices();
     
-    // Add welcome message
+    // Add personalized welcome message
     _messages.add(ChatMessage(
-      text: "Merhaba! Evcil hayvanınız hakkında sorularınızı sorabilirsiniz. Size nasıl yardımcı olabilirim?",
+      text: _getPersonalizedWelcomeMessage(),
       isUser: false,
       timestamp: DateTime.now(),
     ));
+  }
+
+  void _showChatHistory() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Sohbet geçmişi yakında eklenecek!'),
+        backgroundColor: Colors.blue,
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+  String _getPersonalizedWelcomeMessage() {
+    if (widget.pet == null) {
+      return "Merhaba! Evcil hayvanınız hakkında sorularınızı sorabilirsiniz. Size nasıl yardımcı olabilirim?";
+    }
+
+    final pet = widget.pet!;
+    final age = pet.age;
+    final type = _getLocalizedPetType(pet.type);
+    final gender = pet.gender.toLowerCase() == 'male' || pet.gender.toLowerCase() == 'erkek' ? 'erkek' : 'dişi';
+    
+    String ageDescription;
+    if (age < 1) {
+      ageDescription = 'yavru';
+    } else if (age < 3) {
+      ageDescription = 'genç';
+    } else if (age < 7) {
+      ageDescription = 'yetişkin';
+    } else {
+      ageDescription = 'yaşlı';
+    }
+
+    return "Merhaba! ${pet.name} hakkında size yardımcı olmaya geldim! 🐾\n\n"
+           "${pet.name} ${age} yaşında ${ageDescription} bir ${gender} ${type}. "
+           "Sağlık, beslenme, egzersiz, bakım veya davranış konularında sorularınızı yanıtlayabilirim.\n\n"
+           "Örnek sorular:\n"
+           "• ${pet.name} için hangi mama türü uygun?\n"
+           "• ${age < 1 ? 'Yavru' : age > 7 ? 'Yaşlı' : 'Yetişkin'} ${type} bakımında nelere dikkat etmeliyim?\n"
+           "• ${pet.name} için egzersiz programı nasıl olmalı?\n\n"
+           "Nasıl yardımcı olabilirim?";
   }
 
   Future<void> _initializeServices() async {
@@ -199,15 +245,443 @@ class _AIChatPageState extends State<AIChatPage> {
   }
 
   String _generateAIResponse(String userMessage) {
-    final responses = [
-      "Bu konuda size yardımcı olabilirim. Evcil hayvanınızın yaşı ve cinsine göre önerilerim var.",
-      "Bu soru çok iyi! Evcil hayvanların sağlığı için bu bilgi önemli.",
-      "Deneyimlerime göre, bu durumda şunları yapmanızı öneririm...",
-      "Evcil hayvanınızın davranışı normal görünüyor. Endişelenmenize gerek yok.",
-      "Bu konuda veteriner hekiminize danışmanızı öneririm.",
-    ];
+    if (widget.pet == null) {
+      // Pet bilgisi yoksa genel yanıt
+      return "Evcil hayvanınız hakkında daha detaylı bilgi verebilmem için lütfen önce bir evcil hayvan ekleyin.";
+    }
+
+    final pet = widget.pet!;
+    final lowerMessage = userMessage.toLowerCase();
     
-    return responses[userMessage.length % responses.length];
+    // Evcil hayvan bilgilerini kullanarak kişiselleştirilmiş yanıtlar
+    if (lowerMessage.contains('yaş') || lowerMessage.contains('kaç yaş') || lowerMessage.contains('doğum')) {
+      return "${pet.name} şu anda ${pet.age} yaşında. ${pet.age < 1 ? 'Henüz çok küçük bir yavru' : pet.age < 3 ? 'Genç bir evcil hayvan' : pet.age < 7 ? 'Yetişkin bir evcil hayvan' : 'Yaşlı bir evcil hayvan'}. Bu yaş grubunda ${_getAgeSpecificAdvice(pet.age, pet.type)}";
+    }
+    
+    if (lowerMessage.contains('cins') || lowerMessage.contains('tür') || lowerMessage.contains('breed')) {
+      final typeInfo = _getPetTypeInfo(pet.type);
+      final breedInfo = pet.breed != null && pet.breed!.isNotEmpty ? "Cinsi: ${pet.breed!}. " : "";
+      return "${pet.name} bir ${typeInfo}. ${breedInfo}${_getTypeSpecificAdvice(pet.type)}";
+    }
+    
+    if (lowerMessage.contains('cinsiyet') || lowerMessage.contains('erkek') || lowerMessage.contains('dişi')) {
+      final genderInfo = pet.gender.toLowerCase() == 'male' || pet.gender.toLowerCase() == 'erkek' ? 'erkek' : 'dişi';
+      return "${pet.name} ${genderInfo} bir ${_getLocalizedPetType(pet.type)}. ${_getGenderSpecificAdvice(pet.gender, pet.type)}";
+    }
+    
+    if (lowerMessage.contains('sağlık') || lowerMessage.contains('hastalık') || lowerMessage.contains('veteriner')) {
+      return "${pet.name} için sağlık önerileri: ${_getHealthAdvice(pet)}";
+    }
+    
+    if (lowerMessage.contains('beslenme') || lowerMessage.contains('yemek') || lowerMessage.contains('mama')) {
+      return "${pet.name} için beslenme tavsiyeleri: ${_getFeedingAdvice(pet)}";
+    }
+    
+    if (lowerMessage.contains('egzersiz') || lowerMessage.contains('oyun') || lowerMessage.contains('aktivite')) {
+      return "${pet.name} için egzersiz önerileri: ${_getExerciseAdvice(pet)}";
+    }
+    
+    if (lowerMessage.contains('bakım') || lowerMessage.contains('temizlik') || lowerMessage.contains('grooming')) {
+      return "${pet.name} için bakım önerileri: ${_getCareAdvice(pet)}";
+    }
+    
+    if (lowerMessage.contains('davranış') || lowerMessage.contains('karakter') || lowerMessage.contains('kişilik')) {
+      return "${pet.name} hakkında davranış analizi: ${_getBehaviorAdvice(pet)}";
+    }
+    
+    // Genel kişiselleştirilmiş yanıt
+    return "${pet.name} (${pet.age} yaşında ${_getLocalizedPetType(pet.type)}) hakkında sorduğunuz konuda size yardımcı olabilirim. ${_getGeneralAdvice(pet)}";
+  }
+
+  String _getAgeSpecificAdvice(int age, String type) {
+    if (age < 1) {
+      return "yavru bakımı çok önemlidir. Düzenli veteriner kontrolleri ve özel beslenme programı gerekir.";
+    } else if (age < 3) {
+      return "enerjik ve öğrenmeye açıktır. Sosyalleşme ve temel eğitim için ideal dönemdir.";
+    } else if (age < 7) {
+      return "olgun ve dengeli bir dönemdedir. Rutin bakım ve düzenli egzersiz önemlidir.";
+    } else {
+      return "yaşlılık belirtileri başlayabilir. Daha sık veteriner kontrolleri ve özel bakım gerekebilir.";
+    }
+  }
+
+  String _getPetTypeInfo(String type) {
+    switch (type.toLowerCase()) {
+      case 'dog':
+      case 'köpek':
+        return 'köpek';
+      case 'cat':
+      case 'kedi':
+        return 'kedi';
+      case 'bird':
+      case 'kuş':
+        return 'kuş';
+      case 'fish':
+      case 'balık':
+        return 'balık';
+      case 'hamster':
+        return 'hamster';
+      case 'rabbit':
+      case 'tavşan':
+        return 'tavşan';
+      default:
+        return 'evcil hayvan';
+    }
+  }
+
+  String _getLocalizedPetType(String type) {
+    switch (type.toLowerCase()) {
+      case 'dog':
+      case 'köpek':
+        return 'köpek';
+      case 'cat':
+      case 'kedi':
+        return 'kedi';
+      case 'bird':
+      case 'kuş':
+        return 'kuş';
+      case 'fish':
+      case 'balık':
+        return 'balık';
+      case 'hamster':
+        return 'hamster';
+      case 'rabbit':
+      case 'tavşan':
+        return 'tavşan';
+      default:
+        return 'evcil hayvan';
+    }
+  }
+
+  String _getTypeSpecificAdvice(String type) {
+    switch (type.toLowerCase()) {
+      case 'dog':
+      case 'köpek':
+        return "Köpekler sosyal hayvanlardır ve düzenli egzersiz, eğitim ve sosyalleşme ihtiyacı duyarlar.";
+      case 'cat':
+      case 'kedi':
+        return "Kediler bağımsız hayvanlardır ama yine de sevgi ve ilgiye ihtiyaç duyarlar. Tırmalama tahtası ve oyun alanları önemlidir.";
+      case 'bird':
+      case 'kuş':
+        return "Kuşlar zeki hayvanlardır ve mental stimülasyona ihtiyaç duyarlar. Oyuncaklar ve sosyal etkileşim önemlidir.";
+      case 'fish':
+      case 'balık':
+        return "Balıklar için su kalitesi ve uygun akvaryum ortamı çok önemlidir.";
+      case 'hamster':
+        return "Hamsterlar gece aktif hayvanlardır ve çok fazla uykuya ihtiyaç duyarlar.";
+      case 'rabbit':
+      case 'tavşan':
+        return "Tavşanlar sosyal hayvanlardır ve çift olarak yaşamayı tercih ederler.";
+      default:
+        return "Her evcil hayvan türünün kendine özgü ihtiyaçları vardır.";
+    }
+  }
+
+  String _getGenderSpecificAdvice(String gender, String type) {
+    final isMale = gender.toLowerCase() == 'male' || gender.toLowerCase() == 'erkek';
+    
+    if (type.toLowerCase() == 'dog' || type.toLowerCase() == 'köpek') {
+      return isMale ? "Erkek köpekler genellikle daha dominant olabilir ve daha fazla egzersiz ihtiyacı duyabilir." : "Dişi köpekler genellikle daha sakin ve eğitime daha yatkın olabilir.";
+    } else if (type.toLowerCase() == 'cat' || type.toLowerCase() == 'kedi') {
+      return isMale ? "Erkek kediler genellikle daha büyük olur ve daha fazla alan ihtiyacı duyabilir." : "Dişi kediler genellikle daha temiz ve düzenli olur.";
+    }
+    
+    return "Cinsiyet, evcil hayvanın karakterini etkileyebilir ama her hayvanın kendine özgü kişiliği vardır.";
+  }
+
+  String _getHealthAdvice(Pet pet) {
+    final age = pet.age;
+    final type = pet.type.toLowerCase();
+    
+    if (age < 1) {
+      return "Yavru dönemde aşı programı çok önemlidir. Düzenli veteriner kontrolleri ve parazit tedavisi gerekir.";
+    } else if (age > 7) {
+      return "Yaşlı dönemde daha sık veteriner kontrolleri, kan testleri ve özel beslenme programı önerilir.";
+    }
+    
+    if (type == 'dog' || type == 'köpek') {
+      return "Köpekler için düzenli aşı, parazit tedavisi ve diş bakımı önemlidir.";
+    } else if (type == 'cat' || type == 'kedi') {
+      return "Kediler için düzenli aşı, tırnak kesimi ve tüy bakımı önemlidir.";
+    }
+    
+    return "Düzenli veteriner kontrolleri ve aşı programı tüm evcil hayvanlar için önemlidir.";
+  }
+
+  String _getFeedingAdvice(Pet pet) {
+    final age = pet.age;
+    final type = pet.type.toLowerCase();
+    
+    if (age < 1) {
+      return "Yavru dönemde günde 3-4 kez küçük porsiyonlarla beslenmelidir. Yavru maması kullanılmalıdır.";
+    } else if (age > 7) {
+      return "Yaşlı dönemde daha az kalorili, yaşlı maması kullanılmalıdır. Günde 2 kez beslenme yeterlidir.";
+    }
+    
+    if (type == 'dog' || type == 'köpek') {
+      return "Köpekler için günde 2 kez beslenme önerilir. Su her zaman erişilebilir olmalıdır.";
+    } else if (type == 'cat' || type == 'kedi') {
+      return "Kediler için günde 2-3 kez beslenme önerilir. Kuru mama ve ıslak mama kombinasyonu idealdir.";
+    }
+    
+    return "Yaşa ve türe uygun mama seçimi ve düzenli beslenme programı önemlidir.";
+  }
+
+  String _getExerciseAdvice(Pet pet) {
+    final age = pet.age;
+    final type = pet.type.toLowerCase();
+    
+    if (age < 1) {
+      return "Yavru dönemde kısa süreli, nazik egzersizler yapılmalıdır. Aşırı yorulmamalıdır.";
+    } else if (age > 7) {
+      return "Yaşlı dönemde hafif egzersizler yapılmalıdır. Yürüyüş ve nazik oyunlar idealdir.";
+    }
+    
+    if (type == 'dog' || type == 'köpek') {
+      return "Köpekler için günde en az 30-60 dakika egzersiz önerilir. Yürüyüş, koşu ve oyunlar önemlidir.";
+    } else if (type == 'cat' || type == 'kedi') {
+      return "Kediler için günde 15-30 dakika aktif oyun önerilir. Tırmalama tahtası ve oyuncaklar önemlidir.";
+    }
+    
+    return "Yaşa ve türe uygun egzersiz programı evcil hayvanın sağlığı için çok önemlidir.";
+  }
+
+  String _getCareAdvice(Pet pet) {
+    final type = pet.type.toLowerCase();
+    
+    if (type == 'dog' || type == 'köpek') {
+      return "Köpekler için düzenli tüy bakımı, tırnak kesimi ve banyo önemlidir. Kulak temizliği de düzenli yapılmalıdır.";
+    } else if (type == 'cat' || type == 'kedi') {
+      return "Kediler kendilerini temizler ama düzenli tüy bakımı ve tırnak kesimi gerekebilir.";
+    } else if (type == 'bird' || type == 'kuş') {
+      return "Kuşlar için kafes temizliği, su değişimi ve oyuncaklar önemlidir.";
+    }
+    
+    return "Her evcil hayvan türü için uygun bakım rutini oluşturulmalıdır.";
+  }
+
+  String _getBehaviorAdvice(Pet pet) {
+    final age = pet.age;
+    final type = pet.type.toLowerCase();
+    
+    if (age < 1) {
+      return "Yavru dönemde sosyalleşme çok önemlidir. Farklı insanlar ve hayvanlarla tanıştırılmalıdır.";
+    } else if (age > 7) {
+      return "Yaşlı dönemde daha sakin ve istikrarlı davranışlar sergiler. Değişikliklerden hoşlanmayabilir.";
+    }
+    
+    if (type == 'dog' || type == 'köpek') {
+      return "Köpekler pak hayvanlardır ve liderlik bekler. Tutarlı eğitim ve sınırlar önemlidir.";
+    } else if (type == 'cat' || type == 'kedi') {
+      return "Kediler bağımsızdır ama sevgi gösterir. Onların alanına saygı göstermek önemlidir.";
+    }
+    
+    return "Her evcil hayvanın kendine özgü karakteri vardır. Sabır ve anlayışla yaklaşmak önemlidir.";
+  }
+
+  String _getGeneralAdvice(Pet pet) {
+    final status = _getPetStatusSummary(pet);
+    return "Mevcut durumu: $status. ${_getRecommendations(pet)}";
+  }
+
+  String _getPetStatusSummary(Pet pet) {
+    final satiety = pet.satiety;
+    final happiness = pet.happiness;
+    final energy = pet.energy;
+    final care = pet.care;
+    
+    if (satiety >= 7 && happiness >= 7 && energy >= 7 && care >= 7) {
+      return "Mükemmel durumda";
+    } else if (satiety >= 5 && happiness >= 5 && energy >= 5 && care >= 5) {
+      return "İyi durumda";
+    } else if (satiety >= 3 && happiness >= 3 && energy >= 3 && care >= 3) {
+      return "Orta durumda";
+    } else {
+      return "Dikkat gerektiren durumda";
+    }
+  }
+
+  String _getRecommendations(Pet pet) {
+    final recommendations = <String>[];
+    
+    if (pet.satiety < 5) recommendations.add("beslenme");
+    if (pet.happiness < 5) recommendations.add("oyun ve ilgi");
+    if (pet.energy < 5) recommendations.add("dinlenme");
+    if (pet.care < 5) recommendations.add("bakım");
+    
+    if (recommendations.isEmpty) {
+      return "Şu anda herhangi bir özel ihtiyaç yok.";
+    }
+    
+    return "Önerilen iyileştirmeler: ${recommendations.join(', ')}.";
+  }
+
+  Widget _buildPetInfoCard() {
+    if (widget.pet == null) return const SizedBox.shrink();
+    
+    final pet = widget.pet!;
+    final age = pet.age;
+    final type = _getLocalizedPetType(pet.type);
+    final gender = pet.gender.toLowerCase() == 'male' || pet.gender.toLowerCase() == 'erkek' ? 'erkek' : 'dişi';
+    
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF1A1A1A),
+            Color(0xFF2C2C2C),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.purple.withOpacity(0.3),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.purple.withOpacity(0.1),
+            blurRadius: 10,
+            spreadRadius: 0,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: Colors.purple.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(25),
+                  border: Border.all(
+                    color: Colors.purple.withOpacity(0.5),
+                    width: 2,
+                  ),
+                ),
+                child: Icon(
+                  Icons.pets,
+                  color: Colors.purple,
+                  size: 28,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      pet.name,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      "$age yaşında $gender $type",
+                      style: TextStyle(
+                        color: Colors.grey.withOpacity(0.8),
+                        fontSize: 14,
+                      ),
+                    ),
+                    if (pet.breed != null && pet.breed!.isNotEmpty)
+                      Text(
+                        "Cins: ${pet.breed!}",
+                        style: TextStyle(
+                          color: Colors.grey.withOpacity(0.8),
+                          fontSize: 14,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // Status indicators
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildStatusIndicator(
+                icon: Icons.restaurant,
+                label: "Tokluk",
+                value: pet.satiety,
+                color: Colors.green,
+              ),
+              _buildStatusIndicator(
+                icon: Icons.favorite,
+                label: "Mutluluk",
+                value: pet.happiness,
+                color: Colors.pink,
+              ),
+              _buildStatusIndicator(
+                icon: Icons.flash_on,
+                label: "Enerji",
+                value: pet.energy,
+                color: Colors.orange,
+              ),
+              _buildStatusIndicator(
+                icon: Icons.cleaning_services,
+                label: "Bakım",
+                value: pet.care,
+                color: Colors.blue,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatusIndicator({
+    required IconData icon,
+    required String label,
+    required int value,
+    required Color color,
+  }) {
+    return Column(
+      children: [
+        Icon(
+          icon,
+          color: color,
+          size: 20,
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.grey.withOpacity(0.7),
+            fontSize: 10,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Container(
+          width: 30,
+          height: 4,
+          decoration: BoxDecoration(
+            color: Colors.grey.withOpacity(0.3),
+            borderRadius: BorderRadius.circular(2),
+          ),
+          child: FractionallySizedBox(
+            alignment: Alignment.centerLeft,
+            widthFactor: value / 10,
+            child: Container(
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   // Görsel seçme
@@ -258,45 +732,263 @@ class _AIChatPageState extends State<AIChatPage> {
         borderRadius: BorderRadius.circular(16),
       ),
       items: [
-        _buildPopupMenuItem(
-          icon: Icons.history,
-          title: "Sohbet Geçmişi",
-          onTap: () {
-            Navigator.pop(context);
-            // TODO: Implement chat history
-          },
+        PopupMenuItem(
+          value: 'history',
+          child: _buildPopupMenuItem(
+            icon: Icons.history,
+            title: "Sohbet Geçmişi",
+          ),
         ),
-        _buildPopupMenuItem(
-          icon: Icons.add_comment,
-          title: "Yeni Sohbet",
-          onTap: () {
-            Navigator.pop(context);
-            setState(() {
-              _messages.clear();
-              _messages.add(ChatMessage(
-                text: "Merhaba! Evcil hayvanınız hakkında sorularınızı sorabilirsiniz. Size nasıl yardımcı olabilirim?",
-                isUser: false,
-                timestamp: DateTime.now(),
-              ));
-            });
-          },
+        PopupMenuItem(
+          value: 'new_chat',
+          child: _buildPopupMenuItem(
+            icon: Icons.add_comment,
+            title: "Yeni Sohbet",
+          ),
         ),
-        _buildPopupMenuItem(
-          icon: Icons.clear,
-          title: "Mevcut Sohbeti Temizle",
-          onTap: () {
-            Navigator.pop(context);
-            setState(() {
-              _messages.clear();
-              _messages.add(ChatMessage(
-                text: "Sohbet temizlendi. Yeni bir konuşma başlatabilirsiniz.",
-                isUser: false,
-                timestamp: DateTime.now(),
-              ));
-            });
-          },
+        PopupMenuItem(
+          value: 'clear_chat',
+          child: _buildPopupMenuItem(
+            icon: Icons.clear,
+            title: "Mevcut Sohbeti Temizle",
+          ),
         ),
       ],
+    ).then((value) {
+      if (value != null) {
+        _handleMenuAction(value);
+      }
+    });
+  }
+
+  void _handleMenuAction(String action) {
+    switch (action) {
+      case 'history':
+        // TODO: Implement chat history
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Sohbet geçmişi yakında eklenecek!'),
+            backgroundColor: Colors.blue,
+            duration: Duration(seconds: 2),
+          ),
+        );
+        break;
+      case 'new_chat':
+        _startNewChat();
+        break;
+      case 'clear_chat':
+        _clearCurrentChat();
+        break;
+    }
+  }
+
+  bool _hasMeaningfulChat() {
+    // Check if there are actual conversation messages (not just welcome message)
+    return _messages.length > 1;
+  }
+
+  String _getChatStatusText() {
+    if (_messages.isEmpty) {
+      return "Henüz sohbet yok";
+    } else if (_messages.length == 1) {
+      return "Yeni sohbet başlatıldı";
+    } else {
+      return "${_messages.length - 1} mesaj";
+    }
+  }
+
+  void _startNewChat() {
+    if (_messages.length <= 1) {
+      // If there's only the welcome message or no messages, just start fresh
+      setState(() {
+        _messages.clear();
+        _messages.add(ChatMessage(
+          text: _getPersonalizedWelcomeMessage(),
+          isUser: false,
+          timestamp: DateTime.now(),
+        ));
+      });
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Yeni sohbet başlatıldı!'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } else {
+      // If there are actual conversation messages, ask for confirmation
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            backgroundColor: Colors.transparent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: Row(
+              children: [
+                Icon(
+                  Icons.add_comment,
+                  color: Colors.green,
+                  size: 28,
+                ),
+                const SizedBox(width: 12),
+                const Text(
+                  'Yeni Sohbet',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            content: const Text(
+              'Mevcut sohbet geçmişi kaydedilecek ve yeni bir sohbet başlatılacak. Devam etmek istiyor musunuz?',
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 16,
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text(
+                  'İptal',
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  setState(() {
+                    _messages.clear();
+                    _messages.add(ChatMessage(
+                      text: _getPersonalizedWelcomeMessage(),
+                      isUser: false,
+                      timestamp: DateTime.now(),
+                    ));
+                  });
+                  
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Yeni sohbet başlatıldı!'),
+                      backgroundColor: Colors.green,
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  'Başlat',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      );
+    }
+  }
+
+  void _clearCurrentChat() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              Icon(
+                Icons.warning_amber_rounded,
+                color: Colors.orange,
+                size: 28,
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Sohbeti Temizle',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          content: const Text(
+            'Mevcut sohbet geçmişi kalıcı olarak silinecek. Bu işlem geri alınamaz. Devam etmek istiyor musunuz?',
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 16,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text(
+                'İptal',
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                setState(() {
+                  _messages.clear();
+                  _messages.add(ChatMessage(
+                    text: _getPersonalizedWelcomeMessage(),
+                    isUser: false,
+                    timestamp: DateTime.now(),
+                  ));
+                });
+                
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Mevcut sohbet temizlendi!'),
+                    backgroundColor: Colors.orange,
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text(
+                'Temizle',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -320,35 +1012,68 @@ class _AIChatPageState extends State<AIChatPage> {
     );
   }
 
-  PopupMenuItem _buildPopupMenuItem({
+  Widget _buildPopupMenuItem({
     required IconData icon,
     required String title,
-    required VoidCallback onTap,
   }) {
-    return PopupMenuItem(
-      onTap: onTap,
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.white, size: 20),
-          const SizedBox(width: 12),
-          Text(
-            title,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
+    return Row(
+      children: [
+        Icon(icon, color: Colors.white, size: 20),
+        const SizedBox(width: 12),
+        Text(
+          title,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+    final currentUser = authProvider.user;
+
+    if (currentUser == null || (widget.pet != null && !widget.pet!.owners.contains(currentUser.uid))) {
+      return Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: _buildEnhancedAppBar(),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.pets, size: 80, color: Colors.white.withOpacity(0.5)),
+              const SizedBox(height: 20),
+              Text(
+                "Bu evcil hayvanın sahibi değilsiniz.",
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.7),
+                  fontSize: 18,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                "Bu sayfayı görüntülemek için evcil hayvanınızın sahibi olmalısınız.",
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.7),
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0A0A),
+      backgroundColor: Colors.transparent,
+      // Klavye açılırken performans optimizasyonu
+      resizeToAvoidBottomInset: false,
       appBar: _buildEnhancedAppBar(),
+              // FloatingActionButton kaldırıldı
       body: SafeArea(
         bottom: false, // Alt kısmı SafeArea'dan çıkar çünkü kendi padding'imizi ekleyeceğiz
         child: Column(
@@ -367,9 +1092,13 @@ class _AIChatPageState extends State<AIChatPage> {
     );
   }
 
+  // FloatingActionButton ve _showQuickActions metodu kaldırıldı
+
+  // _buildQuickActionTile metodu kaldırıldı
+
   PreferredSizeWidget _buildEnhancedAppBar() {
     return AppBar(
-      backgroundColor: const Color(0xFF1A1A1A),
+      backgroundColor: Colors.transparent,
       elevation: 0,
       flexibleSpace: Container(
         decoration: const BoxDecoration(
@@ -394,50 +1123,62 @@ class _AIChatPageState extends State<AIChatPage> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      title: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: Colors.purple.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: Colors.purple.withOpacity(0.5),
-                width: 2,
-              ),
-            ),
-            child: const Icon(
-              Icons.smart_toy,
-              color: Colors.purple,
-              size: 24,
-            ),
-          ),
-          const SizedBox(width: 12),
-          const Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
+                title: Column(
             children: [
-              Text(
-                "AI Asistan",
+              const Text(
+                'PatiTakip',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(
-                "Çevrimiçi",
-                style: TextStyle(
-                  color: Colors.green,
-                  fontSize: 12,
+                  fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
               ),
+              Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.purple.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: Colors.purple.withOpacity(0.5),
+                        width: 2,
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.smart_toy,
+                      color: Colors.purple,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        widget.pet != null ? "${widget.pet!.name} için AI Asistan" : "AI Asistan",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        _getChatStatusText(),
+                        style: TextStyle(
+                          color: _hasMeaningfulChat() ? Colors.blue : Colors.green,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ],
           ),
-        ],
-      ),
       actions: [
         Container(
           margin: const EdgeInsets.all(8),
@@ -445,9 +1186,40 @@ class _AIChatPageState extends State<AIChatPage> {
             color: Colors.white.withOpacity(0.1),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: IconButton(
+          child: PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert, color: Colors.white),
-            onPressed: _showMenu,
+            onSelected: (value) {
+              switch (value) {
+                case 'new_chat':
+                  _startNewChat();
+                  break;
+                case 'chat_history':
+                  _showChatHistory();
+                  break;
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem<String>(
+                value: 'new_chat',
+                child: Row(
+                  children: [
+                    Icon(Icons.add_circle_outline, color: Colors.purple),
+                    SizedBox(width: 12),
+                    Text('Yeni Sohbet'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem<String>(
+                value: 'chat_history',
+                child: Row(
+                  children: [
+                    Icon(Icons.history, color: Colors.blue),
+                    SizedBox(width: 12),
+                    Text('Sohbet Geçmişi'),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ],
@@ -464,6 +1236,11 @@ class _AIChatPageState extends State<AIChatPage> {
       ),
       child: Column(
         children: [
+          // Pet info card if pet exists
+          if (widget.pet != null) ...[
+            _buildPetInfoCard(),
+            const SizedBox(height: 20),
+          ],
           const SizedBox(height: 40),
           // Hero section with animated robot
           Container(
@@ -496,9 +1273,11 @@ class _AIChatPageState extends State<AIChatPage> {
           const SizedBox(height: 32),
           
           // Welcome text
-          const Text(
-            "AI Asistan'a Hoş Geldiniz!",
-            style: TextStyle(
+          Text(
+            widget.pet != null 
+                ? "${widget.pet!.name} için AI Asistan"
+                : "AI Asistan'a Hoş Geldiniz!",
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 28,
               fontWeight: FontWeight.bold,
@@ -506,9 +1285,11 @@ class _AIChatPageState extends State<AIChatPage> {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
-          const Text(
-            "Evcil hayvanınız hakkında herhangi bir soru sorabilirsiniz",
-            style: TextStyle(
+          Text(
+            widget.pet != null
+                ? "${widget.pet!.name} hakkında herhangi bir soru sorabilirsiniz"
+                : "Evcil hayvanınız hakkında herhangi bir soru sorabilirsiniz",
+            style: const TextStyle(
               color: Colors.grey,
               fontSize: 16,
               height: 1.5,
@@ -520,22 +1301,28 @@ class _AIChatPageState extends State<AIChatPage> {
           // Quick action cards
           _buildQuickActionCard(
             icon: Icons.health_and_safety,
-            title: "Sağlık Önerileri",
-            subtitle: "Evcil hayvanınızın sağlığı için ipuçları",
+            title: widget.pet != null ? "${widget.pet!.name} için Sağlık Önerileri" : "Sağlık Önerileri",
+            subtitle: widget.pet != null 
+                ? "${widget.pet!.name} (${widget.pet!.age} yaşında ${_getLocalizedPetType(widget.pet!.type)}) için sağlık ipuçları"
+                : "Evcil hayvanınızın sağlığı için ipuçları",
             color: const Color(0xFF10B981),
           ),
           const SizedBox(height: 16),
           _buildQuickActionCard(
             icon: Icons.pets,
-            title: "Davranış Analizi",
-            subtitle: "Evcil hayvanınızın davranışlarını anlayın",
+            title: widget.pet != null ? "${widget.pet!.name} için Davranış Analizi" : "Davranış Analizi",
+            subtitle: widget.pet != null 
+                ? "${widget.pet!.name} (${widget.pet!.gender.toLowerCase() == 'male' || widget.pet!.gender.toLowerCase() == 'erkek' ? 'erkek' : 'dişi'} ${_getLocalizedPetType(widget.pet!.type)}) davranışları"
+                : "Evcil hayvanınızın davranışlarını anlayın",
             color: const Color(0xFFF59E0B),
           ),
           const SizedBox(height: 16),
           _buildQuickActionCard(
             icon: Icons.restaurant,
-            title: "Beslenme Tavsiyeleri",
-            subtitle: "Doğru beslenme için öneriler",
+            title: widget.pet != null ? "${widget.pet!.name} için Beslenme Tavsiyeleri" : "Beslenme Tavsiyeleri",
+            subtitle: widget.pet != null 
+                ? "${widget.pet!.name} (${widget.pet!.age} yaşında) için beslenme önerileri"
+                : "Doğru beslenme için öneriler",
             color: const Color(0xFFEF4444),
           ),
           const SizedBox(height: 40),
@@ -560,10 +1347,12 @@ class _AIChatPageState extends State<AIChatPage> {
                 ),
               ],
             ),
-            child: ElevatedButton(
-              onPressed: () {
-                // This will automatically show when user types
-              },
+                          child: ElevatedButton(
+                onPressed: () {
+                  if (widget.pet != null) {
+                    _askGeneralQuestion();
+                  }
+                },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.transparent,
                 shadowColor: Colors.transparent,
@@ -571,14 +1360,14 @@ class _AIChatPageState extends State<AIChatPage> {
                   borderRadius: BorderRadius.circular(28),
                 ),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.chat_bubble_outline, color: Colors.white, size: 24),
-                  SizedBox(width: 12),
+                  const SizedBox(width: 12),
                   Text(
-                    "Sohbete Başla",
-                    style: TextStyle(
+                    widget.pet != null ? "${widget.pet!.name} ile Sohbete Başla" : "Sohbete Başla",
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
@@ -599,70 +1388,153 @@ class _AIChatPageState extends State<AIChatPage> {
     required String subtitle,
     required Color color,
   }) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: color.withOpacity(0.3),
-          width: 1,
+    return GestureDetector(
+      onTap: () => _handleQuickActionTap(title),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1A1A1A),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: color.withOpacity(0.3),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.1),
+              blurRadius: 10,
+              spreadRadius: 0,
+            ),
+          ],
         ),
-        boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(0.1),
-            blurRadius: 10,
-            spreadRadius: 0,
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(25),
+        child: Row(
+          children: [
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(25),
+              ),
+              child: Icon(
+                icon,
+                color: color,
+                size: 28,
+              ),
             ),
-            child: Icon(
-              icon,
-              color: color,
-              size: 28,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    color: Colors.grey[400],
-                    fontSize: 14,
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      color: Colors.grey[400],
+                      fontSize: 14,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          Icon(
-            Icons.arrow_forward_ios,
-            color: Colors.grey[600],
-            size: 16,
-          ),
-        ],
+            Icon(
+              Icons.arrow_forward_ios,
+              color: Colors.grey[600],
+              size: 16,
+            ),
+          ],
+        ),
       ),
     );
+  }
+
+  void _handleQuickActionTap(String title) {
+    if (widget.pet == null) return;
+    
+    final pet = widget.pet!;
+    String question = "";
+    
+    if (title.contains("Sağlık")) {
+      question = "${pet.name} için sağlık önerileri nelerdir?";
+    } else if (title.contains("Davranış")) {
+      question = "${pet.name} için davranış analizi yapabilir misin?";
+    } else if (title.contains("Beslenme")) {
+      question = "${pet.name} için beslenme tavsiyeleri nelerdir?";
+    }
+    
+    if (question.isNotEmpty) {
+      setState(() {
+        _messages.add(ChatMessage(
+          text: question,
+          isUser: true,
+          timestamp: DateTime.now(),
+        ));
+        _isTyping = true;
+      });
+      
+      // AI yanıtını simüle et
+      Future.delayed(const Duration(seconds: 2), () {
+        if (mounted) {
+          setState(() {
+            _isTyping = false;
+            _messages.add(ChatMessage(
+              text: _generateAIResponse(question),
+              isUser: false,
+              timestamp: DateTime.now(),
+            ));
+          });
+        }
+      });
+    }
+  }
+
+  void _askGeneralQuestion() {
+    if (widget.pet == null) return;
+    
+    final pet = widget.pet!;
+    final age = pet.age;
+    final type = _getLocalizedPetType(pet.type);
+    
+    String question = "";
+    if (age < 1) {
+      question = "${pet.name} yavru bir $type. Yavru bakımında nelere dikkat etmeliyim?";
+    } else if (age > 7) {
+      question = "${pet.name} yaşlı bir $type. Yaşlı evcil hayvan bakımında nelere dikkat etmeliyim?";
+    } else {
+      question = "${pet.name} yetişkin bir $type. Genel bakım ve sağlık konularında önerileriniz nelerdir?";
+    }
+    
+    setState(() {
+      _messages.add(ChatMessage(
+        text: question,
+        isUser: true,
+        timestamp: DateTime.now(),
+      ));
+      _isTyping = true;
+    });
+    
+    // AI yanıtını simüle et
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) {
+        setState(() {
+          _isTyping = false;
+          _messages.add(ChatMessage(
+            text: _generateAIResponse(question),
+            isUser: false,
+            timestamp: DateTime.now(),
+          ));
+        });
+      }
+    });
   }
 
   Widget _buildChatSection() {
@@ -985,6 +1857,8 @@ class _AIChatPageState extends State<AIChatPage> {
       ),
     );
   }
+
+
 }
 
 class ChatMessage {

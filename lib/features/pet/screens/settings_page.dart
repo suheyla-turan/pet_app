@@ -48,6 +48,35 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
     final isDark = theme.brightness == Brightness.dark;
     
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: isDark 
+                ? [
+                    const Color(0xFF1A202C),
+                    const Color(0xFF2D3748),
+                    const Color(0xFF4A5568),
+                  ]
+                : [
+                    const Color(0xFFF7FAFC),
+                    const Color(0xFFEDF2F7),
+                    const Color(0xFFE2E8F0),
+                  ],
+            ),
+          ),
+        ),
+        title: const Text('PatiTakip'),
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -69,44 +98,24 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
         child: SafeArea(
           child: Column(
             children: [
-              // Beautiful Header
+              // Page Title
               Container(
                 padding: const EdgeInsets.all(20),
-                child: Row(
+                child: Column(
                   children: [
-                    IconButton(
-                      icon: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(
-                          Icons.arrow_back,
-                          color: theme.colorScheme.primary,
-                        ),
+                    Text(
+                      AppLocalizations.of(context)!.settings,
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w800,
+                        color: isDark ? Colors.white : const Color(0xFF2D3748),
                       ),
-                      onPressed: () => Navigator.pop(context),
                     ),
-                    Expanded(
-                      child: Column(
-                        children: [
-                          Text(
-                            AppLocalizations.of(context)!.settings,
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w800,
-                              color: isDark ? Colors.white : const Color(0xFF2D3748),
-                            ),
-                          ),
-                          Text(
-                            AppLocalizations.of(context)!.settingsDescription,
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: isDark ? Colors.grey.shade300 : Colors.grey.shade600,
-                            ),
-                          ),
-                        ],
+                    Text(
+                      AppLocalizations.of(context)!.settingsDescription,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: isDark ? Colors.grey.shade300 : Colors.grey.shade600,
                       ),
                     ),
                   ],
@@ -408,72 +417,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                                     ),
                                   ),
                                   const SizedBox(height: 16),
-                                  // Zamanlı Bildirimler
-                                  _buildSwitchTile(
-                                    title: AppLocalizations.of(context)!.scheduledNotifications,
-                                    subtitle: AppLocalizations.of(context)!.scheduledNotificationsDesc,
-                                    value: settingsProvider.scheduledNotificationsEnabled,
-                                    onChanged: (value) => settingsProvider.setScheduledNotificationsEnabled(value),
-                                    icon: Icons.schedule,
-                                  ),
-                                  if (settingsProvider.scheduledNotificationsEnabled) ...[
-                                    const SizedBox(height: 12),
-                                    Container(
-                                      padding: const EdgeInsets.all(16),
-                                      decoration: BoxDecoration(
-                                        color: isDark ? Colors.grey.shade700 : Colors.grey.shade100,
-                                        borderRadius: BorderRadius.circular(12),
-                                        border: Border.all(
-                                          color: isDark ? Colors.grey.shade600 : Colors.grey.shade200,
-                                        ),
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Icon(
-                                            Icons.access_time,
-                                            color: theme.colorScheme.primary,
-                                            size: 20,
-                                          ),
-                                          const SizedBox(width: 12),
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  'Bildirim Zamanı',
-                                                  style: TextStyle(
-                                                    fontSize: 16,
-                                                    fontWeight: FontWeight.w600,
-                                                    color: isDark ? Colors.white : const Color(0xFF2D3748),
-                                                  ),
-                                                ),
-                                                Text(
-                                                  settingsProvider.scheduledNotificationTime.format(context),
-                                                  style: TextStyle(
-                                                    fontSize: 14,
-                                                    color: isDark ? Colors.grey.shade300 : Colors.grey.shade600,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                          IconButton(
-                                            onPressed: () async {
-                                              final time = await showTimePicker(
-                                                context: context,
-                                                initialTime: settingsProvider.scheduledNotificationTime,
-                                              );
-                                              if (time != null) {
-                                                settingsProvider.setScheduledNotificationTime(time);
-                                              }
-                                            },
-                                            icon: const Icon(Icons.edit),
-                                            tooltip: 'Zamanı Değiştir',
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
+
                                 ],
                               );
                             },

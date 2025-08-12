@@ -1,5 +1,5 @@
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter/material.dart'; // Added for TimeOfDay
+import 'package:flutter/material.dart';
 import 'dart:ui'; // Locale için
 
 enum ConversationStyle {
@@ -20,8 +20,6 @@ class SettingsProvider with ChangeNotifier {
   double _ttsRate = 0.3;
   double _ttsPitch = 1.0;
   String? _notificationSound;
-  bool _scheduledNotificationsEnabled = false;
-  TimeOfDay _scheduledNotificationTime = const TimeOfDay(hour: 9, minute: 0);
   Locale? _locale;
 
   bool get notificationsEnabled => _notificationsEnabled;
@@ -34,8 +32,6 @@ class SettingsProvider with ChangeNotifier {
   double get ttsRate => _ttsRate;
   double get ttsPitch => _ttsPitch;
   String? get notificationSound => _notificationSound;
-  bool get scheduledNotificationsEnabled => _scheduledNotificationsEnabled;
-  TimeOfDay get scheduledNotificationTime => _scheduledNotificationTime;
   Locale? get locale => _locale;
 
   SettingsProvider() {
@@ -61,10 +57,6 @@ class SettingsProvider with ChangeNotifier {
       _ttsPitch = prefs.getDouble('tts_pitch') ?? 1.0;
       
       _notificationSound = prefs.getString('notification_sound');
-      _scheduledNotificationsEnabled = prefs.getBool('scheduled_notifications_enabled') ?? false;
-      final hour = prefs.getInt('scheduled_notification_hour') ?? 9;
-      final minute = prefs.getInt('scheduled_notification_minute') ?? 0;
-      _scheduledNotificationTime = TimeOfDay(hour: hour, minute: minute);
       
       // Locale yükle
       final localeCode = prefs.getString('locale');
@@ -163,20 +155,7 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> setScheduledNotificationsEnabled(bool enabled) async {
-    _scheduledNotificationsEnabled = enabled;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('scheduled_notifications_enabled', enabled);
-    notifyListeners();
-  }
 
-  Future<void> setScheduledNotificationTime(TimeOfDay time) async {
-    _scheduledNotificationTime = time;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('scheduled_notification_hour', time.hour);
-    await prefs.setInt('scheduled_notification_minute', time.minute);
-    notifyListeners();
-  }
 
   void setLocale(Locale? locale) async {
     _locale = locale;
@@ -200,8 +179,6 @@ class SettingsProvider with ChangeNotifier {
     _ttsRate = 0.3;
     _ttsPitch = 1.0;
     _notificationSound = null;
-    _scheduledNotificationsEnabled = false;
-    _scheduledNotificationTime = const TimeOfDay(hour: 9, minute: 0);
     
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('notifications_enabled', true);
@@ -214,9 +191,6 @@ class SettingsProvider with ChangeNotifier {
     await prefs.setDouble('tts_rate', 0.3);
     await prefs.setDouble('tts_pitch', 1.0);
     await prefs.remove('notification_sound');
-    await prefs.setBool('scheduled_notifications_enabled', false);
-    await prefs.setInt('scheduled_notification_hour', 9);
-    await prefs.setInt('scheduled_notification_minute', 0);
     
     notifyListeners();
   }

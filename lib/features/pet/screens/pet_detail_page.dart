@@ -306,32 +306,85 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final user = Provider.of<AuthProvider>(context, listen: false).user;
+    
+    // Düzenleme yetkisi kontrolü - sadece sahipler düzenleyebilir
     final isCreator = user?.uid == _pet.creator;
+    final isOwner = _pet.owners.contains(user?.uid);
+    final canEdit = isCreator || isOwner; // Sadece yaratıcı veya sahip olanlar düzenleyebilir
     
     return Stack(
       children: [
         Scaffold(
-          backgroundColor: const Color(0xFF1A1A1A),
+          // Klavye açılırken performans optimizasyonu
+          resizeToAvoidBottomInset: false,
           appBar: AppBar(
-            backgroundColor: const Color(0xFF1A1A1A),
+            backgroundColor: Colors.transparent,
             elevation: 0,
+            flexibleSpace: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: isDark
+                    ? [
+                        const Color(0xFF1A202C),
+                        const Color(0xFF2D3748),
+                        const Color(0xFF4A5568),
+                      ]
+                    : [
+                        const Color(0xFFF7FAFC),
+                        const Color(0xFFEDF2F7),
+                        const Color(0xFFE2E8F0),
+                      ],
+                ),
+              ),
+            ),
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              icon: Icon(
+                Icons.arrow_back, 
+                color: isDark ? Colors.white : Colors.black87
+              ),
               onPressed: () => Navigator.of(context).pop(),
             ),
-            title: Text(
-              _pet.name,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
+            title: Column(
+              children: [
+                const Text(
+                  'PatiTakip',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Text(
+                  _pet.name,
+                  style: TextStyle(
+                    fontSize: 20,
+                    color: isDark ? Colors.white : Colors.black87,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
             ),
             actions: [
               PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert, color: Colors.white),
+                icon: Icon(
+                  Icons.more_vert, 
+                  color: isDark ? Colors.white : Colors.black87
+                ),
                 onSelected: (value) async {
                   switch (value) {
                     case 'edit':
+                      if (!canEdit) {
+                        // Sahip olmayan kullanıcıya uyarı göster
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Bu hayvanı düzenleme yetkiniz yok. Sadece hayvanın sahipleri düzenleyebilir.'),
+                            backgroundColor: Colors.orange,
+                            duration: const Duration(seconds: 3),
+                          ),
+                        );
+                        return;
+                      }
                       final result = await Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -351,7 +404,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                   }
                 },
                 itemBuilder: (context) => [
-                  if (isCreator) // Sadece hayvanın yaratıcısı düzenleyebilir
+                  if (canEdit) // Düzenleme yetkisi olan kullanıcılar düzenleyebilir
                     PopupMenuItem<String>(
                       value: 'edit',
                       child: Row(
@@ -359,6 +412,23 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                           Icon(Icons.edit, color: Colors.blue.shade600),
                           const SizedBox(width: 12),
                           const Text('Hayvanı Düzenle'),
+                        ],
+                      ),
+                    )
+                  else // Sahip olmayan kullanıcılar için bilgilendirici menü öğesi
+                    PopupMenuItem<String>(
+                      enabled: false,
+                      child: Row(
+                        children: [
+                          Icon(Icons.lock, color: Colors.grey.shade600),
+                          const SizedBox(width: 12),
+                          Text(
+                            'Düzenleme Yetkisi Yok',
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -457,8 +527,8 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                                        end: Alignment.bottomRight,
                                        colors: isDark
                                            ? [
-                                               Colors.grey.shade800,
-                                               Colors.grey.shade700,
+                                               Colors.grey.shade800.withOpacity(0.9),
+                                               Colors.grey.shade700.withOpacity(0.9),
                                              ]
                                            : [
                                                Colors.white,
@@ -528,15 +598,53 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                                              // Hayvan adı
                                              Text(
                                                _pet.name,
-                                               style: const TextStyle(
+                                               style: TextStyle(
                                                  fontSize: 20,
                                                  fontWeight: FontWeight.bold,
-                                                 color: Colors.white,
+                                                 color: isDark ? Colors.white : Colors.black87,
                                                ),
                                              ),
+                                             const SizedBox(height: 8),
+                                             
+                                             // Sahiplik durumu göstergesi
+                                             Container(
+                                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                               decoration: BoxDecoration(
+                                                 color: canEdit 
+                                                   ? Colors.green.withOpacity(0.2)
+                                                   : Colors.orange.withOpacity(0.2),
+                                                 borderRadius: BorderRadius.circular(12),
+                                                 border: Border.all(
+                                                   color: canEdit 
+                                                     ? Colors.green.withOpacity(0.5)
+                                                     : Colors.orange.withOpacity(0.5),
+                                                   width: 1,
+                                                 ),
+                                               ),
+                                               child: Row(
+                                                 mainAxisSize: MainAxisSize.min,
+                                                 children: [
+                                                   Icon(
+                                                     canEdit ? Icons.check_circle : Icons.lock,
+                                                     size: 14,
+                                                     color: canEdit ? Colors.green : Colors.orange,
+                                                   ),
+                                                   const SizedBox(width: 4),
+                                                   Text(
+                                                     canEdit ? 'Sahipsiniz' : 'Sahip Değilsiniz',
+                                                     style: TextStyle(
+                                                       fontSize: 12,
+                                                       fontWeight: FontWeight.w500,
+                                                       color: canEdit ? Colors.green : Colors.orange,
+                                                     ),
+                                                   ),
+                                                 ],
+                                               ),
+                                             ),
+                                             
                                              const SizedBox(height: 12),
                                              
-                                                                                           // Bilgi etiketleri - Görüntüdeki gibi
+                                             // Bilgi etiketleri - Görüntüdeki gibi
                                               Wrap(
                                                 spacing: 8,
                                                 runSpacing: 8,
@@ -588,7 +696,9 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                                      child: Container(
                                        decoration: BoxDecoration(
                                          borderRadius: BorderRadius.circular(20),
-                                         color: Colors.grey.shade800,
+                                         color: isDark 
+                                           ? Colors.grey.shade800.withOpacity(0.9)
+                                           : Colors.white,
                                        ),
                                        child: Padding(
                                          padding: const EdgeInsets.all(20),
@@ -601,7 +711,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                                                style: TextStyle(
                                                  fontSize: 18,
                                                  fontWeight: FontWeight.w700,
-                                                 color: Colors.white,
+                                                 color: isDark ? Colors.white : Colors.black87,
                                                ),
                                              ),
                                              const SizedBox(height: 20),
@@ -612,6 +722,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                                                label: 'Açlık',
                                                value: satiety,
                                                color: Colors.orange,
+                                               isDark: isDark,
                                              ),
                                              const SizedBox(height: 16),
                                              _buildStatusRow(
@@ -619,6 +730,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                                                label: 'Mutluluk',
                                                value: happiness,
                                                color: Colors.pink,
+                                               isDark: isDark,
                                              ),
                                              const SizedBox(height: 16),
                                              _buildStatusRow(
@@ -626,6 +738,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                                                label: 'Enerji',
                                                value: energy,
                                                color: Colors.blue,
+                                               isDark: isDark,
                                              ),
                                              const SizedBox(height: 16),
                                              _buildStatusRow(
@@ -633,6 +746,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                                                label: 'Bakım',
                                                value: _pet.care,
                                                color: Colors.green,
+                                               isDark: isDark,
                                              ),
                                              
                                              const SizedBox(height: 20),
@@ -684,7 +798,9 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                                 child: Container(
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(20),
-                                    color: Colors.grey.shade800,
+                                    color: isDark 
+                                      ? Colors.grey.shade800.withOpacity(0.9)
+                                      : Colors.white,
                                   ),
                                   child: Padding(
                                     padding: const EdgeInsets.all(20),
@@ -708,12 +824,12 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                                               ),
                                             ),
                                             const SizedBox(width: 12),
-                                            const Text(
+                                            Text(
                                               'Hızlı İşlemler',
                                               style: TextStyle(
                                                 fontSize: 18,
                                                 fontWeight: FontWeight.w700,
-                                                color: Colors.white,
+                                                color: isDark ? Colors.white : Colors.black87,
                                               ),
                                             ),
                                           ],
@@ -779,7 +895,9 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                                  child: Container(
                                    decoration: BoxDecoration(
                                      borderRadius: BorderRadius.circular(20),
-                                     color: Colors.grey.shade800,
+                                     color: isDark 
+                                       ? Colors.grey.shade800.withOpacity(0.9)
+                                       : Colors.white,
                                    ),
                                    child: Padding(
                                      padding: const EdgeInsets.all(20),
@@ -802,13 +920,13 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                                                  size: 20,
                                                ),
                                              ),
-                                             const SizedBox(width: 12),
-                                             const Text(
+                                             const SizedBox(height: 12),
+                                             Text(
                                                'Aşı Bilgileri',
                                                style: TextStyle(
                                                  fontSize: 18,
                                                  fontWeight: FontWeight.w700,
-                                                 color: Colors.white,
+                                                 color: isDark ? Colors.white : Colors.black87,
                                                ),
                                              ),
                                            ],
@@ -878,13 +996,15 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                              const SizedBox(height: 20),
                              
                              // Eş Sahip Yönetimi Kartı
-                             Card(
+                                                          Card(
                                elevation: 8,
                                shadowColor: theme.colorScheme.primary.withOpacity(0.2),
                                child: Container(
                                  decoration: BoxDecoration(
                                    borderRadius: BorderRadius.circular(20),
-                                   color: Colors.grey.shade800,
+                                   color: isDark 
+                                     ? Colors.grey.shade800.withOpacity(0.9)
+                                     : Colors.white,
                                  ),
                                  child: Padding(
                                    padding: const EdgeInsets.all(20),
@@ -900,7 +1020,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                                              decoration: BoxDecoration(
                                                color: Colors.purple,
                                                borderRadius: BorderRadius.circular(8),
-                                             ),
+                                               ),
                                              child: const Icon(
                                                Icons.people,
                                                color: Colors.white,
@@ -908,12 +1028,12 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                                              ),
                                            ),
                                            const SizedBox(width: 12),
-                                           const Text(
+                                           Text(
                                              'Eş Sahip Yönetimi',
                                              style: TextStyle(
                                                fontSize: 18,
                                                fontWeight: FontWeight.w700,
-                                               color: Colors.white,
+                                               color: isDark ? Colors.white : Colors.black87,
                                              ),
                                            ),
                                          ],
@@ -1048,9 +1168,12 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
     required String label,
     required Color color,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.grey.shade700.withOpacity(0.8),
+        color: isDark 
+          ? Colors.grey.shade700.withOpacity(0.8)
+          : Colors.grey.shade200.withOpacity(0.8),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Material(
@@ -1079,16 +1202,16 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                 Expanded(
                   child: Text(
                     label,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black87,
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
-                const Icon(
+                Icon(
                   Icons.arrow_forward_ios,
-                  color: Colors.white,
+                  color: isDark ? Colors.white : Colors.black87,
                   size: 16,
                 ),
               ],
@@ -1105,9 +1228,12 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
     required String label,
     required Color color,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.grey.shade700.withOpacity(0.8),
+        color: isDark 
+          ? Colors.grey.shade700.withOpacity(0.8)
+          : Colors.grey.shade200.withOpacity(0.8),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Material(
@@ -1136,16 +1262,16 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                 Expanded(
                   child: Text(
                     label,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black87,
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
-                const Icon(
+                Icon(
                   Icons.arrow_forward_ios,
-                  color: Colors.white,
+                  color: isDark ? Colors.white : Colors.black87,
                   size: 16,
                 ),
               ],
@@ -1237,6 +1363,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
     required String label,
     required int value,
     required Color color,
+    required bool isDark,
   }) {
     return Row(
       children: [
@@ -1250,8 +1377,8 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
         // Etiket
         Text(
           label,
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: isDark ? Colors.white : Colors.black87,
             fontSize: 16,
             fontWeight: FontWeight.w500,
           ),
@@ -1262,7 +1389,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
           width: 120,
           height: 8,
           decoration: BoxDecoration(
-            color: Colors.grey.shade600,
+            color: isDark ? Colors.grey.shade600 : Colors.grey.shade300,
             borderRadius: BorderRadius.circular(4),
           ),
           child: FractionallySizedBox(
@@ -1300,21 +1427,29 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
     }
     final realtime = RealtimeService();
     final user = Provider.of<AuthProvider>(context, listen: false).user;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 24),
-        Text(AppLocalizations.of(context)!.diaryChat, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        Text(
+          AppLocalizations.of(context)!.diaryChat, 
+          style: TextStyle(
+            fontSize: 18, 
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87,
+          )
+        ),
         const SizedBox(height: 8),
         Container(
           height: 300,
           decoration: BoxDecoration(
-            color: Theme.of(context).brightness == Brightness.dark 
+            color: isDark 
                 ? Colors.grey.shade900 
                 : Colors.grey.shade50,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: Theme.of(context).brightness == Brightness.dark 
+              color: isDark 
                   ? Colors.grey.shade700 
                   : Colors.grey.shade300,
               width: 1.5,
@@ -1364,7 +1499,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                         'Mesajlar yükleniyor...',
                         style: TextStyle(
                           fontSize: 14,
-                          color: Colors.grey.shade600,
+                          color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
                         ),
                       ),
                     ],
@@ -1380,14 +1515,14 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                       Icon(
                         Icons.chat_bubble_outline,
                         size: 48,
-                        color: Colors.grey.shade400,
+                        color: isDark ? Colors.grey.shade500 : Colors.grey.shade400,
                       ),
                       const SizedBox(height: 16),
                       Text(
                         AppLocalizations.of(context)!.noMessages,
                         style: TextStyle(
                           fontSize: 16,
-                          color: Colors.grey.shade600,
+                          color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -1396,7 +1531,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                         'İlk mesajınızı yazmaya başlayın!',
                         style: TextStyle(
                           fontSize: 14,
-                          color: Colors.grey.shade500,
+                          color: isDark ? Colors.grey.shade400 : Colors.grey.shade500,
                         ),
                       ),
                     ],
@@ -1425,10 +1560,10 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                         ),
                         decoration: BoxDecoration(
                           color: isMe 
-                              ? Theme.of(context).brightness == Brightness.dark 
+                              ? isDark
                                   ? Colors.blue.shade700 
                                   : Colors.blue.shade100
-                              : Theme.of(context).brightness == Brightness.dark 
+                              : isDark
                                   ? Colors.grey.shade700 
                                   : Colors.grey.shade200,
                           borderRadius: BorderRadius.circular(16),
@@ -1450,10 +1585,10 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                                 fontSize: 15,
                                 fontWeight: FontWeight.w500,
                                 color: isMe 
-                                    ? Theme.of(context).brightness == Brightness.dark 
+                                    ? isDark
                                         ? Colors.white 
                                         : Colors.black87
-                                    : Theme.of(context).brightness == Brightness.dark 
+                                    : isDark
                                         ? Colors.white 
                                         : Colors.black87,
                               ),
@@ -1468,10 +1603,10 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: isMe 
-                                        ? Theme.of(context).brightness == Brightness.dark 
+                                        ? isDark
                                             ? Colors.blue.shade200 
                                             : Colors.blue.shade600
-                                        : Theme.of(context).brightness == Brightness.dark 
+                                        : isDark
                                             ? Colors.grey.shade400 
                                             : Colors.grey.shade600,
                                     fontWeight: FontWeight.w400,
@@ -1483,7 +1618,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                                       Icons.delete_outline, 
                                       size: 18, 
                                       color: isMe 
-                                          ? Theme.of(context).brightness == Brightness.dark 
+                                          ? isDark
                                               ? Colors.red.shade300 
                                               : Colors.red.shade600
                                           : Colors.red.shade400,
@@ -1570,20 +1705,20 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                               ? 'Kayıt yapılıyor...' 
                               : AppLocalizations.of(context)!.writeMessage,
                           hintStyle: TextStyle(
-                            color: Colors.grey.shade500,
+                            color: isDark ? Colors.grey.shade400 : Colors.grey.shade500,
                             fontSize: 14,
                           ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(24),
                             borderSide: BorderSide(
-                              color: Colors.grey.shade400,
+                              color: isDark ? Colors.grey.shade600 : Colors.grey.shade400,
                               width: 1.5,
                             ),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(24),
                             borderSide: BorderSide(
-                              color: Colors.grey.shade400,
+                              color: isDark ? Colors.grey.shade600 : Colors.grey.shade400,
                               width: 1.5,
                             ),
                           ),
@@ -1595,7 +1730,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                             ),
                           ),
                           filled: true,
-                          fillColor: Theme.of(context).brightness == Brightness.dark 
+                          fillColor: isDark 
                               ? Colors.grey.shade800 
                               : Colors.white,
                           contentPadding: const EdgeInsets.symmetric(
@@ -1605,7 +1740,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                         ),
                         style: TextStyle(
                           fontSize: 15,
-                          color: Theme.of(context).brightness == Brightness.dark 
+                          color: isDark 
                               ? Colors.white 
                               : Colors.black87,
                         ),
@@ -1859,7 +1994,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => const AIChatPage(),
+        builder: (context) => AIChatPage(pet: _pet),
       ),
     );
   }
@@ -1968,7 +2103,21 @@ class AIChatHistoryPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(AppLocalizations.of(context)!.chatHistory)),
+      appBar: AppBar(
+        title: Column(
+          children: [
+            const Text(
+              'PatiTakip',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+            ),
+            Text(
+              AppLocalizations.of(context)!.chatHistory,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        centerTitle: true,
+      ),
       body: const Center(child: Text('Sohbet geçmişi burada görünecek.')),
     );
   }
