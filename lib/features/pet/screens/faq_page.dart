@@ -273,9 +273,9 @@ class _FAQPageState extends State<FAQPage> with TickerProviderStateMixin {
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
+        backgroundColor: Colors.transparent, // Şeffaf app bar - sayfa arka planı ile uyumlu
         title: const Text('PatiTakip'),
         centerTitle: true,
-        backgroundColor: Colors.transparent,
         foregroundColor: themeProvider.getPrimaryTextColor(isDark),
         titleTextStyle: TextStyle(
           fontSize: 24,
@@ -290,8 +290,7 @@ class _FAQPageState extends State<FAQPage> with TickerProviderStateMixin {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      backgroundColor: Colors.transparent,
-      body: Container(
+              body: Container(
         decoration: BoxDecoration(
           gradient: themeProvider.getBackgroundGradient(isDark),
         ),

@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
 
 import 'package:pati_takip/features/pet/models/pet.dart';
 import 'package:pati_takip/services/firestore_service.dart';
+import 'package:pati_takip/providers/theme_provider.dart';
 
 class PetCoOwnerManagementPage extends StatefulWidget {
   final Pet pet;
@@ -297,9 +299,9 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
+        backgroundColor: Colors.transparent, // Şeffaf app bar - sayfa arka planı ile uyumlu
         title: Text('${widget.pet.name} - Eş Sahip Yönetimi'),
         centerTitle: true,
-        backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
         titleTextStyle: const TextStyle(
           fontSize: 24,
@@ -314,17 +316,10 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      backgroundColor: Colors.transparent,
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF0F1419),
-              Color(0xFF1A202C), 
-              Color(0xFF2D3748),
-            ],
+              body: Container(
+        decoration: BoxDecoration(
+          gradient: Provider.of<ThemeProvider>(context).getBackgroundGradient(
+            Theme.of(context).brightness == Brightness.dark
           ),
         ),
         child: SafeArea(

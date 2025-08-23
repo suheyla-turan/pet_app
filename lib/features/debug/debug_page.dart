@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'background_service_test_page.dart';
+import '../../providers/theme_provider.dart';
 
 class DebugPage extends StatelessWidget {
   const DebugPage({super.key});
@@ -10,7 +12,8 @@ class DebugPage extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Debug Menüsü'),
         centerTitle: true,
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.transparent, // Şeffaf app bar - sayfa arka planı ile uyumlu
+        elevation: 0,
         foregroundColor: Colors.white,
         titleTextStyle: const TextStyle(
           fontSize: 24,
@@ -21,17 +24,10 @@ class DebugPage extends StatelessWidget {
           color: Colors.white,
         ),
       ),
-      backgroundColor: Colors.transparent,
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF0F1419),
-              Color(0xFF1A202C), 
-              Color(0xFF2D3748),
-            ],
+              body: Container(
+        decoration: BoxDecoration(
+          gradient: Provider.of<ThemeProvider>(context).getBackgroundGradient(
+            Theme.of(context).brightness == Brightness.dark
           ),
         ),
         child: SafeArea(

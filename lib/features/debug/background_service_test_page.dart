@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/pet_provider.dart';
+import '../../../providers/theme_provider.dart';
 import '../../../services/background_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -38,7 +39,8 @@ class _BackgroundServiceTestPageState extends State<BackgroundServiceTestPage> {
       appBar: AppBar(
         title: const Text('Background Service Test'),
         centerTitle: true,
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.transparent, // Şeffaf app bar - sayfa arka planı ile uyumlu
+        elevation: 0,
         foregroundColor: Colors.white,
         titleTextStyle: const TextStyle(
           fontSize: 24,
@@ -53,17 +55,10 @@ class _BackgroundServiceTestPageState extends State<BackgroundServiceTestPage> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      backgroundColor: Colors.transparent,
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF0F1419),
-              Color(0xFF1A202C), 
-              Color(0xFF2D3748),
-            ],
+              body: Container(
+        decoration: BoxDecoration(
+          gradient: Provider.of<ThemeProvider>(context).getBackgroundGradient(
+            Theme.of(context).brightness == Brightness.dark
           ),
         ),
         child: SafeArea(

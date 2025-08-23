@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import 'package:pati_takip/features/pet/models/pet.dart';
 import 'package:pati_takip/providers/pet_provider.dart';
+import 'package:pati_takip/providers/theme_provider.dart';
 import 'package:pati_takip/services/notification_service.dart';
 import 'package:pati_takip/services/firestore_service.dart';
 import 'package:pati_takip/l10n/app_localizations.dart';
@@ -232,7 +233,7 @@ class _VetAppointmentPageState extends State<VetAppointmentPage> {
       appBar: AppBar(
         title: Text('${widget.pet.name} - Veteriner Randevusu'),
         foregroundColor: Colors.white,
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.transparent, // Şeffaf app bar - sayfa arka planı ile uyumlu
         elevation: 0,
         titleTextStyle: const TextStyle(
           fontSize: 24,
@@ -243,17 +244,10 @@ class _VetAppointmentPageState extends State<VetAppointmentPage> {
           color: Colors.white,
         ),
       ),
-      backgroundColor: Colors.transparent,
-      body: Container(
+              body: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              const Color(0xFF0F1419),
-              const Color(0xFF1A202C), 
-              const Color(0xFF2D3748),
-            ],
+          gradient: Provider.of<ThemeProvider>(context).getBackgroundGradient(
+            Theme.of(context).brightness == Brightness.dark
           ),
         ),
         child: SafeArea(

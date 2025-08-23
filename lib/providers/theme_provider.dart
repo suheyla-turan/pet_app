@@ -33,7 +33,7 @@ class ThemeProvider with ChangeNotifier {
       appBarTheme: const AppBarTheme(
         elevation: 0,
         centerTitle: true,
-        backgroundColor: Color(0xFF6B46C1), // Ana mor renk
+        backgroundColor: Colors.transparent, // Şeffaf app bar - ana menü gibi
         foregroundColor: Colors.white,
         titleTextStyle: TextStyle(
           fontSize: 24,
@@ -104,7 +104,7 @@ class ThemeProvider with ChangeNotifier {
       appBarTheme: const AppBarTheme(
         elevation: 0,
         centerTitle: true,
-        backgroundColor: Color(0xFF6B46C1), // Ana mor renk
+        backgroundColor: Colors.transparent, // Şeffaf app bar - ana menü gibi
         foregroundColor: Colors.white,
         titleTextStyle: TextStyle(
           fontSize: 24,

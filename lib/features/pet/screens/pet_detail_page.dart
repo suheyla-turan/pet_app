@@ -320,10 +320,9 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
         Scaffold(
           // Klavye açılırken performans optimizasyonu
           resizeToAvoidBottomInset: false,
-          backgroundColor: Colors.transparent,
           appBar: AppBar(
             elevation: 0,
-            backgroundColor: Colors.transparent,
+            backgroundColor: Colors.transparent, // Şeffaf app bar - sayfa arka planı ile uyumlu
             leading: IconButton(
               icon: Icon(
                 Icons.arrow_back, 
@@ -2306,6 +2305,8 @@ class AIChatHistoryPage extends StatelessWidget {
           ],
         ),
         centerTitle: true,
+        backgroundColor: Colors.transparent, // Şeffaf app bar - sayfa arka planı ile uyumlu
+        elevation: 0,
       ),
       body: Container(
         decoration: Provider.of<ThemeProvider>(context).getBackgroundDecoration(Theme.of(context).brightness == Brightness.dark),

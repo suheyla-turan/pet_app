@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/theme_provider.dart';
 import 'package:pati_takip/l10n/app_localizations.dart';
 
 class EmailVerificationScreen extends StatefulWidget {
@@ -21,7 +22,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
         title: const Text('E-posta Doğrulama'),
         centerTitle: true,
         elevation: 0,
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.transparent, // Şeffaf app bar - sayfa arka planı ile uyumlu
         foregroundColor: Colors.white,
         titleTextStyle: const TextStyle(
           fontSize: 24,
@@ -33,17 +34,10 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
         ),
         automaticallyImplyLeading: false,
       ),
-      backgroundColor: Colors.transparent,
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF0F1419),
-              Color(0xFF1A202C), 
-              Color(0xFF2D3748),
-            ],
+              body: Container(
+        decoration: BoxDecoration(
+          gradient: Provider.of<ThemeProvider>(context).getBackgroundGradient(
+            Theme.of(context).brightness == Brightness.dark
           ),
         ),
         child: SafeArea(

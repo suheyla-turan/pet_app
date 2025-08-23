@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/pet.dart';
 import 'package:pati_takip/services/notification_service.dart';
 import 'package:pati_takip/l10n/app_localizations.dart';
+import '../../../providers/theme_provider.dart';
 
 class VaccinePage extends StatefulWidget {
   final List<Vaccine> vaccines;
@@ -93,7 +95,8 @@ class _VaccinePageState extends State<VaccinePage> {
         appBar: AppBar(
           title: const Text('PatiTakip'),
           centerTitle: true,
-          backgroundColor: Colors.transparent,
+          backgroundColor: Colors.transparent, // Şeffaf app bar - sayfa arka planı ile uyumlu
+          elevation: 0,
           foregroundColor: Colors.white,
           titleTextStyle: const TextStyle(
             fontSize: 24,
@@ -110,17 +113,10 @@ class _VaccinePageState extends State<VaccinePage> {
             },
           ),
         ),
-        backgroundColor: Colors.transparent,
         body: Container(
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                const Color(0xFF0F1419),
-                const Color(0xFF1A202C), 
-                const Color(0xFF2D3748),
-              ],
+            gradient: Provider.of<ThemeProvider>(context).getBackgroundGradient(
+              Theme.of(context).brightness == Brightness.dark
             ),
           ),
           child: filteredVaccines.isEmpty

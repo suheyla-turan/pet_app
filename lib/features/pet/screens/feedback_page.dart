@@ -25,11 +25,10 @@ class _FeedbackPageState extends State<FeedbackPage> {
     return Scaffold(
       // Klavye açılırken performans optimizasyonu
       resizeToAvoidBottomInset: false,
-      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text('PatiTakip'),
         elevation: 0,
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.transparent, // Şeffaf app bar - sayfa arka planı ile uyumlu
         foregroundColor: themeProvider.getPrimaryTextColor(isDark),
         titleTextStyle: TextStyle(
           fontSize: 24,

@@ -7,7 +7,7 @@ class NotificationTestPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      
       appBar: AppBar(
         elevation: 0,
         title: Column(

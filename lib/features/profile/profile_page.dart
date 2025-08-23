@@ -86,9 +86,9 @@ class _ProfilePageState extends State<ProfilePage> {
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
+        backgroundColor: Colors.transparent, // Şeffaf app bar - sayfa arka planı ile uyumlu
         title: const Text('PatiTakip'),
         centerTitle: true,
-        backgroundColor: Colors.transparent,
         foregroundColor: themeProvider.getPrimaryTextColor(isDark),
         titleTextStyle: TextStyle(
           fontSize: 24,
@@ -395,14 +395,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
             fontWeight: FontWeight.w600,
           ),
         ),
-        backgroundColor: Colors.transparent,
         elevation: 0,
         iconTheme: IconThemeData(
           color: themeProvider.getPrimaryTextColor(isDark),
         ),
       ),
-      backgroundColor: Colors.transparent,
-      body: Container(
+              body: Container(
         decoration: BoxDecoration(
           gradient: themeProvider.getBackgroundGradient(isDark),
         ),

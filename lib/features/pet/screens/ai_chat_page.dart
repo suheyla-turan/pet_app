@@ -618,20 +618,20 @@ class _AIChatPageState extends State<AIChatPage> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFF1A1A1A),
-            Color(0xFF2C2C2C),
+            Color(0xFF2D1B69), // Daha koyu mor
+            Color(0xFF4C1D95), // Orta ton mor
           ],
         ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Colors.purple.withOpacity(0.3),
-          width: 1,
+          color: const Color(0xFF8B5CF6).withOpacity(0.4),
+          width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.purple.withOpacity(0.1),
-            blurRadius: 10,
-            spreadRadius: 0,
+            color: const Color(0xFF8B5CF6).withOpacity(0.2),
+            blurRadius: 15,
+            spreadRadius: 2,
           ),
         ],
       ),
@@ -644,16 +644,16 @@ class _AIChatPageState extends State<AIChatPage> {
                 width: 50,
                 height: 50,
                 decoration: BoxDecoration(
-                  color: Colors.purple.withOpacity(0.2),
+                  color: const Color(0xFF8B5CF6).withOpacity(0.3),
                   borderRadius: BorderRadius.circular(25),
                   border: Border.all(
-                    color: Colors.purple.withOpacity(0.5),
+                    color: const Color(0xFF8B5CF6).withOpacity(0.6),
                     width: 2,
                   ),
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.pets,
-                  color: Colors.purple,
+                  color: Color(0xFF8B5CF6),
                   size: 28,
                 ),
               ),
@@ -666,23 +666,26 @@ class _AIChatPageState extends State<AIChatPage> {
                       pet.name,
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 20,
+                        fontSize: 22,
                         fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
                       ),
                     ),
                     Text(
                       "$age yaşında $gender $type",
-                      style: TextStyle(
-                        color: Colors.grey.withOpacity(0.8),
-                        fontSize: 14,
+                      style: const TextStyle(
+                        color: Color(0xFFE2E8F0),
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                     if (pet.breed != null && pet.breed!.isNotEmpty)
                       Text(
                         "Cins: ${pet.breed!}",
-                        style: TextStyle(
-                          color: Colors.grey.withOpacity(0.8),
+                        style: const TextStyle(
+                          color: Color(0xFFCBD5E1),
                           fontSize: 14,
+                          fontWeight: FontWeight.w400,
                         ),
                       ),
                   ],
@@ -690,7 +693,7 @@ class _AIChatPageState extends State<AIChatPage> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           // Status indicators
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -699,25 +702,25 @@ class _AIChatPageState extends State<AIChatPage> {
                 icon: Icons.restaurant,
                 label: "Tokluk",
                 value: pet.satiety,
-                color: Colors.green,
+                color: const Color(0xFF10B981),
               ),
               _buildStatusIndicator(
                 icon: Icons.favorite,
                 label: "Mutluluk",
                 value: pet.happiness,
-                color: Colors.pink,
+                color: const Color(0xFFF472B6),
               ),
               _buildStatusIndicator(
                 icon: Icons.flash_on,
                 label: "Enerji",
                 value: pet.energy,
-                color: Colors.orange,
+                color: const Color(0xFFF59E0B),
               ),
               _buildStatusIndicator(
                 icon: Icons.cleaning_services,
                 label: "Bakım",
                 value: pet.care,
-                color: Colors.blue,
+                color: const Color(0xFF3B82F6),
               ),
             ],
           ),
@@ -737,23 +740,24 @@ class _AIChatPageState extends State<AIChatPage> {
         Icon(
           icon,
           color: color,
-          size: 20,
+          size: 22,
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 6),
         Text(
           label,
-          style: TextStyle(
-            color: Colors.grey.withOpacity(0.7),
-            fontSize: 10,
+          style: const TextStyle(
+            color: Color(0xFFE2E8F0),
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
           ),
         ),
-        const SizedBox(height: 2),
+        const SizedBox(height: 4),
         Container(
-          width: 30,
-          height: 4,
+          width: 35,
+          height: 5,
           decoration: BoxDecoration(
-            color: Colors.grey.withOpacity(0.3),
-            borderRadius: BorderRadius.circular(2),
+            color: const Color(0xFF475569).withOpacity(0.4),
+            borderRadius: BorderRadius.circular(3),
           ),
           child: FractionallySizedBox(
             alignment: Alignment.centerLeft,
@@ -761,7 +765,14 @@ class _AIChatPageState extends State<AIChatPage> {
             child: Container(
               decoration: BoxDecoration(
                 color: color,
-                borderRadius: BorderRadius.circular(2),
+                borderRadius: BorderRadius.circular(3),
+                boxShadow: [
+                  BoxShadow(
+                    color: color.withOpacity(0.4),
+                    blurRadius: 4,
+                    spreadRadius: 0,
+                  ),
+                ],
               ),
             ),
           ),
@@ -1168,94 +1179,124 @@ class _AIChatPageState extends State<AIChatPage> {
   // _buildQuickActionTile metodu kaldırıldı
 
   PreferredSizeWidget _buildEnhancedAppBar() {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    // Tema rengine göre metin rengini belirle
+    final textColor = isDark ? Colors.white : const Color(0xFF1F2937);
+    final subtitleColor = isDark ? const Color(0xFFE2E8F0) : const Color(0xFF6B7280);
+    final statusColor = isDark ? const Color(0xFF60A5FA) : const Color(0xFF3B82F6);
+    final statusColorAlt = isDark ? const Color(0xFF10B981) : const Color(0xFF059669);
+    
     return AppBar(
       elevation: 0,
       backgroundColor: Colors.transparent,
-      foregroundColor: Colors.white,
-      titleTextStyle: const TextStyle(
+      foregroundColor: textColor,
+      titleTextStyle: TextStyle(
         fontSize: 24,
         fontWeight: FontWeight.w700,
-        color: Colors.white,
+        color: textColor,
+        letterSpacing: 0.3,
       ),
-      iconTheme: const IconThemeData(
-        color: Colors.white,
+      iconTheme: IconThemeData(
+        color: textColor,
       ),
       leading: Container(
         margin: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.1),
+          color: const Color(0xFF8B5CF6).withOpacity(isDark ? 0.2 : 0.1),
           borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: const Color(0xFF8B5CF6).withOpacity(isDark ? 0.4 : 0.3),
+            width: 1,
+          ),
         ),
         child: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: textColor),
           onPressed: () => Navigator.pop(context),
         ),
       ),
-                title: Column(
+      title: Column(
+        children: [
+          Text(
+            'PatiTakip',
+            style: TextStyle(
+              color: subtitleColor,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              letterSpacing: 0.2,
+            ),
+          ),
+          Row(
             children: [
-              const Text(
-                'PatiTakip',
-                style: TextStyle(
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF8B5CF6), Color(0xFFEC4899)],
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: const Color(0xFF8B5CF6).withOpacity(isDark ? 0.6 : 0.5),
+                    width: 2,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF8B5CF6).withOpacity(isDark ? 0.3 : 0.2),
+                      blurRadius: 8,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.smart_toy,
                   color: Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
+                  size: 24,
                 ),
               ),
-              Row(
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.purple.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: Colors.purple.withOpacity(0.5),
-                        width: 2,
-                      ),
-                    ),
-                    child: const Icon(
-                      Icons.smart_toy,
-                      color: Colors.purple,
-                      size: 24,
+                  Text(
+                    widget.pet != null ? "${widget.pet!.name} için AI Asistan" : "AI Asistan",
+                    style: TextStyle(
+                      color: textColor,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.3,
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        widget.pet != null ? "${widget.pet!.name} için AI Asistan" : "AI Asistan",
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        _getChatStatusText(),
-                        style: TextStyle(
-                          color: _hasMeaningfulChat() ? Colors.blue : Colors.green,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
+                  Text(
+                    _getChatStatusText(),
+                    style: TextStyle(
+                      color: _hasMeaningfulChat() ? statusColor : statusColorAlt,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.2,
+                    ),
                   ),
                 ],
               ),
             ],
           ),
+        ],
+      ),
       actions: [
         Container(
           margin: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.1),
+            color: const Color(0xFF8B5CF6).withOpacity(isDark ? 0.2 : 0.1),
             borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: const Color(0xFF8B5CF6).withOpacity(isDark ? 0.4 : 0.3),
+              width: 1,
+            ),
           ),
           child: IconButton(
-            icon: const Icon(Icons.more_vert, color: Colors.white),
+            icon: Icon(Icons.more_vert, color: textColor),
             onPressed: _showChatHistory,
           ),
         ),
@@ -1276,7 +1317,7 @@ class _AIChatPageState extends State<AIChatPage> {
           // Pet info card if pet exists
           if (widget.pet != null) ...[
             _buildPetInfoCard(),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
           ],
           const SizedBox(height: 40),
           // Hero section with animated robot
@@ -1295,9 +1336,9 @@ class _AIChatPageState extends State<AIChatPage> {
               borderRadius: BorderRadius.circular(60),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF8B5CF6).withOpacity(0.4),
-                  blurRadius: 30,
-                  spreadRadius: 10,
+                  color: const Color(0xFF8B5CF6).withOpacity(0.5),
+                  blurRadius: 40,
+                  spreadRadius: 15,
                 ),
               ],
             ),
@@ -1318,6 +1359,7 @@ class _AIChatPageState extends State<AIChatPage> {
               color: Colors.white,
               fontSize: 28,
               fontWeight: FontWeight.bold,
+              letterSpacing: 0.5,
             ),
             textAlign: TextAlign.center,
           ),
@@ -1327,9 +1369,10 @@ class _AIChatPageState extends State<AIChatPage> {
                 ? "${widget.pet!.name} hakkında herhangi bir soru sorabilirsiniz"
                 : "Evcil hayvanınız hakkında herhangi bir soru sorabilirsiniz",
             style: const TextStyle(
-              color: Colors.grey,
+              color: Color(0xFFCBD5E1),
               fontSize: 16,
-              height: 1.5,
+              height: 1.6,
+              letterSpacing: 0.2,
             ),
             textAlign: TextAlign.center,
           ),
@@ -1378,9 +1421,9 @@ class _AIChatPageState extends State<AIChatPage> {
               borderRadius: BorderRadius.circular(28),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF8B5CF6).withOpacity(0.3),
-                  blurRadius: 20,
-                  spreadRadius: 5,
+                  color: const Color(0xFF8B5CF6).withOpacity(0.4),
+                  blurRadius: 25,
+                  spreadRadius: 8,
                 ),
               ],
             ),
@@ -1400,7 +1443,7 @@ class _AIChatPageState extends State<AIChatPage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.chat_bubble_outline, color: Colors.white, size: 24),
+                  const Icon(Icons.chat_bubble_outline, color: Colors.white, size: 24),
                   const SizedBox(width: 12),
                   Text(
                     widget.pet != null ? "${widget.pet!.name} ile Sohbete Başla" : "Sohbete Başla",
@@ -1408,6 +1451,7 @@ class _AIChatPageState extends State<AIChatPage> {
                       color: Colors.white,
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
+                      letterSpacing: 0.3,
                     ),
                   ),
                 ],
@@ -1419,10 +1463,13 @@ class _AIChatPageState extends State<AIChatPage> {
           const SizedBox(height: 20),
           TextButton.icon(
             onPressed: () => _showHelpDialog(),
-            icon: const Icon(Icons.help_outline, color: Colors.blue),
+            icon: const Icon(Icons.help_outline, color: Color(0xFF60A5FA)),
             label: const Text(
               'Yardım al',
-              style: TextStyle(color: Colors.blue),
+              style: TextStyle(
+                color: Color(0xFF60A5FA),
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
           
@@ -1431,13 +1478,13 @@ class _AIChatPageState extends State<AIChatPage> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.orange.withOpacity(0.1),
+              color: const Color(0xFFFEF3C7).withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.orange.withOpacity(0.3)),
+              border: Border.all(color: const Color(0xFFF59E0B).withOpacity(0.4)),
             ),
             child: Row(
               children: [
-                Icon(Icons.warning_amber, color: Colors.orange, size: 20),
+                const Icon(Icons.warning_amber, color: Color(0xFFF59E0B), size: 20),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -1445,8 +1492,8 @@ class _AIChatPageState extends State<AIChatPage> {
                     children: [
                       Text(
                         'Firebase Bağlantı Uyarısı',
-                        style: TextStyle(
-                          color: Colors.orange,
+                        style: const TextStyle(
+                          color: Color(0xFFF59E0B),
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                         ),
@@ -1454,8 +1501,8 @@ class _AIChatPageState extends State<AIChatPage> {
                       const SizedBox(height: 4),
                       Text(
                         'Veritabanı erişim izinleri kontrol ediliyor. Lütfen Firebase Console\'da güvenlik kurallarını güncelleyin.',
-                        style: TextStyle(
-                          color: Colors.orange.withOpacity(0.8),
+                        style: const TextStyle(
+                          color: Color(0xFFFCD34D),
                           fontSize: 12,
                         ),
                       ),
@@ -1475,13 +1522,20 @@ class _AIChatPageState extends State<AIChatPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          backgroundColor: const Color(0xFF2C2C2C),
+          backgroundColor: const Color(0xFF1E293B),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
           title: Row(
             children: [
-              Icon(Icons.help, color: Colors.blue, size: 28),
+              Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFF3B82F6).withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.all(8),
+                child: const Icon(Icons.help, color: Color(0xFF3B82F6), size: 28),
+              ),
               const SizedBox(width: 12),
               const Text(
                 'AI Chat Yardım',
@@ -1489,6 +1543,7 @@ class _AIChatPageState extends State<AIChatPage> {
                   color: Colors.white,
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
+                  letterSpacing: 0.3,
                 ),
               ),
             ],
@@ -1501,8 +1556,10 @@ class _AIChatPageState extends State<AIChatPage> {
                 const Text(
                   'AI Chat özelliğini kullanırken karşılaşabileceğiniz sorunlar:',
                   style: TextStyle(
-                    color: Colors.white70,
+                    color: Color(0xFFE2E8F0),
                     fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 0.2,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -1525,43 +1582,74 @@ class _AIChatPageState extends State<AIChatPage> {
                 ),
                 const SizedBox(height: 16),
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.red.withOpacity(0.3)),
+                    color: const Color(0xFFFEE2E2).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFEF4444).withOpacity(0.4)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.warning, color: Colors.red, size: 20),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFEF4444).withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            padding: const EdgeInsets.all(6),
+                            child: const Icon(Icons.warning, color: Color(0xFFEF4444), size: 20),
+                          ),
                           const SizedBox(width: 8),
                           Text(
                             'Firebase Güvenlik Kuralları',
-                            style: TextStyle(
-                              color: Colors.red,
+                            style: const TextStyle(
+                              color: Color(0xFFEF4444),
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 12),
                       Text(
                         'Eğer "Permission denied" hatası alıyorsanız, Firebase Console\'da güvenlik kurallarını güncellemeniz gerekiyor.',
-                        style: TextStyle(
-                          color: Colors.red.withOpacity(0.8),
+                        style: const TextStyle(
+                          color: Color(0xFFFCA5A5),
                           fontSize: 12,
+                          height: 1.4,
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Text(
-                        '1. Firebase Console\'a gidin\n2. Realtime Database → Rules\n3. Geçici olarak tüm erişime izin verin',
-                        style: TextStyle(
-                          color: Colors.red.withOpacity(0.8),
-                          fontSize: 11,
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1F2937),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: const Color(0xFF374151)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Çözüm Adımları:',
+                              style: const TextStyle(
+                                color: Color(0xFFFCA5A5),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              '1. Firebase Console\'a gidin\n2. Realtime Database → Rules\n3. Geçici olarak tüm erişime izin verin',
+                              style: const TextStyle(
+                                color: Color(0xFF9CA3AF),
+                                fontSize: 11,
+                                height: 1.5,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
@@ -1573,10 +1661,16 @@ class _AIChatPageState extends State<AIChatPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
+              style: TextButton.styleFrom(
+                backgroundColor: const Color(0xFF374151).withOpacity(0.3),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
               child: const Text(
                 'Kapat',
                 style: TextStyle(
-                  color: Colors.grey,
+                  color: Color(0xFF9CA3AF),
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
                 ),
@@ -1588,10 +1682,12 @@ class _AIChatPageState extends State<AIChatPage> {
                 _initializeServices(); // Servisleri yeniden başlat
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
+                backgroundColor: const Color(0xFF3B82F6),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
+                elevation: 2,
+                shadowColor: const Color(0xFF3B82F6).withOpacity(0.3),
               ),
               child: const Text(
                 'Yeniden Dene',
@@ -1599,6 +1695,7 @@ class _AIChatPageState extends State<AIChatPage> {
                   color: Colors.white,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
+                  letterSpacing: 0.2,
                 ),
               ),
             ),
@@ -1613,33 +1710,51 @@ class _AIChatPageState extends State<AIChatPage> {
     required String title,
     required String description,
   }) {
-    return Row(
-      children: [
-        Icon(icon, color: Colors.blue, size: 20),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              Text(
-                description,
-                style: TextStyle(
-                  color: Colors.grey[400],
-                  fontSize: 12,
-                ),
-              ),
-            ],
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF374151).withOpacity(0.3),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFF4B5563).withOpacity(0.3)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFF3B82F6).withOpacity(0.2),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            padding: const EdgeInsets.all(6),
+            child: Icon(icon, color: const Color(0xFF3B82F6), size: 20),
           ),
-        ),
-      ],
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  description,
+                  style: const TextStyle(
+                    color: Color(0xFF9CA3AF),
+                    fontSize: 12,
+                    height: 1.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -1654,17 +1769,17 @@ class _AIChatPageState extends State<AIChatPage> {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: const Color(0xFF1A1A1A),
+          color: const Color(0xFF1E293B),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: color.withOpacity(0.3),
-            width: 1,
+            color: color.withOpacity(0.4),
+            width: 1.5,
           ),
           boxShadow: [
             BoxShadow(
-              color: color.withOpacity(0.1),
-              blurRadius: 10,
-              spreadRadius: 0,
+              color: color.withOpacity(0.15),
+              blurRadius: 15,
+              spreadRadius: 2,
             ),
           ],
         ),
@@ -1676,6 +1791,10 @@ class _AIChatPageState extends State<AIChatPage> {
               decoration: BoxDecoration(
                 color: color.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(25),
+                border: Border.all(
+                  color: color.withOpacity(0.4),
+                  width: 1,
+                ),
               ),
               child: Icon(
                 icon,
@@ -1694,14 +1813,16 @@ class _AIChatPageState extends State<AIChatPage> {
                       color: Colors.white,
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
+                      letterSpacing: 0.2,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
                   Text(
                     subtitle,
-                    style: TextStyle(
-                      color: Colors.grey[400],
+                    style: const TextStyle(
+                      color: Color(0xFF94A3B8),
                       fontSize: 14,
+                      height: 1.4,
                     ),
                   ),
                 ],
@@ -1709,7 +1830,7 @@ class _AIChatPageState extends State<AIChatPage> {
             ),
             Icon(
               Icons.arrow_forward_ios,
-              color: Colors.grey[600],
+              color: const Color(0xFF64748B),
               size: 16,
             ),
           ],
@@ -1831,10 +1952,18 @@ class _AIChatPageState extends State<AIChatPage> {
         mainAxisAlignment: message.isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
         children: [
           if (!message.isUser) ...[
-            CircleAvatar(
-              radius: 16,
-              backgroundColor: Colors.purple,
-              child: const Icon(Icons.smart_toy, size: 16, color: Colors.white),
+            Container(
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF8B5CF6), Color(0xFFEC4899)],
+                ),
+                shape: BoxShape.circle,
+              ),
+              child: const CircleAvatar(
+                radius: 16,
+                backgroundColor: Colors.transparent,
+                child: Icon(Icons.smart_toy, size: 16, color: Colors.white),
+              ),
             ),
             const SizedBox(width: 8),
           ],
@@ -1842,8 +1971,25 @@ class _AIChatPageState extends State<AIChatPage> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: message.isUser ? Colors.purple : const Color(0xFF2C2C2C),
+                color: message.isUser 
+                    ? const Color(0xFF8B5CF6) 
+                    : const Color(0xFF1E293B),
                 borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: message.isUser 
+                      ? const Color(0xFF8B5CF6).withOpacity(0.3)
+                      : const Color(0xFF334155).withOpacity(0.5),
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: message.isUser 
+                        ? const Color(0xFF8B5CF6).withOpacity(0.2)
+                        : const Color(0xFF1E293B).withOpacity(0.3),
+                    blurRadius: 8,
+                    spreadRadius: 0,
+                  ),
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1864,12 +2010,12 @@ class _AIChatPageState extends State<AIChatPage> {
                               width: 200,
                               height: 150,
                               decoration: BoxDecoration(
-                                color: Colors.grey[800],
+                                color: const Color(0xFF475569),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: const Icon(
                                 Icons.image_not_supported,
-                                color: Colors.grey,
+                                color: Color(0xFF94A3B8),
                                 size: 40,
                               ),
                             );
@@ -1892,7 +2038,11 @@ class _AIChatPageState extends State<AIChatPage> {
                           ),
                           const Text(
                             "Sesli mesaj",
-                            style: TextStyle(color: Colors.white, fontSize: 14),
+                            style: TextStyle(
+                              color: Colors.white, 
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ],
                       ),
@@ -1908,18 +2058,26 @@ class _AIChatPageState extends State<AIChatPage> {
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 16,
+                            height: 1.5,
+                            letterSpacing: 0.2,
                           ),
                         ),
                       ),
                       // AI yanıtları için sesli okuma butonu
                       if (!message.isUser) ...[
                         const SizedBox(width: 8),
-                        IconButton(
-                          onPressed: _isSpeaking ? null : () => _speakAIResponse(message.text),
-                          icon: Icon(
-                            _isSpeaking ? Icons.volume_off : Icons.volume_up,
-                            color: _isSpeaking ? Colors.grey : Colors.white,
-                            size: 20,
+                        Container(
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF8B5CF6).withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: IconButton(
+                            onPressed: _isSpeaking ? null : () => _speakAIResponse(message.text),
+                            icon: Icon(
+                              _isSpeaking ? Icons.volume_off : Icons.volume_up,
+                              color: _isSpeaking ? const Color(0xFF94A3B8) : const Color(0xFF8B5CF6),
+                              size: 20,
+                            ),
                           ),
                         ),
                       ],
@@ -1931,10 +2089,18 @@ class _AIChatPageState extends State<AIChatPage> {
           ),
           if (message.isUser) ...[
             const SizedBox(width: 8),
-            CircleAvatar(
-              radius: 16,
-              backgroundColor: Colors.blue,
-              child: const Icon(Icons.person, size: 16, color: Colors.white),
+            Container(
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF3B82F6), Color(0xFF1D4ED8)],
+                ),
+                shape: BoxShape.circle,
+              ),
+              child: const CircleAvatar(
+                radius: 16,
+                backgroundColor: Colors.transparent,
+                child: Icon(Icons.person, size: 16, color: Colors.white),
+              ),
             ),
           ],
         ],
@@ -1947,17 +2113,29 @@ class _AIChatPageState extends State<AIChatPage> {
       margin: const EdgeInsets.only(bottom: 16),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 16,
-            backgroundColor: Colors.purple,
-            child: const Icon(Icons.smart_toy, size: 16, color: Colors.white),
+          Container(
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF8B5CF6), Color(0xFFEC4899)],
+              ),
+              shape: BoxShape.circle,
+            ),
+            child: const CircleAvatar(
+              radius: 16,
+              backgroundColor: Colors.transparent,
+              child: Icon(Icons.smart_toy, size: 16, color: Colors.white),
+            ),
           ),
           const SizedBox(width: 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: const Color(0xFF2C2C2C),
+              color: const Color(0xFF1E293B),
               borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: const Color(0xFF334155).withOpacity(0.5),
+                width: 1,
+              ),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -1980,8 +2158,15 @@ class _AIChatPageState extends State<AIChatPage> {
       width: 8,
       height: 8,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: const Color(0xFF8B5CF6),
         borderRadius: BorderRadius.circular(4),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF8B5CF6).withOpacity(0.4),
+            blurRadius: 4,
+            spreadRadius: 0,
+          ),
+        ],
       ),
     );
   }
@@ -2000,11 +2185,11 @@ class _AIChatPageState extends State<AIChatPage> {
         bottom: 16 + bottomPadding + viewInsets, // Alt padding + güvenli alan + klavye yüksekliği
       ),
       decoration: const BoxDecoration(
-        color: Color(0xFF1A1A1A),
+        color: Color(0xFF0F172A),
         border: Border(
           top: BorderSide(
-            color: Color(0xFF2C2C2C),
-            width: 1,
+            color: Color(0xFF334155),
+            width: 1.5,
           ),
         ),
       ),
@@ -2013,19 +2198,33 @@ class _AIChatPageState extends State<AIChatPage> {
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: const Color(0xFF2C2C2C),
+                color: const Color(0xFF1E293B),
                 borderRadius: BorderRadius.circular(25),
                 border: Border.all(
-                  color: Colors.purple.withOpacity(0.3),
-                  width: 1,
+                  color: const Color(0xFF8B5CF6).withOpacity(0.4),
+                  width: 1.5,
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF8B5CF6).withOpacity(0.1),
+                    blurRadius: 8,
+                    spreadRadius: 0,
+                  ),
+                ],
               ),
               child: TextField(
                 controller: _messageController,
-                style: const TextStyle(color: Colors.white),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  letterSpacing: 0.2,
+                ),
                 decoration: const InputDecoration(
                   hintText: "Mesajınızı yazın...",
-                  hintStyle: TextStyle(color: Colors.grey),
+                  hintStyle: TextStyle(
+                    color: Color(0xFF94A3B8),
+                    fontSize: 16,
+                  ),
                   border: InputBorder.none,
                   contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
                 ),
@@ -2036,8 +2235,16 @@ class _AIChatPageState extends State<AIChatPage> {
           const SizedBox(width: 12),
           Container(
             decoration: BoxDecoration(
-              color: _isRecording ? Colors.red.withOpacity(0.3) : Colors.purple.withOpacity(0.2),
+              color: _isRecording 
+                  ? const Color(0xFFEF4444).withOpacity(0.3) 
+                  : const Color(0xFF8B5CF6).withOpacity(0.2),
               borderRadius: BorderRadius.circular(25),
+              border: Border.all(
+                color: _isRecording 
+                    ? const Color(0xFFEF4444).withOpacity(0.5)
+                    : const Color(0xFF8B5CF6).withOpacity(0.4),
+                width: 1,
+              ),
             ),
             child: Stack(
               children: [
@@ -2045,7 +2252,7 @@ class _AIChatPageState extends State<AIChatPage> {
                   onPressed: _toggleVoiceRecording,
                   icon: Icon(
                     _isRecording ? Icons.stop : Icons.mic,
-                    color: _isRecording ? Colors.red : Colors.purple,
+                    color: _isRecording ? const Color(0xFFEF4444) : const Color(0xFF8B5CF6),
                     size: 24,
                   ),
                 ),
@@ -2057,8 +2264,15 @@ class _AIChatPageState extends State<AIChatPage> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: Colors.red,
+                        color: const Color(0xFFEF4444),
                         borderRadius: BorderRadius.circular(10),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFEF4444).withOpacity(0.4),
+                            blurRadius: 4,
+                            spreadRadius: 0,
+                          ),
+                        ],
                       ),
                       child: Text(
                         _mediaService.formatDuration(_recordingDuration),
@@ -2076,18 +2290,22 @@ class _AIChatPageState extends State<AIChatPage> {
           const SizedBox(width: 8),
           Container(
             decoration: BoxDecoration(
-              color: Colors.purple.withOpacity(0.2),
+              color: const Color(0xFF8B5CF6).withOpacity(0.2),
               borderRadius: BorderRadius.circular(25),
+              border: Border.all(
+                color: const Color(0xFF8B5CF6).withOpacity(0.4),
+                width: 1,
+              ),
             ),
             child: PopupMenuButton<ImageSource>(
-              icon: const Icon(Icons.camera_alt, color: Colors.purple, size: 24),
+              icon: const Icon(Icons.camera_alt, color: Color(0xFF8B5CF6), size: 24),
               onSelected: (ImageSource source) => _pickImage(source: source),
               itemBuilder: (context) => [
                 const PopupMenuItem(
                   value: ImageSource.camera,
                   child: Row(
                     children: [
-                      Icon(Icons.camera_alt, color: Colors.purple),
+                      Icon(Icons.camera_alt, color: Color(0xFF8B5CF6)),
                       SizedBox(width: 8),
                       Text('Kamera'),
                     ],
@@ -2097,7 +2315,7 @@ class _AIChatPageState extends State<AIChatPage> {
                   value: ImageSource.gallery,
                   child: Row(
                     children: [
-                      Icon(Icons.photo_library, color: Colors.purple),
+                      Icon(Icons.photo_library, color: Color(0xFF8B5CF6)),
                       SizedBox(width: 8),
                       Text('Galeri'),
                     ],
@@ -2116,6 +2334,13 @@ class _AIChatPageState extends State<AIChatPage> {
                 ],
               ),
               borderRadius: BorderRadius.circular(25),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF8B5CF6).withOpacity(0.3),
+                  blurRadius: 12,
+                  spreadRadius: 2,
+                ),
+              ],
             ),
             child: IconButton(
               onPressed: _sendMessage,
