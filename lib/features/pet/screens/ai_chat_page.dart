@@ -99,6 +99,16 @@ class _AIChatPageState extends State<AIChatPage> {
       print('✅ AI Chat servisleri başlatıldı');
     } catch (e) {
       print('❌ AI Chat servisleri başlatılamadı: $e');
+      // Kullanıcıya hata mesajı göster
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Servisler başlatılamadı: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
     }
   }
 
@@ -1232,7 +1242,7 @@ class _AIChatPageState extends State<AIChatPage> {
         left: 24,
         right: 24,
         top: 24,
-        bottom: 24, // Alt padding'i azalttım çünkü input section'da zaten var
+        bottom: 24,
       ),
       child: Column(
         children: [
@@ -1347,12 +1357,12 @@ class _AIChatPageState extends State<AIChatPage> {
                 ),
               ],
             ),
-                          child: ElevatedButton(
-                onPressed: () {
-                  if (widget.pet != null) {
-                    _askGeneralQuestion();
-                  }
-                },
+            child: ElevatedButton(
+              onPressed: () {
+                if (widget.pet != null) {
+                  _askGeneralQuestion();
+                }
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.transparent,
                 shadowColor: Colors.transparent,
@@ -1377,8 +1387,232 @@ class _AIChatPageState extends State<AIChatPage> {
               ),
             ),
           ),
+          
+          // Hata durumunda yardım butonu
+          const SizedBox(height: 20),
+          TextButton.icon(
+            onPressed: () => _showHelpDialog(),
+            icon: const Icon(Icons.help_outline, color: Colors.blue),
+            label: const Text(
+              'Yardım al',
+              style: TextStyle(color: Colors.blue),
+            ),
+          ),
+          
+          // Firebase bağlantı durumu
+          const SizedBox(height: 20),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.orange.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.orange.withOpacity(0.3)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.warning_amber, color: Colors.orange, size: 20),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Firebase Bağlantı Uyarısı',
+                        style: TextStyle(
+                          color: Colors.orange,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Veritabanı erişim izinleri kontrol ediliyor. Lütfen Firebase Console\'da güvenlik kurallarını güncelleyin.',
+                        style: TextStyle(
+                          color: Colors.orange.withOpacity(0.8),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
+    );
+  }
+
+  void _showHelpDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF2C2C2C),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              Icon(Icons.help, color: Colors.blue, size: 28),
+              const SizedBox(width: 12),
+              const Text(
+                'AI Chat Yardım',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'AI Chat özelliğini kullanırken karşılaşabileceğiniz sorunlar:',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _buildHelpItem(
+                  icon: Icons.error_outline,
+                  title: 'Erişim Hatası',
+                  description: 'Evcil hayvanınızın sahibi olduğunuzdan emin olun',
+                ),
+                const SizedBox(height: 8),
+                _buildHelpItem(
+                  icon: Icons.wifi_off,
+                  title: 'Bağlantı Sorunu',
+                  description: 'İnternet bağlantınızı kontrol edin',
+                ),
+                const SizedBox(height: 8),
+                _buildHelpItem(
+                  icon: Icons.refresh,
+                  title: 'Yeniden Deneme',
+                  description: 'Sayfayı yeniden yükleyin veya uygulamayı kapatıp açın',
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.red.withOpacity(0.3)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.warning, color: Colors.red, size: 20),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Firebase Güvenlik Kuralları',
+                            style: TextStyle(
+                              color: Colors.red,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Eğer "Permission denied" hatası alıyorsanız, Firebase Console\'da güvenlik kurallarını güncellemeniz gerekiyor.',
+                        style: TextStyle(
+                          color: Colors.red.withOpacity(0.8),
+                          fontSize: 12,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '1. Firebase Console\'a gidin\n2. Realtime Database → Rules\n3. Geçici olarak tüm erişime izin verin',
+                        style: TextStyle(
+                          color: Colors.red.withOpacity(0.8),
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text(
+                'Kapat',
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _initializeServices(); // Servisleri yeniden başlat
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text(
+                'Yeniden Dene',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildHelpItem({
+    required IconData icon,
+    required String title,
+    required String description,
+  }) {
+    return Row(
+      children: [
+        Icon(icon, color: Colors.blue, size: 20),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              Text(
+                description,
+                style: TextStyle(
+                  color: Colors.grey[400],
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 

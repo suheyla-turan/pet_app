@@ -4,6 +4,8 @@ import '../../providers/auth_provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:pati_takip/l10n/app_localizations.dart';
+import '../../widgets/email_verification_dialog.dart';
+import 'dart:async'; // Added for StreamSubscription
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -13,6 +15,29 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+  late StreamSubscription<bool> _emailVerificationSubscription;
+  
+  @override
+  void initState() {
+    super.initState();
+    _setupEmailVerificationListener();
+  }
+  
+  @override
+  void dispose() {
+    _emailVerificationSubscription.cancel();
+    super.dispose();
+  }
+  
+  void _setupEmailVerificationListener() {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    _emailVerificationSubscription = authProvider.emailVerificationStream.listen((isVerified) {
+      if (mounted) {
+        setState(() {});
+      }
+    });
+  }
+  
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
@@ -148,6 +173,125 @@ class _ProfilePageState extends State<ProfilePage> {
                             
                             const SizedBox(height: 40),
                             
+                            // E-posta Doğrulama Kartı
+                            if (!authProvider.isEmailVerified) ...[
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(24),
+                                decoration: BoxDecoration(
+                                  color: Colors.orange.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: Colors.orange.withOpacity(0.3),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Column(
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          Icons.warning_amber_rounded,
+                                          color: Colors.orange,
+                                          size: 24,
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Text(
+                                            'E-posta Doğrulanmamış',
+                                            style: TextStyle(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.orange.shade700,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Text(
+                                      'Hesabınızı güvenli hale getirmek için e-posta adresinizi doğrulamanız gerekiyor.',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.orange.shade600,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: ElevatedButton.icon(
+                                            onPressed: () => _showEmailVerificationDialog(context),
+                                            icon: const Icon(Icons.email, size: 18),
+                                            label: const Text('Doğrula'),
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: Colors.orange,
+                                              foregroundColor: Colors.white,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(12),
+                                              ),
+                                              padding: const EdgeInsets.symmetric(vertical: 12),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                            ],
+                            
+                            // E-posta Doğrulandı Bilgi Kartı
+                            if (authProvider.isEmailVerified) ...[
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(24),
+                                decoration: BoxDecoration(
+                                  color: Colors.green.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: Colors.green.withOpacity(0.3),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.verified,
+                                      color: Colors.green,
+                                      size: 24,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'E-posta Doğrulandı',
+                                            style: TextStyle(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.green.shade700,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            'Hesabınız güvenli ve tüm özellikler kullanılabilir.',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.green.shade600,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                            ],
+                            
                             // Alt Kısım - Butonlar
                             Column(
                               children: [
@@ -263,6 +407,14 @@ class _ProfilePageState extends State<ProfilePage> {
           ],
         );
       },
+    );
+  }
+  
+  void _showEmailVerificationDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const EmailVerificationDialog(),
     );
   }
   

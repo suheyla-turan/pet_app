@@ -39,6 +39,8 @@ class MediaService {
       print('✅ Media service başlatıldı');
     } catch (e) {
       print('❌ Media service başlatılamadı: $e');
+      // Kullanıcıya hata mesajı gönder
+      onError?.call('Medya servisi başlatılamadı. Lütfen uygulamayı yeniden başlatın.');
     }
   }
 
@@ -49,13 +51,15 @@ class MediaService {
       if (source == ImageSource.camera) {
         final status = await Permission.camera.request();
         if (status != PermissionStatus.granted) {
-          onError?.call('Kamera izni gerekli');
+          final errorMsg = 'Kamera izni gerekli. Ayarlardan kamera iznini verin.';
+          onError?.call(errorMsg);
           return null;
         }
       } else {
         final status = await Permission.photos.request();
         if (status != PermissionStatus.granted) {
-          onError?.call('Galeri izni gerekli');
+          final errorMsg = 'Galeri izni gerekli. Ayarlardan galeri iznini verin.';
+          onError?.call(errorMsg);
           return null;
         }
       }
@@ -71,10 +75,13 @@ class MediaService {
         final path = image.path;
         onImageSelected?.call(path);
         return path;
+      } else {
+        onError?.call('Görsel seçilmedi');
       }
     } catch (e) {
       print('❌ Resim seçme hatası: $e');
-      onError?.call('Resim seçilemedi: $e');
+      final errorMsg = 'Görsel seçilemedi: ${e.toString()}';
+      onError?.call(errorMsg);
     }
     return null;
   }
@@ -85,7 +92,8 @@ class MediaService {
       // Mikrofon izni kontrolü
       final status = await Permission.microphone.request();
       if (status != PermissionStatus.granted) {
-        onError?.call('Mikrofon izni gerekli');
+        final errorMsg = 'Mikrofon izni gerekli. Ayarlardan mikrofon iznini verin.';
+        onError?.call(errorMsg);
         return;
       }
 
@@ -119,7 +127,8 @@ class MediaService {
       print('🎤 Ses kayıt başlatıldı: $_currentRecordingPath');
     } catch (e) {
       print('❌ Ses kayıt başlatma hatası: $e');
-      onError?.call('Ses kayıt başlatılamadı: $e');
+      final errorMsg = 'Ses kayıt başlatılamadı: ${e.toString()}';
+      onError?.call(errorMsg);
     }
   }
 

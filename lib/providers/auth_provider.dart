@@ -181,4 +181,36 @@ class AuthProvider extends ChangeNotifier {
       _setLoading(false);
     }
   }
+
+  // E-posta doğrulama gönder
+  Future<bool> sendEmailVerification() async {
+    try {
+      _setLoading(true);
+      _setError(null);
+      
+      await _authService.sendEmailVerification();
+      return true;
+    } catch (e) {
+      _setError(_getErrorMessage(e.toString()));
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  // E-posta doğrulama durumunu kontrol et
+  bool get isEmailVerified => _authService.isEmailVerified();
+
+  // Kullanıcı bilgilerini yenile
+  Future<void> reloadUser() async {
+    try {
+      await _authService.reloadUser();
+      notifyListeners();
+    } catch (e) {
+      _setError(_getErrorMessage(e.toString()));
+    }
+  }
+
+  // E-posta doğrulama durumunu dinle
+  Stream<bool> get emailVerificationStream => _authService.emailVerificationStream;
 } 

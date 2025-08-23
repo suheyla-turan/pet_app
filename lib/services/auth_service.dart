@@ -233,4 +233,46 @@ class AuthService {
       rethrow;
     }
   }
+
+  // E-posta doğrulama gönder
+  Future<void> sendEmailVerification() async {
+    try {
+      final user = _auth.currentUser;
+      if (user != null && !user.emailVerified) {
+        await user.sendEmailVerification();
+        print('✅ E-posta doğrulama gönderildi');
+      } else if (user?.emailVerified == true) {
+        print('ℹ️ E-posta zaten doğrulanmış');
+      } else {
+        print('❌ Kullanıcı bulunamadı');
+      }
+    } catch (e) {
+      print('❌ E-posta doğrulama gönderme hatası: $e');
+      rethrow;
+    }
+  }
+
+  // E-posta doğrulama durumunu kontrol et
+  bool isEmailVerified() {
+    final user = _auth.currentUser;
+    return user?.emailVerified ?? false;
+  }
+
+  // E-posta doğrulama durumunu yenile
+  Future<void> reloadUser() async {
+    try {
+      final user = _auth.currentUser;
+      if (user != null) {
+        await user.reload();
+        print('✅ Kullanıcı bilgileri yenilendi');
+      }
+    } catch (e) {
+      print('❌ Kullanıcı yenileme hatası: $e');
+    }
+  }
+
+  // E-posta doğrulama durumunu dinle
+  Stream<bool> get emailVerificationStream {
+    return _auth.authStateChanges().map((user) => user?.emailVerified ?? false);
+  }
 } 

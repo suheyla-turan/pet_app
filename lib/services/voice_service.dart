@@ -34,7 +34,6 @@ class VoiceService {
       
       // Türkçe yoksa İngilizce kullan
       if (languages != null && !languages.contains("tr-TR")) {
-        // TODO: Inject localization here for TTS language not found
         print('Turkish TTS language not found, using English instead');
         await _flutterTts.setLanguage("en-US");
       }
@@ -64,9 +63,10 @@ class VoiceService {
 
       print('✅ Sesli konuşma servisi başlatıldı');
     } catch (e) {
-      // TODO: Inject localization here for TTS service failed
       print('Voice service could not be started: $e');
       _isSpeaking = false; // Ensure _isSpeaking is false on failure
+      // Kullanıcıya hata mesajı gönder
+      throw Exception('Sesli konuşma servisi başlatılamadı: ${e.toString()}');
     }
   }
 
