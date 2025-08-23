@@ -43,6 +43,46 @@ class _ProfilePageState extends State<ProfilePage> {
     final authProvider = Provider.of<AuthProvider>(context);
     final user = authProvider.user;
     
+    // E-posta doğrulanmamış kullanıcıları kontrol et
+    if (user != null && !user.emailVerified) {
+      // E-posta doğrulanmamış kullanıcıları otomatik olarak çıkış yap
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        authProvider.signOutUnverifiedUser();
+      });
+      return Scaffold(
+        appBar: AppBar(
+          title: Text('E-posta Doğrulama Gerekli'),
+          centerTitle: true,
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.mark_email_unread_outlined, size: 64, color: Colors.orange),
+              SizedBox(height: 16),
+              Text(
+                'E-posta adresinizi doğrulamanız gerekiyor',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Giriş ekranına yönlendiriliyorsunuz...',
+                style: TextStyle(color: Colors.grey[600]),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    
+    if (user == null) {
+      // Kullanıcı null ise (çıkış yapılmışsa) bu sayfa render edilmemeli
+      // RootPage widget'ı otomatik olarak OnboardingPage'i gösterecek
+      // Bu durumda boş bir container döndür, RootPage yönlendirmeyi yapacak
+      return Container();
+    }
+    
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     

@@ -10,7 +10,8 @@ import 'package:pati_takip/features/pet/widgets/progress_indicator.dart';
 import 'package:pati_takip/features/pet/screens/vaccine_page.dart';
 import 'package:pati_takip/features/pet/screens/pet_form_page.dart';
 import 'package:pati_takip/features/pet/screens/ai_chat_page.dart';
-import 'package:pati_takip/features/pet/screens/co_owner_management_page.dart';
+import 'package:pati_takip/features/pet/screens/pet_co_owner_management_page.dart';
+// Eş sahip yönetimi import'u kaldırıldı - Ana menüdeki eşsahip yönetimi kullanılıyor
 
 import 'package:pati_takip/providers/pet_provider.dart';
 import 'package:pati_takip/services/notification_service.dart';
@@ -995,8 +996,10 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                              
                              const SizedBox(height: 20),
                              
-                             // Eş Sahip Yönetimi Kartı
-                                                          Card(
+                             // Eş Sahip Yönetimi Kartı kaldırıldı - Ana menüdeki eşsahip yönetimi kullanılıyor
+                            
+                            // Eş Sahip Yönetimi Butonu
+                             Card(
                                elevation: 8,
                                shadowColor: theme.colorScheme.primary.withOpacity(0.2),
                                child: Container(
@@ -1040,26 +1043,43 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                                        ),
                                        const SizedBox(height: 20),
                                        
-                                       // Eş sahip yönetimi butonu
+                                       // Açıklama
+                                       Text(
+                                         'Hayvanınızın eş sahiplerini yönetin, yeni eş sahip ekleyin ve mesaj gönderin.',
+                                         style: TextStyle(
+                                           color: isDark ? Colors.grey[400] : Colors.grey[600],
+                                           fontSize: 14,
+                                         ),
+                                       ),
+                                       const SizedBox(height: 20),
+                                       
+                                       // Eş Sahip Yönetimi Butonu
                                        SizedBox(
                                          width: double.infinity,
-                                         child: _buildQuickActionButton(
+                                         child: ElevatedButton.icon(
                                            onPressed: () {
                                              Navigator.push(
                                                context,
                                                MaterialPageRoute(
-                                                 builder: (_) => CoOwnerManagementPage(pet: _pet),
+                                                 builder: (context) => PetCoOwnerManagementPage(pet: _pet),
                                                ),
                                              );
                                            },
-                                           icon: Icons.people,
-                                           label: 'Eş Sahip Yönetimi',
-                                           color: Colors.purple,
+                                           icon: const Icon(Icons.people, size: 20),
+                                           label: const Text(
+                                             'Eş Sahip Yönetimi',
+                                             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                                           ),
+                                           style: ElevatedButton.styleFrom(
+                                             backgroundColor: Colors.purple,
+                                             foregroundColor: Colors.white,
+                                             padding: const EdgeInsets.symmetric(vertical: 16),
+                                             shape: RoundedRectangleBorder(
+                                               borderRadius: BorderRadius.circular(12),
+                                             ),
+                                           ),
                                          ),
                                        ),
-                                       
-                                       // Mevcut eş sahip bilgileri
-
                                      ],
                                    ),
                                  ),
@@ -1067,9 +1087,9 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                              ),
                              
                              const SizedBox(height: 20),
-                            
-                            // Günlük Notları (Pet Chat) kısmı tekrar eklendi
-                              _buildPetChat(),
+                             
+                             // Günlük Notları (Pet Chat) kısmı tekrar eklendi
+                             _buildPetChat(),
                               
                               const SizedBox(height: 20),
                               
@@ -2069,6 +2089,8 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
       }
     }
   }
+
+  // Eş Sahip Yönetimi metodları kaldırıldı - Artık ayrı sayfada yapılıyor
 
 
 

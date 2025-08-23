@@ -173,6 +173,117 @@ class NotificationService {
     );
   }
 
+  /// Eş sahip istek bildirimi
+  static Future<void> showCoOwnerRequestNotification(String petName, String requesterName, {String? customSound}) async {
+    await initialize();
+    
+    final androidDetails = AndroidNotificationDetails(
+      'request_channel',
+      'Eş Sahip İstekleri',
+      channelDescription: 'Eş sahip olma istekleri',
+      importance: Importance.high,
+      priority: Priority.high,
+      icon: 'paw_notification_icon',
+      largeIcon: const DrawableResourceAndroidBitmap('@mipmap/launcher_icon'),
+      color: const Color(0xFF10B981), // Yeşil renk (istek için)
+      showWhen: true,
+      when: DateTime.now().millisecondsSinceEpoch,
+    );
+    
+    final iosDetails = DarwinNotificationDetails(
+      sound: customSound != null ? '$customSound.wav' : null,
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+    
+    final details = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+
+    await _notifications.show(
+      5,
+      '🤝 Eş Sahip İsteği',
+      '$requesterName, $petName\'a eş sahip olmak istiyor',
+      details,
+    );
+  }
+
+  /// Eş sahip istek kabul bildirimi
+  static Future<void> showCoOwnerRequestAcceptedNotification(String petName, String acceptedUserName, {String? customSound}) async {
+    await initialize();
+    
+    final androidDetails = AndroidNotificationDetails(
+      'request_accepted_channel',
+      'İstek Kabul Bildirimleri',
+      channelDescription: 'Eş sahip isteklerinin kabul edilme bildirimleri',
+      importance: Importance.defaultImportance,
+      priority: Priority.defaultPriority,
+      icon: 'paw_notification_icon',
+      largeIcon: const DrawableResourceAndroidBitmap('@mipmap/launcher_icon'),
+      color: const Color(0xFF10B981), // Yeşil renk
+      showWhen: true,
+      when: DateTime.now().millisecondsSinceEpoch,
+    );
+    
+    final iosDetails = DarwinNotificationDetails(
+      sound: customSound != null ? '$customSound.wav' : null,
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+    
+    final details = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+
+    await _notifications.show(
+      6,
+      '✅ İstek Kabul Edildi',
+      '$acceptedUserName, $petName\'a eş sahip olma isteğinizi kabul etti',
+      details,
+    );
+  }
+
+  /// Eş sahip istek red bildirimi
+  static Future<void> showCoOwnerRequestRejectedNotification(String petName, String rejectedUserName, {String? customSound}) async {
+    await initialize();
+    
+    final androidDetails = AndroidNotificationDetails(
+      'request_rejected_channel',
+      'İstek Red Bildirimleri',
+      channelDescription: 'Eş sahip isteklerinin reddedilme bildirimleri',
+      importance: Importance.defaultImportance,
+      priority: Priority.defaultPriority,
+      icon: 'paw_notification_icon',
+      largeIcon: const DrawableResourceAndroidBitmap('@mipmap/launcher_icon'),
+      color: const Color(0xFFEF4444), // Kırmızı renk
+      showWhen: true,
+      when: DateTime.now().millisecondsSinceEpoch,
+    );
+    
+    final iosDetails = DarwinNotificationDetails(
+      sound: customSound != null ? '$customSound.wav' : null,
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+    
+    final details = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+
+    await _notifications.show(
+      7,
+      '❌ İstek Reddedildi',
+      '$rejectedUserName, $petName\'a eş sahip olma isteğinizi reddetti',
+      details,
+    );
+  }
+
   /// Düşük değer bildirimi (mevcut)
   static Future<void> showLowValueNotification(String petName, String valueType, {String? customSound}) async {
     await initialize();

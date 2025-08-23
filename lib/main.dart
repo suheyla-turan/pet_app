@@ -9,6 +9,7 @@ import 'providers/theme_provider.dart';
 import 'providers/settings_provider.dart';
 import 'providers/auth_provider.dart';
 import 'features/onboarding/onboarding_page.dart';
+import 'features/auth/email_verification_screen.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
@@ -123,9 +124,28 @@ class RootPage extends StatelessWidget {
         if (authProvider.isLoading) {
           return const Center(child: CircularProgressIndicator());
         }
-        if (!authProvider.isAuthenticated) {
-          return OnboardingPage();
+        
+        // Kullanıcı null ise (çıkış yapılmışsa) direkt giriş ekranına yönlendir
+        if (authProvider.user == null) {
+          return OnboardingPage(initialPage: 4); // 4. sayfa giriş ekranı
         }
+        
+        // Kullanıcı giriş yapmış ama e-posta doğrulanmamış
+        if (authProvider.isLoggedInButNotVerified) {
+          // E-posta doğrulanmamış kullanıcıları otomatik olarak çıkış yap
+          // Bu sayede giriş ekranına yönlendirilirler
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            authProvider.signOutUnverifiedUser();
+          });
+          return EmailVerificationScreen();
+        }
+        
+        // Kullanıcı giriş yapmamış veya çıkış yapmış
+        if (!authProvider.isAuthenticated) {
+          return OnboardingPage(initialPage: 4); // 4. sayfa giriş ekranı
+        }
+        
+        // Kullanıcı giriş yapmış ve e-posta doğrulanmış
         return PetListPage();
       },
     );

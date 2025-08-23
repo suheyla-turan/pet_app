@@ -6,15 +6,23 @@ import 'package:provider/provider.dart';
 import 'package:pati_takip/l10n/app_localizations.dart';
 
 class OnboardingPage extends StatefulWidget {
-  const OnboardingPage({super.key});
+  final int initialPage;
+  const OnboardingPage({super.key, this.initialPage = 0});
 
   @override
   State<OnboardingPage> createState() => _OnboardingPageState();
 }
 
 class _OnboardingPageState extends State<OnboardingPage> {
-  final _pageController = PageController();
+  late PageController _pageController;
   int _pageIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController(initialPage: widget.initialPage);
+    _pageIndex = widget.initialPage;
+  }
 
   @override
   void dispose() {
@@ -372,6 +380,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             final success = await authProvider.register(email: email, password: password, name: name);
                             if (success && context.mounted) {
                               FocusScope.of(context).unfocus();
+                              // Başarı mesajı göster ve e-posta doğrulama gerekliliğini belirt
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('✅ Kayıt başarılı! E-posta doğrulama bağlantısı gönderildi. Lütfen e-postanızı kontrol edin ve doğrulama yapın.'),
+                                  backgroundColor: Colors.green[600],
+                                  duration: Duration(seconds: 8),
+                                  action: SnackBarAction(
+                                    label: 'Tamam',
+                                    textColor: Colors.white,
+                                    onPressed: () {
+                                      ScaffoldMessenger.of(context).removeCurrentSnackBar();
+                                    },
+                                  ),
+                                ),
+                              );
+                              
+                              // Form alanlarını temizle
+                              setState(() {
+                                email = '';
+                                password = '';
+                                name = '';
+                              });
                             }
                           }
                         },

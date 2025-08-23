@@ -44,6 +44,7 @@ class AuthService {
           'email': email,
           'createdAt': FieldValue.serverTimestamp(),
           'photoURL': null,
+          'emailVerified': false, // E-posta doğrulama durumu ekle
         });
         print('✅ Firestore kayıt başarılı');
       } catch (firestoreError) {
@@ -51,8 +52,22 @@ class AuthService {
         // Firestore hatası kritik değil, devam et
       }
 
+      // E-posta doğrulama gönder
+      try {
+        await result.user!.sendEmailVerification();
+        print('✅ E-posta doğrulama gönderildi');
+      } catch (verificationError) {
+        print('⚠️ E-posta doğrulama gönderme hatası: $verificationError');
+      }
+
       // Display name güncellemesini daha sonra yap
       _updateDisplayNameLater(result.user!, name);
+
+      // Kayıt başarılı olduktan sonra otomatik olarak çıkış yap
+      // Böylece kullanıcı giriş ekranına yönlendirilir
+      await Future.delayed(Duration(milliseconds: 1000)); // Kısa bir bekleme
+      await _auth.signOut();
+      print('✅ Kayıt sonrası otomatik çıkış yapıldı, giriş ekranına yönlendiriliyor');
 
       print('✅ Kayıt işlemi tamamlandı');
       return result;
@@ -82,8 +97,10 @@ class AuthService {
               print('⚠️ Firestore kayıt hatası (ikinci deneme): $firestoreError');
             }
             
-            // Başarılı olarak kabul et
-            print('✅ PigeonUserDetails hatası atlandı, kayıt başarılı');
+            // Başarılı olarak kabul et ve çıkış yap
+            await Future.delayed(Duration(milliseconds: 1000));
+            await _auth.signOut();
+            print('✅ PigeonUserDetails hatası atlandı, kayıt başarılı ve çıkış yapıldı');
             return null; // Kullanıcı zaten oluşturuldu, null döndür
           }
         } catch (checkError) {
@@ -114,12 +131,37 @@ class AuthService {
     required String password,
   }) async {
     try {
-      return await _auth.signInWithEmailAndPassword(
+      final result = await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
+      
+      // E-posta doğrulama kontrolü
+      if (result.user != null && !result.user!.emailVerified) {
+        // E-posta doğrulanmamışsa oturumu kapat
+        await _auth.signOut();
+        throw FirebaseAuthException(
+          code: 'email-not-verified',
+          message: 'E-posta adresiniz henüz doğrulanmamış. Lütfen e-postanızı kontrol edin.',
+        );
+      }
+      
+      return result;
     } catch (e) {
       print('❌ Giriş hatası: $e');
+      
+      // Yanlış şifre veya kullanıcı bulunamadı durumunda mevcut oturumu temizle
+      if (e.toString().contains('wrong-password') || e.toString().contains('user-not-found')) {
+        try {
+          if (_auth.currentUser != null) {
+            await _auth.signOut();
+            print('✅ Yanlış giriş bilgileri nedeniyle mevcut oturum temizlendi');
+          }
+        } catch (signOutError) {
+          print('⚠️ Oturum temizleme hatası: $signOutError');
+        }
+      }
+      
       rethrow;
     }
   }
@@ -271,8 +313,94 @@ class AuthService {
     }
   }
 
+  // E-posta doğrulandıktan sonra otomatik çıkış yap
+  Future<void> signOutAfterVerification() async {
+    try {
+      final user = _auth.currentUser;
+      if (user != null && user.emailVerified) {
+        // E-posta doğrulanmışsa Firestore'u güncelle
+        await updateEmailVerificationStatus();
+        
+        // Kısa bir bekleme sonrası çıkış yap
+        await Future.delayed(Duration(seconds: 2));
+        await _auth.signOut();
+        print('✅ E-posta doğrulama sonrası otomatik çıkış yapıldı, giriş ekranına yönlendiriliyor');
+      }
+    } catch (e) {
+      print('❌ E-posta doğrulama sonrası çıkış hatası: $e');
+    }
+  }
+
+  // Doğrulanmamış e-posta ile giriş yapmaya çalışan kullanıcıyı otomatik çıkış yap
+  Future<void> signOutUnverifiedUser() async {
+    try {
+      final user = _auth.currentUser;
+      if (user != null && !user.emailVerified) {
+        print('⚠️ Doğrulanmamış e-posta ile giriş yapmaya çalışıldı, otomatik çıkış yapılıyor');
+        await _auth.signOut();
+        print('✅ Doğrulanmamış kullanıcı otomatik çıkış yapıldı, giriş ekranına yönlendiriliyor');
+      }
+    } catch (e) {
+      print('❌ Doğrulanmamış kullanıcı çıkış hatası: $e');
+    }
+  }
+
   // E-posta doğrulama durumunu dinle
   Stream<bool> get emailVerificationStream {
     return _auth.authStateChanges().map((user) => user?.emailVerified ?? false);
+  }
+
+  // Kullanıcının uygulamaya erişim izni var mı kontrol et
+  bool canUserAccessApp() {
+    final user = _auth.currentUser;
+    return user != null && user.emailVerified;
+  }
+
+  // Uygulama açıldığında e-posta doğrulama durumunu kontrol et
+  Future<void> checkEmailVerificationOnAppStart() async {
+    try {
+      final user = _auth.currentUser;
+      if (user != null && !user.emailVerified) {
+        print('⚠️ Uygulama başlangıcında: E-posta doğrulanmamış, otomatik çıkış yapılıyor');
+        await _auth.signOut();
+        print('✅ Uygulama başlangıcında doğrulanmamış kullanıcı çıkış yapıldı');
+      }
+    } catch (e) {
+      print('❌ Uygulama başlangıcında e-posta doğrulama kontrol hatası: $e');
+    }
+  }
+
+  // E-posta doğrulama durumunu güncelle (Firestore'da)
+  Future<void> updateEmailVerificationStatus() async {
+    try {
+      final user = _auth.currentUser;
+      if (user != null && user.emailVerified) {
+        await _firestore.collection('profiller').doc(user.uid).update({
+          'emailVerified': true,
+          'emailVerifiedAt': FieldValue.serverTimestamp(),
+        });
+        print('✅ Firestore e-posta doğrulama durumu güncellendi');
+      }
+    } catch (e) {
+      print('⚠️ Firestore e-posta doğrulama durumu güncelleme hatası: $e');
+    }
+  }
+
+  // Kullanıcı bilgilerini yenile ve e-posta doğrulama durumunu kontrol et
+  Future<void> reloadAndCheckEmailVerification() async {
+    try {
+      final user = _auth.currentUser;
+      if (user != null) {
+        await user.reload();
+        print('✅ Kullanıcı bilgileri yenilendi');
+        
+        // E-posta doğrulandıysa Firestore'u güncelle
+        if (user.emailVerified) {
+          await updateEmailVerificationStatus();
+        }
+      }
+    } catch (e) {
+      print('❌ Kullanıcı yenileme ve e-posta doğrulama kontrol hatası: $e');
+    }
   }
 } 

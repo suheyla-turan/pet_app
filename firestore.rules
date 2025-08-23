@@ -1,0 +1,35 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // E-posta doğrulanmış kullanıcılar için genel kural
+    function isEmailVerified() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+    
+    // Profil bilgileri - sadece e-posta doğrulanmış kullanıcılar
+    match /profiller/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if request.auth != null && request.auth.uid == userId && isEmailVerified();
+    }
+    
+    // Hayvan bilgileri - sadece e-posta doğrulanmış kullanıcılar
+    match /hayvanlar/{petId} {
+      allow read, write: if isEmailVerified();
+    }
+    
+    // Ortak sahip istekleri - sadece e-posta doğrulanmış kullanıcılar
+    match /co_owner_requests/{requestId} {
+      allow read, write: if isEmailVerified();
+    }
+    
+    // Pet mesajları - sadece e-posta doğrulanmış kullanıcılar
+    match /pet_messages/{petId} {
+      allow read, write: if isEmailVerified();
+    }
+    
+    // Diğer tüm belgeler - sadece e-posta doğrulanmış kullanıcılar
+    match /{document=**} {
+      allow read, write: if isEmailVerified();
+    }
+  }
+}

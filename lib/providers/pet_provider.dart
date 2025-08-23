@@ -183,6 +183,16 @@ class PetProvider with ChangeNotifier {
     }
   }
 
+  /// Eş sahip isteği kabul edildikten sonra hayvanları yeniden yükle
+  Future<void> refreshPetsAfterCoOwnerAccept() async {
+    try {
+      await loadPets();
+      print('✅ Eş sahip kabulünden sonra hayvanlar yenilendi');
+    } catch (e) {
+      print('❌ HATA - Hayvanlar yenilenirken hata: $e');
+    }
+  }
+
   Future<void> updatePet(String oldName, Pet updatedPet) async {
     try {
       // Firestore'da isim ile arama yap
