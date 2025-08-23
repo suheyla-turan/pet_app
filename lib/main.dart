@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:workmanager/workmanager.dart';
 import 'features/pet/screens/pet_list_page.dart';
 import 'services/notification_service.dart';
 import 'services/media_service.dart';
@@ -13,9 +14,150 @@ import 'features/onboarding/onboarding_page.dart';
 import 'features/auth/email_verification_screen.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'firebase_options.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:pati_takip/l10n/app_localizations.dart';
+
+// Background callback fonksiyonu
+@pragma('vm:entry-point')
+void callbackDispatcher() {
+  Workmanager().executeTask((task, inputData) async {
+    try {
+      await Firebase.initializeApp();
+      
+      switch (task) {
+        case 'petValuesUpdate':
+          await _updatePetValues();
+          break;
+        case 'periodicPetCheck':
+          await _periodicPetCheck();
+          break;
+      }
+      return true;
+    } catch (e) {
+      print('Background task error: $e');
+      return false;
+    }
+  });
+}
+
+// Evcil hayvan değerlerini güncelle
+@pragma('vm:entry-point')
+Future<void> _updatePetValues() async {
+  try {
+    final auth = firebase_auth.FirebaseAuth.instance;
+    if (auth.currentUser == null) return;
+
+    final firestore = FirebaseFirestore.instance;
+    final petsSnapshot = await firestore
+        .collection('pets')
+        .where('owners', arrayContains: auth.currentUser!.uid)
+        .get();
+
+    for (final doc in petsSnapshot.docs) {
+      final petData = doc.data();
+      final lastUpdate = DateTime.parse(petData['lastUpdate']);
+      final now = DateTime.now();
+      final difference = now.difference(lastUpdate).inMinutes;
+
+      // Değerleri güncelle
+      int satiety = petData['satiety'] ?? 5;
+      int happiness = petData['happiness'] ?? 5;
+      int energy = petData['energy'] ?? 5;
+      int care = petData['care'] ?? 5;
+
+      final satietyInterval = petData['satietyInterval'] ?? 60;
+      final happinessInterval = petData['happinessInterval'] ?? 60;
+      final energyInterval = petData['energyInterval'] ?? 60;
+      final careInterval = petData['careInterval'] ?? 1440;
+
+      // Değerleri güncelle
+      if (difference >= satietyInterval) {
+        satiety = (satiety - 1).clamp(0, 10);
+      }
+      if (difference >= happinessInterval) {
+        happiness = (happiness - 1).clamp(0, 10);
+      }
+      if (difference >= energyInterval) {
+        energy = (energy - 1).clamp(0, 10);
+      }
+      if (difference >= careInterval) {
+        care = (care - 1).clamp(0, 10);
+      }
+
+      // Firestore'da güncelle
+      await doc.reference.update({
+        'satiety': satiety,
+        'happiness': happiness,
+        'energy': energy,
+        'care': care,
+        'lastUpdate': now.toIso8601String(),
+      });
+    }
+  } catch (e) {
+    print('Pet values update error: $e');
+  }
+}
+
+// Periyodik evcil hayvan kontrolü
+@pragma('vm:entry-point')
+Future<void> _periodicPetCheck() async {
+  try {
+    final auth = firebase_auth.FirebaseAuth.instance;
+    if (auth.currentUser == null) return;
+
+    final firestore = FirebaseFirestore.instance;
+    final petsSnapshot = await firestore
+        .collection('pets')
+        .where('owners', arrayContains: auth.currentUser!.uid)
+        .get();
+
+    for (final doc in petsSnapshot.docs) {
+      final petData = doc.data();
+      final lastUpdate = DateTime.parse(petData['lastUpdate']);
+      final now = DateTime.now();
+      final difference = now.difference(lastUpdate).inMinutes;
+
+      // Değerleri güncelle
+      int satiety = petData['satiety'] ?? 5;
+      int happiness = petData['happiness'] ?? 5;
+      int energy = petData['energy'] ?? 5;
+      int care = petData['care'] ?? 5;
+
+      final satietyInterval = petData['satietyInterval'] ?? 60;
+      final happinessInterval = petData['happinessInterval'] ?? 60;
+      final energyInterval = petData['energyInterval'] ?? 60;
+      final careInterval = petData['careInterval'] ?? 1440;
+
+      // Değerleri güncelle
+      if (difference >= satietyInterval) {
+        satiety = (satiety - 1).clamp(0, 10);
+      }
+      if (difference >= happinessInterval) {
+        happiness = (happiness - 1).clamp(0, 10);
+      }
+      if (difference >= energyInterval) {
+        energy = (energy - 1).clamp(0, 10);
+      }
+      if (difference >= careInterval) {
+        care = (care - 1).clamp(0, 10);
+      }
+
+      // Firestore'da güncelle
+      await doc.reference.update({
+        'satiety': satiety,
+        'happiness': happiness,
+        'energy': energy,
+        'care': care,
+        'lastUpdate': now.toIso8601String(),
+      });
+    }
+  } catch (e) {
+    print('Periodic pet check error: $e');
+  }
+}
 
 // import 'generated/l10n.dart'; // Otomatik oluşturulacak
 
@@ -29,6 +171,12 @@ void main() async {
   );
   
   await NotificationService.initialize();
+  
+  // WorkManager'ı önce başlat
+  await Workmanager().initialize(
+    callbackDispatcher,
+    isInDebugMode: false,
+  );
   
   // Background service'i başlat
   await BackgroundService.initialize();

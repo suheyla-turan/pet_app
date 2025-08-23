@@ -11,11 +11,6 @@ class BackgroundService {
   
   /// Background service'i başlat
   static Future<void> initialize() async {
-    await Workmanager().initialize(
-      callbackDispatcher,
-      isInDebugMode: false,
-    );
-    
     // Periyodik görev başlat (15 dakikada bir)
     await Workmanager().registerPeriodicTask(
       _periodicTaskName,

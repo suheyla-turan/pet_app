@@ -604,7 +604,13 @@ class FirestoreService {
       }).toList();
     } catch (e) {
       print('❌ HATA - Mesajlar getirilemedi: $e');
-      return [];
+      if (e.toString().contains('not-found')) {
+        print('⚠️ Hayvan bulunamadı, boş liste döndürülüyor');
+        return [];
+      } else {
+        print('⚠️ Diğer hata, boş liste döndürülüyor');
+        return [];
+      }
     }
   }
 
@@ -1021,15 +1027,26 @@ class FirestoreService {
         throw Exception('Kullanıcı giriş yapmamış');
       }
 
+      // Önce pet bilgilerini al
+      final petDoc = await FirebaseFirestore.instance.collection('hayvanlar').doc(petId).get();
+      if (!petDoc.exists) throw Exception('Hayvan bulunamadı');
+      
+      final petData = petDoc.data()!;
+      final petName = petData['name'] ?? 'İsimsiz Hayvan';
+      
       final messageData = {
         'petId': petId,
+        'petName': petName,
         'senderId': currentUser.uid,
-        'senderEmail': currentUser.email,
+        'senderName': currentUser.displayName ?? 'İsimsiz Kullanıcı',
+        'senderEmail': currentUser.email ?? '',
         'message': message,
         'messageType': messageType,
         'timestamp': FieldValue.serverTimestamp(),
         'caption': caption,
         'durationSeconds': durationSeconds,
+        'recipients': List<String>.from(petData['owners'] ?? [currentUser.uid]),
+        'type': 'co_owner_message',
       };
 
       // Eğer resim dosyası varsa, önce yükle
@@ -1037,15 +1054,22 @@ class FirestoreService {
         // Resim yükleme işlemi burada yapılacak
         // Şimdilik sadece caption'ı gönderelim
         messageData['imageUrl'] = 'placeholder_image_url';
+        messageData['message'] = caption ?? 'Görsel mesaj';
+      }
+      
+      // Eğer sesli mesaj varsa
+      if (durationSeconds != null) {
+        messageData['audioUrl'] = 'placeholder_audio_url';
+        messageData['message'] = 'Sesli mesaj';
       }
 
       await FirebaseFirestore.instance
-          .collection('coOwnerMessages')
+          .collection('pet_messages')
           .add(messageData);
 
       // Pet dokümanına son mesaj bilgisini güncelle
       await FirebaseFirestore.instance
-          .collection('pets')
+          .collection('hayvanlar')
           .doc(petId)
           .update({
         'lastMessage': message,
@@ -1053,7 +1077,12 @@ class FirestoreService {
       });
 
     } catch (e) {
-      throw Exception('Mesaj gönderilirken hata: $e');
+      print('❌ HATA - Eş sahip mesajı gönderilemedi: $e');
+      if (e.toString().contains('not-found')) {
+        throw Exception('Hayvan bulunamadı. Lütfen sayfayı yenileyin.');
+      } else {
+        throw Exception('Mesaj gönderilirken hata: $e');
+      }
     }
   }
 
@@ -1093,7 +1122,13 @@ class FirestoreService {
       });
     } catch (e) {
       print('❌ HATA - Mesaj stream\'i oluşturulamadı: $e');
-      return Stream.value([]);
+      if (e.toString().contains('not-found')) {
+        print('⚠️ Hayvan bulunamadı, boş stream döndürülüyor');
+        return Stream.value([]);
+      } else {
+        print('⚠️ Diğer hata, boş stream döndürülüyor');
+        return Stream.value([]);
+      }
     }
   }
 

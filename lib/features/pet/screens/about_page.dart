@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:provider/provider.dart';
+import '../../../providers/theme_provider.dart';
 
 class AboutPage extends StatefulWidget {
   const AboutPage({super.key});
@@ -34,36 +36,33 @@ class _AboutPageState extends State<AboutPage> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final themeProvider = Provider.of<ThemeProvider>(context);
     final isDark = theme.brightness == Brightness.dark;
     
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
         elevation: 0,
         title: const Text('PatiTakip'),
         centerTitle: true,
+        backgroundColor: Colors.transparent,
+        foregroundColor: themeProvider.getPrimaryTextColor(isDark),
+        titleTextStyle: TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.w700,
+          color: themeProvider.getPrimaryTextColor(isDark),
+        ),
+        iconTheme: IconThemeData(
+          color: themeProvider.getPrimaryTextColor(isDark),
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
       ),
+      backgroundColor: Colors.transparent,
       body: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isDark 
-              ? [
-                  const Color(0xFF1A202C),
-                  const Color(0xFF2D3748),
-                  const Color(0xFF4A5568),
-                ]
-              : [
-                  const Color(0xFFF7FAFC),
-                  const Color(0xFFEDF2F7),
-                  const Color(0xFFE2E8F0),
-                ],
-          ),
+          gradient: themeProvider.getBackgroundGradient(isDark),
         ),
         child: SafeArea(
           child: Column(
@@ -78,14 +77,14 @@ class _AboutPageState extends State<AboutPage> with TickerProviderStateMixin {
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.w800,
-                        color: isDark ? Colors.white : const Color(0xFF2D3748),
+                        color: themeProvider.getPrimaryTextColor(isDark),
                       ),
                     ),
                     Text(
                       'Uygulama bilgileri ve özellikler',
                       style: TextStyle(
                         fontSize: 16,
-                        color: isDark ? Colors.grey.shade300 : Colors.grey.shade600,
+                        color: themeProvider.getSecondaryTextColor(isDark),
                       ),
                     ),
                   ],
@@ -237,26 +236,22 @@ class _AboutPageState extends State<AboutPage> with TickerProviderStateMixin {
   }) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final themeProvider = Provider.of<ThemeProvider>(context);
     
     return Card(
-      elevation: 8,
-      shadowColor: color.withValues(alpha: 0.2),
+      elevation: 12,
+      shadowColor: theme.colorScheme.primary.withValues(alpha: 0.3),
       child: Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isDark
-                ? [
-                    Colors.grey.shade800,
-                    Colors.grey.shade700,
-                  ]
-                : [
-                    Colors.white,
-                    Colors.grey.shade50,
-                  ],
-          ),
+          borderRadius: BorderRadius.circular(24),
+          color: themeProvider.getCardBackgroundColor(isDark),
+          boxShadow: [
+            BoxShadow(
+              color: themeProvider.getShadowColor(isDark),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
+            ),
+          ],
         ),
         child: Padding(
           padding: const EdgeInsets.all(20),
@@ -287,14 +282,14 @@ class _AboutPageState extends State<AboutPage> with TickerProviderStateMixin {
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w700,
-                            color: isDark ? Colors.white : const Color(0xFF2D3748),
+                            color: themeProvider.getPrimaryTextColor(isDark),
                           ),
                         ),
                         Text(
                           subtitle,
                           style: TextStyle(
                             fontSize: 14,
-                            color: isDark ? Colors.grey.shade300 : Colors.grey.shade600,
+                            color: themeProvider.getSecondaryTextColor(isDark),
                           ),
                         ),
                       ],

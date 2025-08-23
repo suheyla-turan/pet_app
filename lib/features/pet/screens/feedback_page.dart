@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:pati_takip/l10n/app_localizations.dart';
 import 'package:pati_takip/services/firestore_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
+import '../../../providers/theme_provider.dart';
 
 class FeedbackPage extends StatefulWidget {
   const FeedbackPage({super.key});
@@ -18,27 +20,31 @@ class _FeedbackPageState extends State<FeedbackPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final themeProvider = Provider.of<ThemeProvider>(context);
     final isDark = theme.brightness == Brightness.dark;
     return Scaffold(
       // Klavye açılırken performans optimizasyonu
       resizeToAvoidBottomInset: false,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text('PatiTakip'),
-        backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: IconThemeData(color: theme.colorScheme.primary),
+        backgroundColor: Colors.transparent,
+        foregroundColor: themeProvider.getPrimaryTextColor(isDark),
+        titleTextStyle: TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.w700,
+          color: themeProvider.getPrimaryTextColor(isDark),
+        ),
+        iconTheme: IconThemeData(
+          color: themeProvider.getPrimaryTextColor(isDark),
+        ),
       ),
       body: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isDark
-                ? [const Color(0xFF1A202C), const Color(0xFF2D3748)]
-                : [const Color(0xFFF7FAFC), const Color(0xFFEDF2F7)],
-          ),
+          gradient: themeProvider.getBackgroundGradient(isDark),
         ),
         child: _sent
             ? Center(
@@ -47,7 +53,13 @@ class _FeedbackPageState extends State<FeedbackPage> {
                   children: [
                     const Icon(Icons.check_circle, color: Colors.green, size: 48),
                     const SizedBox(height: 16),
-                    Text(AppLocalizations.of(context)!.feedbackThanks, style: TextStyle(fontSize: 18)),
+                    Text(
+                      AppLocalizations.of(context)!.feedbackThanks, 
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: themeProvider.getPrimaryTextColor(isDark),
+                      ),
+                    ),
                   ],
                 ),
               )

@@ -8,6 +8,7 @@ import 'settings_page.dart';
 import 'co_owner_requests_page.dart';
 import '../../../providers/pet_provider.dart';
 import '../../../providers/auth_provider.dart';
+import '../../../providers/theme_provider.dart';
 import '../../profile/profile_page.dart';
 import 'package:pati_takip/l10n/app_localizations.dart';
 // import 'package:speech_to_text/speech_to_text.dart' as stt; // KALDIRILDI
@@ -109,21 +110,7 @@ class _PetListPageState extends State<PetListPage> with TickerProviderStateMixin
                   Expanded(
                     child: Container(
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: isDark 
-                            ? [
-                                const Color(0xFF1A202C),
-                                const Color(0xFF2D3748),
-                                const Color(0xFF4A5568),
-                              ]
-                            : [
-                                const Color(0xFFF7FAFC),
-                                const Color(0xFFEDF2F7),
-                                const Color(0xFFE2E8F0),
-                              ],
-                        ),
+                        gradient: Provider.of<ThemeProvider>(context).getBackgroundGradient(isDark),
                       ),
                       child: SafeArea(
                         child: Column(

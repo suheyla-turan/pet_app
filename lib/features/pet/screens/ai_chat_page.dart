@@ -9,6 +9,7 @@ import 'package:pati_takip/features/pet/models/pet.dart';
 import 'package:pati_takip/features/pet/models/chat_history.dart';
 import 'package:pati_takip/features/pet/widgets/chat_history_overlay.dart';
 import 'package:pati_takip/providers/auth_provider.dart';
+import 'package:pati_takip/providers/theme_provider.dart';
 
 class AIChatPage extends StatefulWidget {
   final Pet? pet;
@@ -1072,38 +1073,54 @@ class _AIChatPageState extends State<AIChatPage> {
     final currentUser = authProvider.user;
 
     if (currentUser == null || (widget.pet != null && !widget.pet!.owners.contains(currentUser.uid))) {
-      return Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: _buildEnhancedAppBar(),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.pets, size: 80, color: Colors.white.withOpacity(0.5)),
-              const SizedBox(height: 20),
-              Text(
-                "Bu evcil hayvanın sahibi değilsiniz.",
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.7),
-                  fontSize: 18,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                "Bu sayfayı görüntülemek için evcil hayvanınızın sahibi olmalısınız.",
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.7),
-                  fontSize: 14,
-                ),
-              ),
-            ],
+      final themeProvider = Provider.of<ThemeProvider>(context);
+      return Stack(
+        children: [
+          // Background container - Ana menü tarzı
+          Container(
+            decoration: themeProvider.getBackgroundDecoration(Theme.of(context).brightness == Brightness.dark),
           ),
-        ),
+          Scaffold(
+            backgroundColor: Colors.transparent,
+            appBar: _buildEnhancedAppBar(),
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.pets, size: 80, color: Colors.white.withOpacity(0.5)),
+                  const SizedBox(height: 20),
+                  Text(
+                    "Bu evcil hayvanın sahibi değilsiniz.",
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.7),
+                      fontSize: 18,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    "Bu sayfayı görüntülemek için evcil hayvanınızın sahibi olmalısınız.",
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.7),
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       );
     }
 
+    final themeProvider = Provider.of<ThemeProvider>(context);
     return Stack(
       children: [
+        // Background container - Ana menü tarzı
+        Container(
+          decoration: BoxDecoration(
+            gradient: themeProvider.getBackgroundGradient(Theme.of(context).brightness == Brightness.dark),
+          ),
+        ),
         Scaffold(
           backgroundColor: Colors.transparent,
           // Klavye açılırken performans optimizasyonu
@@ -1152,19 +1169,16 @@ class _AIChatPageState extends State<AIChatPage> {
 
   PreferredSizeWidget _buildEnhancedAppBar() {
     return AppBar(
-      backgroundColor: Colors.transparent,
       elevation: 0,
-      flexibleSpace: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF2D1B69),
-              Color(0xFF1A1A1A),
-            ],
-          ),
-        ),
+      backgroundColor: Colors.transparent,
+      foregroundColor: Colors.white,
+      titleTextStyle: const TextStyle(
+        fontSize: 24,
+        fontWeight: FontWeight.w700,
+        color: Colors.white,
+      ),
+      iconTheme: const IconThemeData(
+        color: Colors.white,
       ),
       leading: Container(
         margin: const EdgeInsets.all(8),

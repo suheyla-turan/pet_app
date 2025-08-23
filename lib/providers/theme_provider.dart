@@ -33,12 +33,15 @@ class ThemeProvider with ChangeNotifier {
       appBarTheme: const AppBarTheme(
         elevation: 0,
         centerTitle: true,
-        backgroundColor: Colors.transparent,
-        foregroundColor: Color(0xFF2D3748),
+        backgroundColor: Color(0xFF6B46C1), // Ana mor renk
+        foregroundColor: Colors.white,
         titleTextStyle: TextStyle(
           fontSize: 24,
           fontWeight: FontWeight.w700,
-          color: Color(0xFF2D3748),
+          color: Colors.white,
+        ),
+        iconTheme: IconThemeData(
+          color: Colors.white,
         ),
       ),
       cardTheme: CardThemeData(
@@ -101,11 +104,14 @@ class ThemeProvider with ChangeNotifier {
       appBarTheme: const AppBarTheme(
         elevation: 0,
         centerTitle: true,
-        backgroundColor: Colors.transparent,
+        backgroundColor: Color(0xFF6B46C1), // Ana mor renk
         foregroundColor: Colors.white,
         titleTextStyle: TextStyle(
           fontSize: 24,
           fontWeight: FontWeight.w700,
+          color: Colors.white,
+        ),
+        iconTheme: IconThemeData(
           color: Colors.white,
         ),
       ),
@@ -163,4 +169,133 @@ class ThemeProvider with ChangeNotifier {
 
   // Optional: for migration, keep a helper
   bool get isDarkMode => _themeMode == ThemeMode.dark;
+
+  // Main homepage background gradient - Ana menü ile aynı
+  LinearGradient getBackgroundGradient(bool isDark) {
+    return LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: isDark 
+        ? [
+            const Color(0xFF0F1419), // Ana menü koyu tema
+            const Color(0xFF1A202C), 
+            const Color(0xFF2D3748),
+          ]
+        : [
+            const Color(0xFFF8FAFC), // Ana menü açık tema
+            const Color(0xFFF1F5F9), 
+            const Color(0xFFE2E8F0),
+          ],
+    );
+  }
+
+  // Alternative background gradient - Ana menü varyasyonu
+  LinearGradient getAlternativeBackgroundGradient(bool isDark) {
+    return LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: isDark 
+        ? [
+            const Color(0xFF1A202C), // Ana menü tonları
+            const Color(0xFF2D3748), 
+            const Color(0xFF4A5568),
+          ]
+        : [
+            const Color(0xFFF1F5F9), // Ana menü tonları
+            const Color(0xFFE2E8F0), 
+            const Color(0xFFCBD5E0),
+          ],
+    );
+  }
+
+  // Background decoration helper
+  BoxDecoration getBackgroundDecoration(bool isDark) {
+    return BoxDecoration(
+      gradient: getBackgroundGradient(isDark),
+    );
+  }
+
+  // Alternative background decoration
+  BoxDecoration getAlternativeBackgroundDecoration(bool isDark) {
+    return BoxDecoration(
+      gradient: getAlternativeBackgroundGradient(isDark),
+    );
+  }
+
+  // Solid background color - Ana menü tarzı
+  Color getSolidBackgroundColor(bool isDark) {
+    return isDark 
+      ? const Color(0xFF1A202C) // Ana menü koyu tema
+      : const Color(0xFFF8FAFC); // Ana menü açık tema
+  }
+
+  // Ana menü card colors
+  Color getCardBackgroundColor(bool isDark) {
+    return isDark 
+      ? Colors.grey.shade800 // Ana menüdeki kart rengi
+      : Colors.white; // Ana menüdeki kart rengi
+  }
+
+  // Ana menü container colors
+  Color getContainerBackgroundColor(bool isDark) {
+    return isDark 
+      ? Colors.grey.shade700 // Ana menüdeki container rengi
+      : Colors.white; // Ana menüdeki container rengi
+  }
+
+  // Ana menü text colors
+  Color getPrimaryTextColor(bool isDark) {
+    return isDark 
+      ? Colors.white // Ana menüdeki ana metin rengi
+      : const Color(0xFF2D3748); // Ana menüdeki ana metin rengi
+  }
+
+  Color getSecondaryTextColor(bool isDark) {
+    return isDark 
+      ? Colors.grey.shade300 // Ana menüdeki ikincil metin rengi
+      : Colors.grey.shade600; // Ana menüdeki ikincil metin rengi
+  }
+
+  // Ana menü shadow colors
+  Color getShadowColor(bool isDark) {
+    return Colors.black.withValues(alpha: isDark ? 0.3 : 0.08);
+  }
+
+  // Profile/settings pages - Ana menü tarzı varyasyon
+  LinearGradient getWarmBackgroundGradient(bool isDark) {
+    return LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: isDark 
+        ? [
+            const Color(0xFF0F1419), // Ana menü temel renkleri
+            const Color(0xFF1A202C), 
+            const Color(0xFF2D3748),
+          ]
+        : [
+            const Color(0xFFF8FAFC), // Ana menü temel renkleri
+            const Color(0xFFF1F5F9), 
+            const Color(0xFFE2E8F0),
+          ],
+    );
+  }
+
+  // Technical pages - Ana menü tarzı koyu varyasyon
+  LinearGradient getCoolBackgroundGradient(bool isDark) {
+    return LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: isDark 
+        ? [
+            const Color(0xFF0F1419), // Ana menü koyu tonlar
+            const Color(0xFF1A202C), 
+            const Color(0xFF2D3748),
+          ]
+        : [
+            const Color(0xFFF8FAFC), // Ana menü açık tonlar
+            const Color(0xFFF1F5F9), 
+            const Color(0xFFE2E8F0),
+          ],
+    );
+  }
 } 

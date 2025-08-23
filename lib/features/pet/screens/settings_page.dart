@@ -46,55 +46,33 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final themeProvider = Provider.of<ThemeProvider>(context);
     final isDark = theme.brightness == Brightness.dark;
     
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
         elevation: 0,
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: isDark 
-                ? [
-                    const Color(0xFF1A202C),
-                    const Color(0xFF2D3748),
-                    const Color(0xFF4A5568),
-                  ]
-                : [
-                    const Color(0xFFF7FAFC),
-                    const Color(0xFFEDF2F7),
-                    const Color(0xFFE2E8F0),
-                  ],
-            ),
-          ),
-        ),
         title: const Text('PatiTakip'),
         centerTitle: true,
+        backgroundColor: Colors.transparent,
+        foregroundColor: themeProvider.getPrimaryTextColor(isDark),
+        titleTextStyle: TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.w700,
+          color: themeProvider.getPrimaryTextColor(isDark),
+        ),
+        iconTheme: IconThemeData(
+          color: themeProvider.getPrimaryTextColor(isDark),
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
       ),
+      backgroundColor: Colors.transparent,
       body: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isDark 
-              ? [
-                  const Color(0xFF1A202C),
-                  const Color(0xFF2D3748),
-                  const Color(0xFF4A5568),
-                ]
-              : [
-                  const Color(0xFFF7FAFC),
-                  const Color(0xFFEDF2F7),
-                  const Color(0xFFE2E8F0),
-                ],
-          ),
+          gradient: themeProvider.getBackgroundGradient(isDark),
         ),
         child: SafeArea(
           child: Column(
@@ -109,14 +87,14 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.w800,
-                        color: isDark ? Colors.white : const Color(0xFF2D3748),
+                        color: themeProvider.getPrimaryTextColor(isDark),
                       ),
                     ),
                     Text(
                       AppLocalizations.of(context)!.settingsDescription,
                       style: TextStyle(
                         fontSize: 16,
-                        color: isDark ? Colors.grey.shade300 : Colors.grey.shade600,
+                        color: themeProvider.getSecondaryTextColor(isDark),
                       ),
                     ),
                   ],

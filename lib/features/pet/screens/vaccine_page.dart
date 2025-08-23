@@ -93,6 +93,16 @@ class _VaccinePageState extends State<VaccinePage> {
         appBar: AppBar(
           title: const Text('PatiTakip'),
           centerTitle: true,
+          backgroundColor: Colors.transparent,
+          foregroundColor: Colors.white,
+          titleTextStyle: const TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+          ),
+          iconTheme: const IconThemeData(
+            color: Colors.white,
+          ),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () {
@@ -100,9 +110,22 @@ class _VaccinePageState extends State<VaccinePage> {
             },
           ),
         ),
-        body: filteredVaccines.isEmpty
-            ? Center(child: Text(AppLocalizations.of(context)!.noVaccines(widget.showDone.toString())))
-            : ListView.builder(
+        backgroundColor: Colors.transparent,
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                const Color(0xFF0F1419),
+                const Color(0xFF1A202C), 
+                const Color(0xFF2D3748),
+              ],
+            ),
+          ),
+          child: filteredVaccines.isEmpty
+              ? Center(child: Text(AppLocalizations.of(context)!.noVaccines(widget.showDone.toString())))
+              : ListView.builder(
                 itemCount: filteredVaccines.length,
                 itemBuilder: (context, index) {
                   final vaccine = filteredVaccines[index];
@@ -136,6 +159,7 @@ class _VaccinePageState extends State<VaccinePage> {
                   );
                 },
               ),
+        ),
         floatingActionButton: FloatingActionButton(
           onPressed: _showAddDialog,
           child: const Icon(Icons.add),

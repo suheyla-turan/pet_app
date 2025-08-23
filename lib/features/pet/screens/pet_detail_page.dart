@@ -20,6 +20,7 @@ import 'package:pati_takip/services/firestore_service.dart';
 import 'package:pati_takip/services/realtime_service.dart';
 
 import 'package:pati_takip/providers/auth_provider.dart';
+import 'package:pati_takip/providers/theme_provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:pati_takip/l10n/app_localizations.dart';
@@ -319,32 +320,14 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
         Scaffold(
           // Klavye açılırken performans optimizasyonu
           resizeToAvoidBottomInset: false,
+          backgroundColor: Colors.transparent,
           appBar: AppBar(
-            backgroundColor: Colors.transparent,
             elevation: 0,
-            flexibleSpace: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: isDark
-                    ? [
-                        const Color(0xFF1A202C),
-                        const Color(0xFF2D3748),
-                        const Color(0xFF4A5568),
-                      ]
-                    : [
-                        const Color(0xFFF7FAFC),
-                        const Color(0xFFEDF2F7),
-                        const Color(0xFFE2E8F0),
-                      ],
-                ),
-              ),
-            ),
+            backgroundColor: Colors.transparent,
             leading: IconButton(
               icon: Icon(
                 Icons.arrow_back, 
-                color: isDark ? Colors.white : Colors.black87
+                color: Provider.of<ThemeProvider>(context, listen: false).getPrimaryTextColor(isDark)
               ),
               onPressed: () => Navigator.of(context).pop(),
             ),
@@ -361,7 +344,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                   _pet.name,
                   style: TextStyle(
                     fontSize: 20,
-                    color: isDark ? Colors.white : Colors.black87,
+                    color: Provider.of<ThemeProvider>(context, listen: false).getPrimaryTextColor(isDark),
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -371,7 +354,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
               PopupMenuButton<String>(
                 icon: Icon(
                   Icons.more_vert, 
-                  color: isDark ? Colors.white : Colors.black87
+                  color: Provider.of<ThemeProvider>(context, listen: false).getPrimaryTextColor(isDark)
                 ),
                 onSelected: (value) async {
                   switch (value) {
@@ -452,21 +435,7 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
           floatingActionButton: _buildAIChatButton(),
           body: Container(
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: isDark 
-                  ? [
-                      const Color(0xFF1A202C),
-                      const Color(0xFF2D3748),
-                      const Color(0xFF4A5568),
-                    ]
-                  : [
-                      const Color(0xFFF7FAFC),
-                      const Color(0xFFEDF2F7),
-                      const Color(0xFFE2E8F0),
-                    ],
-              ),
+              gradient: Provider.of<ThemeProvider>(context).getBackgroundGradient(isDark),
             ),
             child: SafeArea(
               child: Column(
@@ -2338,7 +2307,10 @@ class AIChatHistoryPage extends StatelessWidget {
         ),
         centerTitle: true,
       ),
-      body: const Center(child: Text('Sohbet geçmişi burada görünecek.')),
+      body: Container(
+        decoration: Provider.of<ThemeProvider>(context).getBackgroundDecoration(Theme.of(context).brightness == Brightness.dark),
+        child: const Center(child: Text('Sohbet geçmişi burada görünecek.')),
+      ),
     );
   }
 }

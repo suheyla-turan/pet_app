@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 
 import 'package:pati_takip/providers/auth_provider.dart';
 import 'package:pati_takip/providers/pet_provider.dart';
+import 'package:pati_takip/providers/theme_provider.dart';
 import 'package:pati_takip/services/firestore_service.dart';
 import 'package:pati_takip/services/notification_service.dart';
 import 'package:pati_takip/l10n/app_localizations.dart';
@@ -207,38 +208,38 @@ class _CoOwnerRequestsPageState extends State<CoOwnerRequestsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     
     return Scaffold(
-      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
         elevation: 0,
-        title: Column(
-          children: [
-            const Text(
-              'PatiTakip',
-              style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
-            ),
-            const Text(
-              'Eş Sahip İstekleri',
-              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-          ],
+        title: const Text('Eş Sahip İstekleri'),
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
+        foregroundColor: themeProvider.getPrimaryTextColor(isDark),
+        titleTextStyle: TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.w700,
+          color: themeProvider.getPrimaryTextColor(isDark),
+        ),
+        iconTheme: IconThemeData(
+          color: themeProvider.getPrimaryTextColor(isDark),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.white),
-            onPressed: _loadRequests,
-          ),
-        ],
       ),
-      body: _buildPendingRequestsTab(),
+      backgroundColor: Colors.transparent,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: themeProvider.getBackgroundGradient(isDark),
+        ),
+        child: SafeArea(
+          child: _buildPendingRequestsTab(),
+        ),
+      ),
     );
   }
 

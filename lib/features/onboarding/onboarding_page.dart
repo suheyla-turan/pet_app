@@ -37,70 +37,84 @@ class _OnboardingPageState extends State<OnboardingPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: PageView(
-                controller: _pageController,
-                onPageChanged: (i) => setState(() => _pageIndex = i),
-                physics: const NeverScrollableScrollPhysics(),
-                children: [
-                  _OnboardingInfo(
-                    title: AppLocalizations.of(context)!.onboardingWelcome,
-                    description: AppLocalizations.of(context)!.onboardingDescription,
-                    lottieAsset: 'assets/golden.json',
-                    buttonText: AppLocalizations.of(context)!.next,
-                    onButton: () => _pageController.animateToPage(1, duration: Duration(milliseconds: 400), curve: Curves.ease),
-                  ),
-                  _OnboardingInfo(
-                    title: AppLocalizations.of(context)!.addPet,
-                    description: AppLocalizations.of(context)!.addPetDescription,
-                    lottieAsset: 'assets/golden.json',
-                    buttonText: AppLocalizations.of(context)!.next,
-                    onButton: () => _pageController.animateToPage(2, duration: Duration(milliseconds: 400), curve: Curves.ease),
-                  ),
-                  _OnboardingInfo(
-                    title: AppLocalizations.of(context)!.vaccinationAndCare,
-                    description: AppLocalizations.of(context)!.vaccinationAndCareDescription,
-                    lottieAsset: 'assets/golden.json',
-                    buttonText: AppLocalizations.of(context)!.next,
-                    onButton: () => _pageController.animateToPage(3, duration: Duration(milliseconds: 400), curve: Curves.ease),
-                  ),
-                  _OnboardingInfo(
-                    title: AppLocalizations.of(context)!.profileAndHistory,
-                    description: AppLocalizations.of(context)!.profileAndHistoryDescription,
-                    lottieAsset: 'assets/golden.json',
-                    buttonText: AppLocalizations.of(context)!.start,
-                    onButton: _goToAuth,
-                  ),
-                  // Auth ekranları
-                  LoginScreen(
-                    onRegisterTap: () => _pageController.animateToPage(5, duration: Duration(milliseconds: 400), curve: Curves.ease),
-                  ),
-                  RegisterScreen(
-                    onLoginTap: () => _pageController.animateToPage(4, duration: Duration(milliseconds: 400), curve: Curves.ease),
-                  ),
-                ],
-              ),
-            ),
-            if (_pageIndex < 4)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16.0),
-                child: SmoothPageIndicator(
+      backgroundColor: Colors.transparent,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF0F1419),
+              Color(0xFF1A202C), 
+              Color(0xFF2D3748),
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              Expanded(
+                child: PageView(
                   controller: _pageController,
-                  count: 4,
-                  effect: WormEffect(
-                    dotHeight: 10,
-                    dotWidth: 10,
-                    activeDotColor: Theme.of(context).colorScheme.primary,
-                  ),
-                  onDotClicked: (index) {
-                    _pageController.animateToPage(index, duration: Duration(milliseconds: 400), curve: Curves.ease);
-                  },
+                  onPageChanged: (i) => setState(() => _pageIndex = i),
+                  physics: const NeverScrollableScrollPhysics(),
+                  children: [
+                    _OnboardingInfo(
+                      title: AppLocalizations.of(context)!.onboardingWelcome,
+                      description: AppLocalizations.of(context)!.onboardingDescription,
+                      lottieAsset: 'assets/golden.json',
+                      buttonText: AppLocalizations.of(context)!.next,
+                      onButton: () => _pageController.animateToPage(1, duration: Duration(milliseconds: 400), curve: Curves.ease),
+                    ),
+                    _OnboardingInfo(
+                      title: AppLocalizations.of(context)!.addPet,
+                      description: AppLocalizations.of(context)!.addPetDescription,
+                      lottieAsset: 'assets/golden.json',
+                      buttonText: AppLocalizations.of(context)!.next,
+                      onButton: () => _pageController.animateToPage(2, duration: Duration(milliseconds: 400), curve: Curves.ease),
+                    ),
+                    _OnboardingInfo(
+                      title: AppLocalizations.of(context)!.vaccinationAndCare,
+                      description: AppLocalizations.of(context)!.vaccinationAndCareDescription,
+                      lottieAsset: 'assets/golden.json',
+                      buttonText: AppLocalizations.of(context)!.next,
+                      onButton: () => _pageController.animateToPage(3, duration: Duration(milliseconds: 400), curve: Curves.ease),
+                    ),
+                    _OnboardingInfo(
+                      title: AppLocalizations.of(context)!.profileAndHistory,
+                      description: AppLocalizations.of(context)!.profileAndHistoryDescription,
+                      lottieAsset: 'assets/golden.json',
+                      buttonText: AppLocalizations.of(context)!.start,
+                      onButton: _goToAuth,
+                    ),
+                    // Auth ekranları
+                    LoginScreen(
+                      onRegisterTap: () => _pageController.animateToPage(5, duration: Duration(milliseconds: 400), curve: Curves.ease),
+                    ),
+                    RegisterScreen(
+                      onLoginTap: () => _pageController.animateToPage(4, duration: Duration(milliseconds: 400), curve: Curves.ease),
+                    ),
+                  ],
                 ),
               ),
-          ],
+              if (_pageIndex < 4)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16.0),
+                  child: SmoothPageIndicator(
+                    controller: _pageController,
+                    count: 4,
+                    effect: WormEffect(
+                      dotHeight: 10,
+                      dotWidth: 10,
+                      activeDotColor: Theme.of(context).colorScheme.primary,
+                    ),
+                    onDotClicked: (index) {
+                      _pageController.animateToPage(index, duration: Duration(milliseconds: 400), curve: Curves.ease);
+                    },
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -195,7 +209,14 @@ class _LoginScreenState extends State<LoginScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(AppLocalizations.of(context)!.login, style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+                Text(
+                  AppLocalizations.of(context)!.login, 
+                  style: const TextStyle(
+                    fontSize: 26, 
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  )
+                ),
                 SizedBox(height: 24),
                 TextFormField(
                   decoration: InputDecoration(
@@ -443,7 +464,6 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
             appBar: AppBar(
         title: const Text('PatiTakip'),
         centerTitle: true,
-        backgroundColor: Colors.transparent,
         elevation: 0,
       ),
       body: Padding(

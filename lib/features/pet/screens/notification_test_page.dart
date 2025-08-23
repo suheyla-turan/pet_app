@@ -9,7 +9,6 @@ class NotificationTestPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
         elevation: 0,
         title: Column(
           children: [
@@ -19,7 +18,7 @@ class NotificationTestPage extends StatelessWidget {
             ),
             const Text(
               'Bildirim Testi',
-              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w500),
             ),
           ],
         ),

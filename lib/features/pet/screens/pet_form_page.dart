@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:pati_takip/features/pet/models/pet.dart';
 import 'package:pati_takip/providers/pet_provider.dart';
 import 'package:pati_takip/providers/auth_provider.dart';
+import 'package:pati_takip/providers/theme_provider.dart';
 import 'package:pati_takip/l10n/app_localizations.dart';
 
 class PetFormPage extends StatefulWidget {
@@ -203,133 +204,33 @@ class _PetFormPageState extends State<PetFormPage> with TickerProviderStateMixin
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final user = Provider.of<AuthProvider>(context, listen: false).user;
-    
-    // Sahiplik kontrolü - sadece sahipler düzenleyebilir
-    if (widget.pet != null) {
-      final isCreator = user?.uid == widget.pet!.creator;
-      final isOwner = widget.pet!.owners.contains(user?.uid);
-      final canEdit = isCreator || isOwner;
-      
-      if (!canEdit) {
-        // Sahip olmayan kullanıcılar için erişim engellendi sayfası
-        return Scaffold(
-          backgroundColor: isDark ? Colors.grey.shade900 : Colors.grey.shade50,
-          appBar: AppBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            title: const Text('Erişim Engellendi'),
-            centerTitle: true,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back),
-              onPressed: () => Navigator.pop(context),
-            ),
-          ),
-          body: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: isDark 
-                  ? [
-                      const Color(0xFF1A202C),
-                      const Color(0xFF2D3748),
-                      const Color(0xFF4A5568),
-                    ]
-                  : [
-                      const Color(0xFFF7FAFC),
-                      const Color(0xFFEDF2F7),
-                      const Color(0xFFE2E8F0),
-                    ],
-              ),
-            ),
-            child: SafeArea(
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(32),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.lock,
-                        size: 80,
-                        color: Colors.orange.shade400,
-                      ),
-                      const SizedBox(height: 24),
-                      Text(
-                        'Erişim Engellendi',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : Colors.black87,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Bu hayvanı düzenleme yetkiniz bulunmamaktadır. Sadece hayvanın sahipleri düzenleyebilir.',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: isDark ? Colors.grey.shade300 : Colors.grey.shade600,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 32),
-                      ElevatedButton.icon(
-                        onPressed: () => Navigator.pop(context),
-                        icon: const Icon(Icons.arrow_back),
-                        label: const Text('Geri Dön'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.orange,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      }
-    }
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     
     return Scaffold(
-      // Klavye açılırken performans optimizasyonu
-      resizeToAvoidBottomInset: false,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text('PatiTakip'),
+        title: Text(widget.pet == null ? 'Evcil Hayvan Ekle' : 'Evcil Hayvan Düzenle'),
         centerTitle: true,
+        backgroundColor: Colors.transparent,
+        foregroundColor: themeProvider.getPrimaryTextColor(isDark),
+        titleTextStyle: TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.w700,
+          color: themeProvider.getPrimaryTextColor(isDark),
+        ),
+        iconTheme: IconThemeData(
+          color: themeProvider.getPrimaryTextColor(isDark),
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
       ),
+      backgroundColor: Colors.transparent,
       body: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isDark 
-              ? [
-                  const Color(0xFF1A202C),
-                  const Color(0xFF2D3748),
-                  const Color(0xFF4A5568),
-                ]
-              : [
-                  const Color(0xFFF7FAFC),
-                  const Color(0xFFEDF2F7),
-                  const Color(0xFFE2E8F0),
-                ],
-          ),
+          gradient: themeProvider.getBackgroundGradient(isDark),
         ),
         child: SafeArea(
           child: Column(
@@ -371,7 +272,7 @@ class _PetFormPageState extends State<PetFormPage> with TickerProviderStateMixin
                           // Image Picker Card
                           Card(
                             elevation: 8,
-                            shadowColor: theme.colorScheme.primary.withOpacity(0.2),
+                            shadowColor: themeProvider.getPrimaryTextColor(isDark).withOpacity(0.2),
                             child: Container(
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(20),
@@ -410,7 +311,7 @@ class _PetFormPageState extends State<PetFormPage> with TickerProviderStateMixin
                                         decoration: BoxDecoration(
                                           borderRadius: BorderRadius.circular(20),
                                           border: Border.all(
-                                            color: theme.colorScheme.primary.withOpacity(0.3),
+                                                                                         color: themeProvider.getPrimaryTextColor(isDark).withOpacity(0.3),
                                             width: 2,
                                             style: BorderStyle.solid,
                                           ),
@@ -433,25 +334,25 @@ class _PetFormPageState extends State<PetFormPage> with TickerProviderStateMixin
                                                   decoration: BoxDecoration(
                                                     gradient: LinearGradient(
                                                       colors: [
-                                                        theme.colorScheme.primary.withOpacity(0.1),
-                                                        theme.colorScheme.primary.withOpacity(0.05),
+                                                                                                                 themeProvider.getPrimaryTextColor(isDark).withOpacity(0.1),
+                                                         themeProvider.getPrimaryTextColor(isDark).withOpacity(0.05),
                                                       ],
                                                     ),
                                                   ),
                                                   child: Column(
                                                     mainAxisAlignment: MainAxisAlignment.center,
                                                     children: [
-                                                      Icon(
-                                                        Icons.add_a_photo,
-                                                        size: 40,
-                                                        color: theme.colorScheme.primary,
-                                                      ),
+                                                                                                             Icon(
+                                                         Icons.add_a_photo,
+                                                         size: 40,
+                                                         color: themeProvider.getPrimaryTextColor(isDark),
+                                                       ),
                                                       const SizedBox(height: 8),
                                                       Text(
                                                         AppLocalizations.of(context)!.addPhoto,
                                                         style: TextStyle(
                                                           fontSize: 12,
-                                                          color: theme.colorScheme.primary,
+                                                          color: themeProvider.getPrimaryTextColor(isDark),
                                                           fontWeight: FontWeight.w500,
                                                         ),
                                                       ),
@@ -472,7 +373,7 @@ class _PetFormPageState extends State<PetFormPage> with TickerProviderStateMixin
                           // Basic Info Card
                           Card(
                             elevation: 8,
-                            shadowColor: theme.colorScheme.primary.withOpacity(0.2),
+                            shadowColor: themeProvider.getPrimaryTextColor(isDark).withOpacity(0.2),
                             child: Container(
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(20),
@@ -610,11 +511,11 @@ class _PetFormPageState extends State<PetFormPage> with TickerProviderStateMixin
                           
                           const SizedBox(height: 20),
                           
-                          // Interval Settings Card
-                          Card(
-                            elevation: 8,
-                            shadowColor: theme.colorScheme.primary.withOpacity(0.2),
-                            child: Container(
+                                                     // Interval Settings Card
+                           Card(
+                             elevation: 8,
+                             shadowColor: themeProvider.getPrimaryTextColor(isDark).withOpacity(0.2),
+                             child: Container(
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(20),
                                 gradient: LinearGradient(
@@ -701,12 +602,12 @@ class _PetFormPageState extends State<PetFormPage> with TickerProviderStateMixin
                             height: 56,
                             child: ElevatedButton(
                               onPressed: _savePet,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: theme.colorScheme.primary,
-                                foregroundColor: Colors.white,
-                                elevation: 8,
-                                shadowColor: theme.colorScheme.primary.withOpacity(0.3),
-                                shape: RoundedRectangleBorder(
+                                                             style: ElevatedButton.styleFrom(
+                                 backgroundColor: themeProvider.getPrimaryTextColor(isDark),
+                                 foregroundColor: Colors.white,
+                                 elevation: 8,
+                                 shadowColor: themeProvider.getPrimaryTextColor(isDark).withOpacity(0.3),
+                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(16),
                                 ),
                               ),
