@@ -1,15 +1,12 @@
 import 'dart:io';
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:image_picker/image_picker.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:pati_takip/features/pet/models/pet.dart';
 import 'package:pati_takip/services/firestore_service.dart';
-import 'package:pati_takip/services/notification_service.dart';
-import 'package:pati_takip/providers/theme_provider.dart';
 
 class PetCoOwnerManagementPage extends StatefulWidget {
   final Pet pet;
@@ -35,12 +32,11 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
   final TextEditingController _messageController = TextEditingController();
   final TextEditingController _imageCaptionController = TextEditingController();
   File? _selectedImage;
-  String? _recordedAudioPath;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     _loadCoOwners();
     _loadMessages();
   }
@@ -134,7 +130,7 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
     try {
       await FirestoreService.sendMessageToCoOwners(widget.pet.id!, message);
       _messageController.clear();
-      await _loadMessages(); // Mesajları yenile
+      // StreamBuilder otomatik olarak güncellenecek
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('✅ Mesaj tüm eş sahiplere gönderildi'),
@@ -158,12 +154,45 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
   Future<void> _pickImage() async {
     try {
       final ImagePicker picker = ImagePicker();
-      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
       
-      if (image != null) {
-        setState(() {
-          _selectedImage = File(image.path);
-        });
+      // Kamera veya galeri seçimi için dialog göster
+      final ImageSource? source = await showDialog<ImageSource>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Fotoğraf Seç'),
+          content: const Text('Fotoğrafı nereden almak istiyorsunuz?'),
+          actions: [
+            TextButton.icon(
+              onPressed: () => Navigator.pop(context, ImageSource.camera),
+              icon: const Icon(Icons.camera_alt),
+              label: const Text('Kamera'),
+            ),
+            TextButton.icon(
+              onPressed: () => Navigator.pop(context, ImageSource.gallery),
+              icon: const Icon(Icons.photo_library),
+              label: const Text('Galeri'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('İptal'),
+            ),
+          ],
+        ),
+      );
+      
+      if (source != null) {
+        final XFile? image = await picker.pickImage(
+          source: source,
+          imageQuality: 80, // Kaliteyi biraz düşür
+          maxWidth: 1024, // Maksimum genişlik
+          maxHeight: 1024, // Maksimum yükseklik
+        );
+        
+        if (image != null) {
+          setState(() {
+            _selectedImage = File(image.path);
+          });
+        }
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -207,8 +236,7 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
       });
       _imageCaptionController.clear();
       
-      // Mesajları yenile
-      await _loadMessages();
+      // StreamBuilder otomatik olarak güncellenecek
       
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -295,8 +323,7 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
         _recordingDuration = 0;
       });
       
-      // Mesajları yenile
-      await _loadMessages();
+      // StreamBuilder otomatik olarak güncellenecek
       
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -341,7 +368,7 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
     if (confirm == true) {
       try {
         await FirestoreService.deleteMessage(messageId);
-        await _loadMessages(); // Mesajları yenile
+        // StreamBuilder otomatik olarak güncellenecek
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('✅ Mesaj silindi'),
@@ -390,7 +417,7 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
     if (result != null && result.isNotEmpty && result != currentMessage) {
       try {
         await FirestoreService.editMessage(messageId, result);
-        await _loadMessages(); // Mesajları yenile
+        // StreamBuilder otomatik olarak güncellenecek
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('✅ Mesaj düzenlendi'),
@@ -405,6 +432,26 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
           ),
         );
       }
+    }
+  }
+
+  Future<void> _sendCurrentMessage() async {
+    // Sesli mesaj varsa onu gönder
+    if (_recordingDuration > 0) {
+      await _sendVoiceMessage();
+      return;
+    }
+    
+    // Görsel mesaj varsa onu gönder
+    if (_selectedImage != null) {
+      await _sendImageMessage();
+      return;
+    }
+    
+    // Metin mesajı gönder
+    final message = _messageController.text.trim();
+    if (message.isNotEmpty) {
+      await _sendMessageToAll();
     }
   }
 
@@ -456,6 +503,96 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
     _messageController.dispose();
     _imageCaptionController.dispose();
     super.dispose();
+  }
+
+  /// Ana sahip tarafından hayvanı silme
+  Future<void> _deletePet() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Hayvanı Sil'),
+        content: const Text(
+          'Bu hayvanı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz ve tüm eş sahipler hayvana erişimini kaybeder.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('İptal'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Sil'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      try {
+        await FirestoreService.deletePetByCreator(widget.pet.id!);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Hayvan silindi'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        // Ana sayfaya dön
+        Navigator.of(context).popUntil((route) => route.isFirst);
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Hayvan silinirken hata: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Eş sahip olarak sahipliği bırakma
+  Future<void> _leaveOwnership() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Sahipliği Bırak'),
+        content: const Text(
+          'Bu hayvandan sahipliği bırakmak istediğinizden emin misiniz? Artık hayvana erişiminiz olmayacak.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('İptal'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Sahipliği Bırak'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      try {
+        await FirestoreService.leavePetOwnership(widget.pet.id!);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Sahiplik bırakıldı'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        // Ana sayfaya dön
+        Navigator.of(context).popUntil((route) => route.isFirst);
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Sahiplik bırakılırken hata: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -512,6 +649,7 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
           tabs: const [
             Tab(text: 'Eş Sahip Ekle'),
             Tab(text: 'Mesajlaşma'),
+            Tab(text: 'Eş Sahip Yönetimi'),
           ],
         ),
       ),
@@ -519,9 +657,8 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
         controller: _tabController,
         children: [
           _buildAddCoOwnerTab(isDark),
-          _buildSendMessageTab(isDark),
-          _buildCoOwnersListTab(isDark),
-          _buildMessagesTab(isDark),
+          _buildChatTab(isDark),
+          _buildCoOwnerManagementTab(isDark),
         ],
       ),
     );
@@ -663,561 +800,173 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
               ],
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSendMessageTab(bool isDark) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Metin Mesajı
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF2D2D2D) : Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.green,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.message,
-                        color: Colors.white,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Metin Mesajı Gönder',
-                            style: TextStyle(
-                              color: isDark ? Colors.white : Colors.black87,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Hayvanınızın tüm sahiplerine metin mesajı gönderin',
-                            style: TextStyle(
-                              color: isDark ? Colors.grey[400] : Colors.grey[600],
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                TextField(
-                  controller: _messageController,
-                  style: TextStyle(
-                    color: isDark ? Colors.white : Colors.black87,
-                    fontSize: 16,
-                  ),
-                  maxLines: 4,
-                  decoration: InputDecoration(
-                    hintText: 'Mesajınızı yazın...',
-                    hintStyle: TextStyle(
-                      color: isDark ? Colors.grey[500] : Colors.grey[400],
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(
-                        color: isDark ? Colors.grey[600]! : Colors.grey[300]!,
-                      ),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(
-                        color: isDark ? Colors.grey[600]! : Colors.grey[300]!,
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Colors.green, width: 2),
-                    ),
-                    filled: true,
-                    fillColor: isDark ? const Color(0xFF1A1A1A) : Colors.grey[50],
-                    contentPadding: const EdgeInsets.all(16),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _isLoading ? null : _sendMessageToAll,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 2,
-                    ),
-                    child: _isLoading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                            ),
-                          )
-                        : const Text(
-                            'Metin Mesajı Gönder',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                  ),
-                ),
-              ],
-            ),
-          ),
           
-          const SizedBox(height: 20),
-          
-          // Görsel Mesaj
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF2D2D2D) : Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.blue,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.image,
-                        color: Colors.white,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Görsel Mesaj Gönder',
-                            style: TextStyle(
-                              color: isDark ? Colors.white : Colors.black87,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Hayvanınızın tüm sahiplerine görsel mesajı gönderin',
-                            style: TextStyle(
-                              color: isDark ? Colors.grey[400] : Colors.grey[600],
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                TextField(
-                  controller: _imageCaptionController,
-                  style: TextStyle(
-                    color: isDark ? Colors.white : Colors.black87,
-                    fontSize: 16,
-                  ),
-                  maxLines: 2,
-                  decoration: InputDecoration(
-                    hintText: 'Görsel açıklaması (opsiyonel)...',
-                    hintStyle: TextStyle(
-                      color: isDark ? Colors.grey[500] : Colors.grey[400],
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(
-                        color: isDark ? Colors.grey[600]! : Colors.grey[300]!,
-                      ),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(
-                        color: isDark ? Colors.grey[600]! : Colors.grey[300]!,
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Colors.blue, width: 2),
-                    ),
-                    filled: true,
-                    fillColor: isDark ? const Color(0xFF1A1A1A) : Colors.grey[50],
-                    contentPadding: const EdgeInsets.all(16),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: _isLoading ? null : _pickImage,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 2,
-                        ),
-                        icon: const Icon(Icons.photo_library),
-                        label: const Text(
-                          'Görsel Seç',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: _isLoading ? null : _sendImageMessage,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 2,
-                        ),
-                        icon: const Icon(Icons.send),
-                        label: const Text(
-                          'Görsel Gönder',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                if (_selectedImage != null) ...[
-                  const SizedBox(height: 16),
-                  Container(
-                    width: double.infinity,
-                    height: 200,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: isDark ? Colors.grey[600]! : Colors.grey[300]!,
-                        width: 2,
-                      ),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: Image.file(
-                        _selectedImage!,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          
-          const SizedBox(height: 20),
-          
-          // Sesli Mesaj
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF2D2D2D) : Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.orange,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.mic,
-                        color: Colors.white,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Sesli Mesaj Gönder',
-                            style: TextStyle(
-                              color: isDark ? Colors.white : Colors.black87,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Hayvanınızın tüm sahiplerine sesli mesajı gönderin',
-                            style: TextStyle(
-                              color: isDark ? Colors.grey[400] : Colors.grey[600],
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: _isLoading ? null : _startRecording,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _isRecording ? Colors.red : Colors.orange,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 2,
-                        ),
-                        icon: Icon(_isRecording ? Icons.stop : Icons.mic),
-                        label: Text(
-                          _isRecording ? 'Kaydı Durdur' : 'Kayda Başla',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: _isLoading ? null : _sendVoiceMessage,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 2,
-                        ),
-                        icon: const Icon(Icons.send),
-                        label: const Text(
-                          'Sesli Mesaj Gönder',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                if (_recordingDuration > 0) ...[
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF1A1A1A) : Colors.grey[50],
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: isDark ? Colors.grey[600]! : Colors.grey[300]!,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.audiotrack,
-                          color: Colors.orange,
-                          size: 24,
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          'Kayıt süresi: ${_recordingDuration}s',
-                          style: TextStyle(
-                            color: isDark ? Colors.white : Colors.black87,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCoOwnersListTab(bool isDark) {
-    if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation<Color>(Colors.purple),
-        ),
-      );
-    }
-
-    if (_coOwners.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.people_outline,
-              color: isDark ? Colors.grey[600] : Colors.grey[400],
-              size: 80,
+          // Eş sahip listesi
+          if (_coOwners.isNotEmpty) ...[
+            const SizedBox(height: 24),
+            Text(
+              'Mevcut Eş Sahipler',
+              style: TextStyle(
+                color: isDark ? Colors.white : Colors.black87,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 16),
-            Text(
-              'Henüz eş sahip eklenmemiş',
-              style: TextStyle(
-                color: isDark ? Colors.grey[400] : Colors.grey[600],
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Eş sahip eklemek için ilk tab\'ı kullanın',
-              style: TextStyle(
-                color: isDark ? Colors.grey[500] : Colors.grey[500],
-                fontSize: 14,
-              ),
-            ),
+            ..._coOwners.map((coOwner) => _buildCoOwnerCard(coOwner, isDark)).toList(),
           ],
-        ),
-      );
-    }
+        ],
+      ),
+    );
+  }
 
-    return RefreshIndicator(
-      onRefresh: _loadCoOwners,
-      child: ListView.builder(
-        padding: const EdgeInsets.all(20),
-        itemCount: _coOwners.length,
-        itemBuilder: (context, index) {
-          final coOwner = _coOwners[index];
-          return Container(
-            margin: const EdgeInsets.only(bottom: 16),
-            padding: const EdgeInsets.all(20),
+  Widget _buildCoOwnerCard(Map<String, dynamic> coOwner, bool isDark) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF2D2D2D) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 50,
+            height: 50,
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF2D2D2D) : Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
+              color: Colors.purple,
+              borderRadius: BorderRadius.circular(25),
+            ),
+            child: Center(
+              child: Text(
+                (coOwner['displayName'] ?? '?').substring(0, 1).toUpperCase(),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  coOwner['displayName'] ?? 'İsimsiz Kullanıcı',
+                  style: TextStyle(
+                    color: isDark ? Colors.white : Colors.black87,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  coOwner['email'] ?? 'Email yok',
+                  style: TextStyle(
+                    color: isDark ? Colors.grey[400] : Colors.grey[600],
+                    fontSize: 14,
+                  ),
                 ),
               ],
             ),
-            child: Row(
-              children: [
-                Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: Colors.purple,
-                    borderRadius: BorderRadius.circular(25),
-                  ),
-                  child: Center(
-                    child: Text(
-                      (coOwner['displayName'] ?? '?').substring(0, 1).toUpperCase(),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
+          ),
+          IconButton(
+            onPressed: () => _removeCoOwner(coOwner['uid']),
+            icon: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.red,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Icon(
+                Icons.remove,
+                color: Colors.white,
+                size: 16,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChatTab(bool isDark) {
+    return Column(
+      children: [
+        // Mesajları görüntüleme alanı - StreamBuilder ile real-time güncelleme
+        Expanded(
+          child: StreamBuilder<List<Map<String, dynamic>>>(
+            stream: FirestoreService.streamCoOwnerMessages(widget.pet.id!),
+            builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return Center(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
+                      Icon(
+                        Icons.error_outline,
+                        size: 64,
+                        color: Colors.red[400],
+                      ),
+                      const SizedBox(height: 16),
                       Text(
-                        coOwner['displayName'] ?? 'İsimsiz Kullanıcı',
+                        'Mesajlar yüklenirken hata oluştu',
                         style: TextStyle(
-                          color: isDark ? Colors.white : Colors.black87,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.grey[400] : Colors.grey[600],
+                          fontSize: 16,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 8),
+                      ElevatedButton(
+                        onPressed: () => setState(() {}),
+                        child: const Text('Tekrar Dene'),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              if (!snapshot.hasData) {
+                return const Center(
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.purple),
+                  ),
+                );
+              }
+
+              final messages = snapshot.data!;
+              
+              if (messages.isEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.chat_bubble_outline,
+                        size: 64,
+                        color: isDark ? Colors.grey[600] : Colors.grey[400],
+                      ),
+                      const SizedBox(height: 16),
                       Text(
-                        coOwner['email'] ?? 'Email yok',
+                        'Henüz mesaj yok',
+                        style: TextStyle(
+                          color: isDark ? Colors.grey[400] : Colors.grey[600],
+                          fontSize: 18,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Eş sahiplerle mesajlaşmaya başlayın',
                         style: TextStyle(
                           color: isDark ? Colors.grey[400] : Colors.grey[600],
                           fontSize: 14,
@@ -1225,326 +974,479 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
                       ),
                     ],
                   ),
-                ),
-                IconButton(
-                  onPressed: () => _removeCoOwner(coOwner['uid']),
-                  icon: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.red,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Icon(
-                      Icons.remove,
-                      color: Colors.white,
-                      size: 16,
-                    ),
+                );
+              }
+
+              return ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: messages.length,
+                reverse: true, // En yeni mesaj altta
+                itemBuilder: (context, index) {
+                  final message = messages[messages.length - 1 - index]; // Ters çevir
+                  final isOwnMessage = message['isOwnMessage'] ?? false;
+                  final timestamp = message['timestamp'] as Timestamp?;
+                  final timeAgo = timestamp != null 
+                      ? _getTimeAgo(timestamp.toDate())
+                      : 'Bilinmeyen zaman';
+
+                  return _buildMessageBubble(message, isOwnMessage, timeAgo, isDark);
+                },
+              );
+            },
+          ),
+        ),
+        
+        // Mesaj gönderme kutusu
+        _buildMessageInputBox(isDark),
+      ],
+    );
+  }
+
+  Widget _buildMessageBubble(Map<String, dynamic> message, bool isOwnMessage, String timeAgo, bool isDark) {
+    return Container(
+      margin: EdgeInsets.only(
+        bottom: 12,
+        left: isOwnMessage ? 60 : 0,
+        right: isOwnMessage ? 0 : 60,
+      ),
+      child: Row(
+        mainAxisAlignment: isOwnMessage ? MainAxisAlignment.end : MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          if (!isOwnMessage) ...[
+            // Diğer kullanıcıların avatar'ı
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: Colors.purple,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Center(
+                child: Text(
+                  (message['senderName'] ?? '?').substring(0, 1).toUpperCase(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-              ],
+              ),
             ),
-          );
-        },
+            const SizedBox(width: 8),
+          ],
+          
+          // Mesaj baloncuğu
+          Flexible(
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: isOwnMessage 
+                    ? Colors.blue
+                    : (isDark ? const Color(0xFF2D2D2D) : Colors.grey[200]),
+                borderRadius: BorderRadius.only(
+                  topLeft: const Radius.circular(18),
+                  topRight: const Radius.circular(18),
+                  bottomLeft: Radius.circular(isOwnMessage ? 18 : 4),
+                  bottomRight: Radius.circular(isOwnMessage ? 4 : 18),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Gönderen adı (sadece diğer kullanıcılar için)
+                  if (!isOwnMessage) ...[
+                    Text(
+                      message['senderName'] ?? 'İsimsiz Kullanıcı',
+                      style: TextStyle(
+                        color: Colors.purple,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                  ],
+                  
+                  // Mesaj içeriği
+                  _buildMessageContent(message, isOwnMessage, isDark),
+                  
+                  const SizedBox(height: 4),
+                  
+                  // Zaman ve işlem butonları
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        timeAgo,
+                        style: TextStyle(
+                          color: isOwnMessage 
+                              ? Colors.white70 
+                              : (isDark ? Colors.grey[500] : Colors.grey[600]),
+                          fontSize: 10,
+                        ),
+                      ),
+                      if (isOwnMessage) ...[
+                        const SizedBox(width: 8),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Düzenle butonu (sadece metin mesajları için)
+                            if (message['messageType'] == 'text')
+                              GestureDetector(
+                                onTap: () => _editMessage(
+                                  message['messageId'],
+                                  message['message'] ?? '',
+                                ),
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Icon(
+                                    Icons.edit,
+                                    color: Colors.white,
+                                    size: 12,
+                                  ),
+                                ),
+                              ),
+                            const SizedBox(width: 4),
+                            // Sil butonu
+                            GestureDetector(
+                              onTap: () => _deleteMessage(message['messageId']),
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: Colors.red.withOpacity(0.3),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Icon(
+                                  Icons.delete,
+                                  color: Colors.white,
+                                  size: 12,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          
+          if (isOwnMessage) ...[
+            const SizedBox(width: 8),
+            // Kendi avatar'ımız
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: Colors.blue,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Center(
+                child: Icon(
+                  Icons.person,
+                  color: Colors.white,
+                  size: 16,
+                ),
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }
 
-  Widget _buildMessagesTab(bool isDark) {
-    return RefreshIndicator(
-      onRefresh: _loadMessages,
-      child: _messages.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.chat_bubble_outline,
-                    size: 64,
-                    color: isDark ? Colors.grey[600] : Colors.grey[400],
+  Widget _buildMessageContent(Map<String, dynamic> message, bool isOwnMessage, bool isDark) {
+    final messageType = message['messageType'] ?? 'text';
+    
+    switch (messageType) {
+      case 'text':
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              message['message'] ?? '',
+              style: TextStyle(
+                color: isOwnMessage ? Colors.white : (isDark ? Colors.white : Colors.black87),
+                fontSize: 14,
+                height: 1.3,
+              ),
+            ),
+            // Düzenlendi etiketi
+            if (message['isEdited'] == true) ...[
+              const SizedBox(height: 2),
+              Text(
+                'düzenlendi',
+                style: TextStyle(
+                  color: isOwnMessage ? Colors.white60 : Colors.grey[500],
+                  fontSize: 10,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ],
+        );
+        
+      case 'image':
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (message['imageUrl'] != null) ...[
+              Container(
+                constraints: const BoxConstraints(maxWidth: 200, maxHeight: 200),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(
+                    message['imageUrl'],
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        width: 200,
+                        height: 150,
+                        color: Colors.grey[300],
+                        child: const Icon(
+                          Icons.broken_image,
+                          color: Colors.grey,
+                          size: 32,
+                        ),
+                      );
+                    },
                   ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Henüz mesaj yok',
-                    style: TextStyle(
-                      color: isDark ? Colors.grey[400] : Colors.grey[600],
-                      fontSize: 18,
-                      fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+            if (message['caption']?.isNotEmpty == true) ...[
+              const SizedBox(height: 4),
+              Text(
+                message['caption'],
+                style: TextStyle(
+                  color: isOwnMessage ? Colors.white : (isDark ? Colors.white : Colors.black87),
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ],
+        );
+        
+      case 'voice':
+        return Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: (isOwnMessage ? Colors.white : Colors.orange).withOpacity(0.2),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.play_arrow,
+                color: isOwnMessage ? Colors.white : Colors.orange,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Sesli mesaj (${message['durationSeconds'] ?? 0}s)',
+                style: TextStyle(
+                  color: isOwnMessage ? Colors.white : (isDark ? Colors.white : Colors.black87),
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        );
+        
+      default:
+        return Text(
+          'Desteklenmeyen mesaj türü',
+          style: TextStyle(
+            color: isOwnMessage ? Colors.white70 : Colors.grey[500],
+            fontSize: 12,
+            fontStyle: FontStyle.italic,
+          ),
+        );
+    }
+  }
+
+  Widget _buildMessageInputBox(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        border: Border(
+          top: BorderSide(
+            color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
+            width: 1,
+          ),
+        ),
+      ),
+      child: Column(
+        children: [
+          // Seçilen görsel önizlemesi
+          if (_selectedImage != null) ...[
+            Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              height: 80,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey[400]!),
+              ),
+              child: Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(8),
+                      bottomLeft: Radius.circular(8),
+                    ),
+                    child: Image.file(
+                      _selectedImage!,
+                      width: 80,
+                      height: 80,
+                      fit: BoxFit.cover,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                                     Text(
-                     'Eş sahiplerle metin, görsel ve sesli mesajlaşmak için ikinci tab\'ı kullanın',
-                     style: TextStyle(
-                       color: isDark ? Colors.grey[400] : Colors.grey[600],
-                       fontSize: 14,
-                     ),
-                   ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: TextField(
+                        controller: _imageCaptionController,
+                        decoration: const InputDecoration(
+                          hintText: 'Görsel açıklaması...',
+                          border: InputBorder.none,
+                        ),
+                        maxLines: 2,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () {
+                      setState(() {
+                        _selectedImage = null;
+                      });
+                      _imageCaptionController.clear();
+                    },
+                    icon: const Icon(Icons.close, color: Colors.red),
+                  ),
                 ],
               ),
-            )
-          : ListView.builder(
-              padding: const EdgeInsets.all(20),
-              itemCount: _messages.length,
-              itemBuilder: (context, index) {
-                final message = _messages[index];
-                final isOwnMessage = message['isOwnMessage'] ?? false;
-                final timestamp = message['timestamp'] as Timestamp?;
-                final timeAgo = timestamp != null 
-                    ? _getTimeAgo(timestamp.toDate())
-                    : 'Bilinmeyen zaman';
-
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 16),
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: isOwnMessage 
-                        ? (isDark ? Colors.blue.shade900 : Colors.blue.shade50)
-                        : (isDark ? const Color(0xFF2D2D2D) : Colors.white),
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: isOwnMessage ? Colors.blue : Colors.purple,
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Center(
-                              child: Text(
-                                (message['senderName'] ?? '?').substring(0, 1).toUpperCase(),
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  message['senderName'] ?? 'İsimsiz Kullanıcı',
-                                  style: TextStyle(
-                                    color: isDark ? Colors.white : Colors.black87,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                Text(
-                                  timeAgo,
-                                  style: TextStyle(
-                                    color: isDark ? Colors.grey[400] : Colors.grey[600],
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                                                     if (isOwnMessage) ...[
-                             Container(
-                               padding: const EdgeInsets.all(4),
-                               decoration: BoxDecoration(
-                                 color: Colors.blue,
-                                 borderRadius: BorderRadius.circular(8),
-                               ),
-                               child: const Text(
-                                 'Siz',
-                                 style: TextStyle(
-                                   color: Colors.white,
-                                   fontSize: 10,
-                                   fontWeight: FontWeight.bold,
-                                 ),
-                               ),
-                             ),
-                             const SizedBox(width: 8),
-                             // Mesaj işlemleri butonları
-                             Row(
-                               mainAxisSize: MainAxisSize.min,
-                               children: [
-                                 // Düzenle butonu (sadece metin mesajları için)
-                                 if (message['messageType'] == 'text')
-                                   Container(
-                                     decoration: BoxDecoration(
-                                       color: isDark ? Colors.blue.shade900 : Colors.blue.shade50,
-                                       borderRadius: BorderRadius.circular(16),
-                                     ),
-                                     child: IconButton(
-                                       onPressed: () => _editMessage(
-                                         message['messageId'],
-                                         message['message'] ?? '',
-                                       ),
-                                       icon: Icon(
-                                         Icons.edit,
-                                         color: isDark ? Colors.blue[300] : Colors.blue[600],
-                                         size: 16,
-                                       ),
-                                       tooltip: 'Düzenle',
-                                       padding: const EdgeInsets.all(8),
-                                       constraints: const BoxConstraints(
-                                         minWidth: 32,
-                                         minHeight: 32,
-                                       ),
-                                     ),
-                                   ),
-                                 // Sil butonu
-                                 IconButton(
-                                   onPressed: () => _deleteMessage(message['messageId']),
-                                   icon: Icon(
-                                     Icons.delete,
-                                     color: isDark ? Colors.red[300] : Colors.red[600],
-                                     size: 18,
-                                   ),
-                                   tooltip: 'Sil',
-                                   padding: EdgeInsets.zero,
-                                   constraints: const BoxConstraints(
-                                     minWidth: 32,
-                                     minHeight: 32,
-                                   ),
-                                 ),
-                               ],
-                             ),
-                           ],
-                        ],
-                      ),
-                                             const SizedBox(height: 12),
-                       // Mesaj içeriğini mesaj türüne göre göster
-                                               if (message['messageType'] == 'text') ...[
-                          Text(
-                            message['message'] ?? '',
-                            style: TextStyle(
-                              color: isDark ? Colors.white : Colors.black87,
-                              fontSize: 16,
-                              height: 1.4,
-                            ),
-                          ),
-                          // Düzenlendi etiketi
-                          if (message['isEdited'] == true) ...[
-                            const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.edit,
-                                  size: 12,
-                                  color: isDark ? Colors.grey[500] : Colors.grey[600],
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  'Düzenlendi',
-                                  style: TextStyle(
-                                    color: isDark ? Colors.grey[500] : Colors.grey[600],
-                                    fontSize: 10,
-                                    fontStyle: FontStyle.italic,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ] else if (message['messageType'] == 'image') ...[
-                         if (message['imageUrl'] != null) ...[
-                           Container(
-                             width: double.infinity,
-                             height: 200,
-                             decoration: BoxDecoration(
-                               borderRadius: BorderRadius.circular(8),
-                               border: Border.all(
-                                 color: isDark ? Colors.grey[600]! : Colors.grey[300]!,
-                               ),
-                             ),
-                             child: ClipRRect(
-                               borderRadius: BorderRadius.circular(6),
-                               child: Image.network(
-                                 message['imageUrl'],
-                                 fit: BoxFit.cover,
-                                 errorBuilder: (context, error, stackTrace) {
-                                   return Container(
-                                     color: isDark ? Colors.grey[800] : Colors.grey[200],
-                                     child: Icon(
-                                       Icons.broken_image,
-                                       color: isDark ? Colors.grey[600] : Colors.grey[400],
-                                       size: 48,
-                                     ),
-                                   );
-                                 },
-                               ),
-                             ),
-                           ),
-                         ],
-                         if (message['caption']?.isNotEmpty == true) ...[
-                           const SizedBox(height: 8),
-                           Text(
-                             message['caption'],
-                             style: TextStyle(
-                               color: isDark ? Colors.grey[400] : Colors.grey[600],
-                               fontSize: 14,
-                               fontStyle: FontStyle.italic,
-                             ),
-                           ),
-                         ],
-                       ] else if (message['messageType'] == 'voice') ...[
-                         Container(
-                           padding: const EdgeInsets.all(12),
-                           decoration: BoxDecoration(
-                             color: isDark ? Colors.orange.shade900 : Colors.orange.shade50,
-                             borderRadius: BorderRadius.circular(8),
-                             border: Border.all(
-                               color: Colors.orange,
-                               width: 1,
-                             ),
-                           ),
-                           child: Row(
-                             children: [
-                               Icon(
-                                 Icons.play_arrow,
-                                 color: Colors.orange,
-                                 size: 24,
-                               ),
-                               const SizedBox(width: 12),
-                               Expanded(
-                                 child: Column(
-                                   crossAxisAlignment: CrossAxisAlignment.start,
-                                   children: [
-                                     Text(
-                                       'Sesli Mesaj',
-                                       style: TextStyle(
-                                         color: isDark ? Colors.white : Colors.black87,
-                                         fontSize: 16,
-                                         fontWeight: FontWeight.w500,
-                                       ),
-                                     ),
-                                     Text(
-                                       '${message['durationSeconds'] ?? 0} saniye',
-                                       style: TextStyle(
-                                         color: isDark ? Colors.grey[400] : Colors.grey[600],
-                                         fontSize: 12,
-                                       ),
-                                     ),
-                                   ],
-                                 ),
-                               ),
-                             ],
-                           ),
-                         ),
-                       ],
-                    ],
-                  ),
-                );
-              },
             ),
+          ],
+          
+          // Kayıt durumu göstergesi
+          if (_isRecording) ...[
+            Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.red.withOpacity(0.3)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.mic, color: Colors.red, size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Ses kaydediliyor... ${_recordingDuration}s',
+                    style: const TextStyle(color: Colors.red, fontWeight: FontWeight.w500),
+                  ),
+                  const Spacer(),
+                  GestureDetector(
+                    onTap: _startRecording,
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.stop, color: Colors.white, size: 16),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          
+          // Ana mesaj input satırı
+          Row(
+            children: [
+              // Fotoğraf butonu
+              IconButton(
+                onPressed: _pickImage,
+                icon: Icon(
+                  Icons.camera_alt,
+                  color: isDark ? Colors.grey[400] : Colors.grey[600],
+                ),
+                tooltip: 'Fotoğraf ekle',
+              ),
+              
+              // Ses kaydı butonu
+              IconButton(
+                onPressed: _startRecording,
+                icon: Icon(
+                  _isRecording ? Icons.stop : Icons.mic,
+                  color: _isRecording ? Colors.red : (isDark ? Colors.grey[400] : Colors.grey[600]),
+                ),
+                tooltip: _isRecording ? 'Kaydı durdur' : 'Ses kaydı',
+              ),
+              
+              // Mesaj input alanı
+              Expanded(
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF2D2D2D) : Colors.grey[100],
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: isDark ? Colors.grey[600]! : Colors.grey[300]!,
+                    ),
+                  ),
+                  child: TextField(
+                    controller: _messageController,
+                    decoration: const InputDecoration(
+                      hintText: 'Mesaj yazın...',
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                    maxLines: 4,
+                    minLines: 1,
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                ),
+              ),
+              
+              // Gönder butonu
+              IconButton(
+                onPressed: _sendCurrentMessage,
+                icon: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: const BoxDecoration(
+                    color: Colors.blue,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.send,
+                    color: Colors.white,
+                    size: 16,
+                  ),
+                ),
+                tooltip: 'Gönder',
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -1562,4 +1464,210 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
       return 'Az önce';
     }
   }
+
+  Widget _buildCoOwnerManagementTab(bool isDark) {
+    if (_isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(Colors.purple),
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadCoOwners,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Ana sahip bilgisi ve silme butonu
+            _buildMainOwnerSection(isDark),
+            const SizedBox(height: 24),
+            
+            // Eş sahip listesi
+            if (_coOwners.isNotEmpty) ...[
+              Text(
+                'Eş Sahipler',
+                style: TextStyle(
+                  color: isDark ? Colors.white : Colors.black87,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              ..._coOwners.map((coOwner) => _buildCoOwnerCard(coOwner, isDark)).toList(),
+            ] else ...[
+              Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.people_outline,
+                      color: isDark ? Colors.grey[600] : Colors.grey[400],
+                      size: 80,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Henüz eş sahip eklenmemiş',
+                      style: TextStyle(
+                        color: isDark ? Colors.grey[400] : Colors.grey[600],
+                        fontSize: 18,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Eş sahip eklemek için ilk tab\'ı kullanın',
+                      style: TextStyle(
+                        color: isDark ? Colors.grey[500] : Colors.grey[500],
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMainOwnerSection(bool isDark) {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    final isCreator = currentUser?.uid == widget.pet.creator;
+    
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF2D2D2D) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: isCreator ? Colors.red : Colors.blue,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  isCreator ? Icons.pets : Icons.person,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isCreator ? 'Ana Sahip (Siz)' : 'Ana Sahip',
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black87,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      currentUser?.email ?? 'Email yok',
+                      style: TextStyle(
+                        color: isDark ? Colors.grey[400] : Colors.grey[600],
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          
+          if (isCreator) ...[
+            // Ana sahip için hayvan silme butonu
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _isLoading ? null : _deletePet,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 2,
+                ),
+                child: _isLoading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : const Text(
+                        'Hayvanı Sil',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+              ),
+            ),
+          ] else ...[
+            // Eş sahip için sahiplik bırakma butonu
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _isLoading ? null : _leaveOwnership,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 2,
+                ),
+                child: _isLoading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : const Text(
+                        'Sahipliği Bırak',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+
 }

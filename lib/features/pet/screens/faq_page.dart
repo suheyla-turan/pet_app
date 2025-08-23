@@ -47,7 +47,7 @@ class _FAQPageState extends State<FAQPage> with TickerProviderStateMixin {
           ),
           FAQItem(
             question: "Hangi cihazlarda çalışır?",
-            answer: "PatiTakip Android ve iOS cihazlarda çalışır. Web versiyonu da yakında gelecektir.",
+            answer: "PatiTakip şu anda sadece Android cihazlarda çalışmaktadır.",
           ),
         ],
       ),
@@ -65,16 +65,8 @@ class _FAQPageState extends State<FAQPage> with TickerProviderStateMixin {
             answer: l10n.faqHowToUseAIAnswer,
           ),
           FAQItem(
-            question: l10n.faqVoiceCommands,
-            answer: l10n.faqVoiceCommandsAnswer,
-          ),
-          FAQItem(
             question: l10n.faqNotifications,
             answer: l10n.faqNotificationsAnswer,
-          ),
-          FAQItem(
-            question: "Çoklu kullanıcı desteği nasıl çalışır?",
-            answer: "Evcil hayvan detay sayfasında 'Sahipler' bölümünden diğer kullanıcıları ekleyebilirsiniz. Bu sayede aile üyeleri de hayvan bakımına katılabilir ve aynı bilgilere erişebilir.",
           ),
           FAQItem(
             question: "Verilerim güvenli mi?",
@@ -105,11 +97,11 @@ class _FAQPageState extends State<FAQPage> with TickerProviderStateMixin {
           ),
           FAQItem(
             question: "Evcil hayvanımın ağırlığını takip edebilir miyim?",
-            answer: "Evet, evcil hayvanınızın ağırlığını günlük notlarda kaydedebilirsiniz. Bu sayede kilo değişimlerini takip edebilir ve sağlık durumunu izleyebilirsiniz.",
+            answer: "Evet, evcil hayvanınızın ağırlığını notlarda kaydedebilirsiniz. Bu sayede kilo değişimlerini takip edebilir ve sağlık durumunu izleyebilirsiniz.",
           ),
           FAQItem(
             question: "Veteriner randevularını takip edebilir miyim?",
-            answer: "Evet, veteriner randevularını özel bakım aktiviteleri olarak ekleyebilir ve hatırlatıcılar ayarlayabilirsiniz.",
+            answer: "Evet, veteriner randevularını notlarda kaydedebilirsiniz.",
           ),
         ],
       ),
@@ -136,11 +128,11 @@ class _FAQPageState extends State<FAQPage> with TickerProviderStateMixin {
           ),
           FAQItem(
             question: "Evcil hayvanımın uyku düzenini takip edebilir miyim?",
-            answer: "Evet, evcil hayvanınızın uyku düzenini günlük notlarda kaydedebilirsiniz. Uyku süresi ve kalitesi hakkında notlar alabilirsiniz.",
+            answer: "Evet, evcil hayvanınızın uyku düzenini notlarda kaydedebilirsiniz. Uyku süresi ve kalitesi hakkında notlar alabilirsiniz.",
           ),
           FAQItem(
             question: "Sosyal aktiviteleri nasıl kaydedebilirim?",
-            answer: "Evcil hayvanınızın diğer hayvanlarla oyun zamanlarını, park ziyaretlerini ve sosyal aktivitelerini günlük notlarda kaydedebilirsiniz.",
+            answer: "Evcil hayvanınızın diğer hayvanlarla oyun zamanlarını, park ziyaretlerini ve sosyal aktivitelerini notlarda kaydedebilirsiniz.",
           ),
         ],
       ),
@@ -163,7 +155,7 @@ class _FAQPageState extends State<FAQPage> with TickerProviderStateMixin {
           ),
           FAQItem(
             question: "Farklı ülkelerde aşı gereksinimleri hakkında bilgi alabilir miyim?",
-            answer: "AI sohbet özelliğini kullanarak farklı ülkelerdeki aşı gereksinimleri hakkında bilgi alabilirsiniz. Ancak her zaman resmi veteriner kaynaklarını kontrol etmenizi öneririz.",
+            answer: "AI sohbet özelliğini kullanarak genel bilgi alabilirsiniz, ancak her zaman resmi veteriner kaynaklarını kontrol etmenizi öneririz.",
           ),
         ],
       ),
@@ -186,11 +178,7 @@ class _FAQPageState extends State<FAQPage> with TickerProviderStateMixin {
           ),
           FAQItem(
             question: "İnternet bağlantısı olmadan uygulamayı kullanabilir miyim?",
-            answer: "Temel özellikler offline olarak çalışır, ancak veri senkronizasyonu ve AI sohbet için internet bağlantısı gereklidir.",
-          ),
-          FAQItem(
-            question: "Verilerimi dışa aktarabilir miyim?",
-            answer: "Evet, evcil hayvan verilerinizi PDF formatında dışa aktarabilirsiniz. Bu özellik yakında gelecektir.",
+            answer: "Temel özellikler sınırlı olarak offline çalışır, ancak veri senkronizasyonu ve AI sohbet için internet bağlantısı gereklidir.",
           ),
           FAQItem(
             question: "Uygulama ne kadar yer kaplar?",
@@ -208,10 +196,6 @@ class _FAQPageState extends State<FAQPage> with TickerProviderStateMixin {
             answer: l10n.faqContactSupportAnswer,
           ),
           FAQItem(
-            question: l10n.faqPrivacyPolicy,
-            answer: l10n.faqPrivacyPolicyAnswer,
-          ),
-          FAQItem(
             question: l10n.faqTermsOfService,
             answer: l10n.faqTermsOfServiceAnswer,
           ),
@@ -222,10 +206,6 @@ class _FAQPageState extends State<FAQPage> with TickerProviderStateMixin {
           FAQItem(
             question: "Özellik önerisi nasıl yapabilirim?",
             answer: "Yeni özellik önerilerinizi 'Geri Bildirim' bölümünden gönderebilirsiniz. Tüm öneriler değerlendirilir ve en popüler olanlar geliştirilir.",
-          ),
-          FAQItem(
-            question: "Topluluk forumu var mı?",
-            answer: "Evet, yakında PatiTakip kullanıcıları için bir topluluk forumu açılacaktır. Burada deneyimlerinizi paylaşabilir ve diğer kullanıcılardan tavsiye alabilirsiniz.",
           ),
         ],
       ),

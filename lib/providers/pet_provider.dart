@@ -3,6 +3,7 @@ import 'dart:async';
 import '../features/pet/models/pet.dart';
 import '../services/firestore_service.dart';
 import '../services/notification_service.dart';
+import '../services/background_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../providers/settings_provider.dart';
 import '../services/realtime_service.dart';
@@ -279,5 +280,35 @@ class PetProvider with ChangeNotifier {
   void dispose() {
     _timer?.cancel();
     super.dispose();
+  }
+
+  /// Background service'i başlat
+  Future<void> startBackgroundService() async {
+    try {
+      await BackgroundService.startBackgroundTask();
+      print('✅ Background service başlatıldı');
+    } catch (e) {
+      print('❌ Background service başlatılamadı: $e');
+    }
+  }
+
+  /// Background service'i durdur
+  Future<void> stopBackgroundService() async {
+    try {
+      await BackgroundService.stop();
+      print('✅ Background service durduruldu');
+    } catch (e) {
+      print('❌ Background service durdurulamadı: $e');
+    }
+  }
+
+  /// Uygulama açıldığında background service'i başlat
+  Future<void> initializeBackgroundService() async {
+    try {
+      await startBackgroundService();
+      print('✅ Background service initialize edildi');
+    } catch (e) {
+      print('❌ Background service initialize edilemedi: $e');
+    }
   }
 } 

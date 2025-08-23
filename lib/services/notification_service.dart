@@ -437,4 +437,114 @@ class NotificationService {
     }
     return null;
   }
+
+  /// Veteriner randevu bildirimi (3 gün önce)
+  static Future<void> showVetAppointmentReminderNotification(String petName, DateTime appointmentDate, {String? customSound}) async {
+    await initialize();
+    
+    final androidDetails = AndroidNotificationDetails(
+      'vet_appointment_channel',
+      'Veteriner Randevu Bildirimleri',
+      channelDescription: 'Veteriner randevu hatırlatma bildirimleri',
+      importance: Importance.high,
+      priority: Priority.high,
+      icon: 'paw_notification_icon',
+      largeIcon: const DrawableResourceAndroidBitmap('@mipmap/launcher_icon'),
+      color: const Color(0xFF8B5CF6), // Mor renk (veteriner için)
+      showWhen: true,
+      when: DateTime.now().millisecondsSinceEpoch,
+    );
+    
+    final iosDetails = DarwinNotificationDetails(
+      sound: customSound != null ? '$customSound.wav' : null,
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+    
+    final details = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+
+    await _notifications.show(
+      8,
+      '🏥 Veteriner Randevu Hatırlatması',
+      '$petName için veteriner randevusu 3 gün sonra! Hazırlıkları yapmayı unutmayın.',
+      details,
+    );
+  }
+
+  /// Veteriner randevu bildirimi (randevu günü)
+  static Future<void> showVetAppointmentTodayNotification(String petName, DateTime appointmentDate, {String? customSound}) async {
+    await initialize();
+    
+    final androidDetails = AndroidNotificationDetails(
+      'vet_appointment_channel',
+      'Veteriner Randevu Bildirimleri',
+      channelDescription: 'Veteriner randevu hatırlatma bildirimleri',
+      importance: Importance.high,
+      priority: Priority.high,
+      icon: 'paw_notification_icon',
+      largeIcon: const DrawableResourceAndroidBitmap('@mipmap/launcher_icon'),
+      color: const Color(0xFF8B5CF6), // Mor renk (veteriner için)
+      showWhen: true,
+      when: DateTime.now().millisecondsSinceEpoch,
+    );
+    
+    final iosDetails = DarwinNotificationDetails(
+      sound: customSound != null ? '$customSound.wav' : null,
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+    
+    final details = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+
+    await _notifications.show(
+      9,
+      '🏥 Veteriner Randevusu Bugün!',
+      '$petName için veteriner randevusu bugün! Randevu saatini kontrol edin.',
+      details,
+    );
+  }
+
+  /// Veteriner randevu bildirimlerini zamanla
+  static Future<void> scheduleVetAppointmentNotifications(String petId, String petName, DateTime appointmentDate) async {
+    // 3 gün önce bildirim
+    final threeDaysBefore = appointmentDate.subtract(const Duration(days: 3));
+    if (threeDaysBefore.isAfter(DateTime.now())) {
+      await scheduleNotification(
+        id: int.parse('${petId.hashCode}1'), // Unique ID için
+        title: '🏥 Veteriner Randevu Hatırlatması',
+        body: '$petName için veteriner randevusu 3 gün sonra! Hazırlıkları yapmayı unutmayın.',
+        scheduledTime: threeDaysBefore,
+      );
+    }
+
+    // Randevu günü bildirim (sabah 9'da)
+    final appointmentDay = DateTime(
+      appointmentDate.year,
+      appointmentDate.month,
+      appointmentDate.day,
+      9, // Sabah 9
+    );
+    if (appointmentDay.isAfter(DateTime.now())) {
+      await scheduleNotification(
+        id: int.parse('${petId.hashCode}2'), // Unique ID için
+        title: '🏥 Veteriner Randevusu Bugün!',
+        body: '$petName için veteriner randevusu bugün! Randevu saatini kontrol edin.',
+        scheduledTime: appointmentDay,
+      );
+    }
+  }
+
+  /// Veteriner randevu bildirimlerini iptal et
+  static Future<void> cancelVetAppointmentNotifications(String petId) async {
+    await _notifications.cancel(int.parse('${petId.hashCode}1'));
+    await _notifications.cancel(int.parse('${petId.hashCode}2'));
+  }
 } 

@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../features/pet/models/pet.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'notification_service.dart';
+import 'dart:io'; // Added for File
 
 class FirestoreService {
   static Future<void> hayvanEkle(Pet pet) async {
@@ -321,6 +322,121 @@ class FirestoreService {
         throw Exception('Hayvan bulunamadı. Lütfen sayfayı yenileyin.');
       } else {
         throw Exception('Eş sahip kaldırılırken beklenmeyen bir hata oluştu: ${e.toString()}');
+      }
+    }
+  }
+
+  /// Ana sahip (creator) tarafından hayvanı silme
+  static Future<void> deletePetByCreator(String petId) async {
+    try {
+      // Mevcut kullanıcıyı kontrol et
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) {
+        throw Exception('Kullanıcı oturumu yok. Lütfen tekrar giriş yapın.');
+      }
+
+      // Hayvan dokümanını getir ve yetkiyi kontrol et
+      final petDoc = await FirebaseFirestore.instance.collection('hayvanlar').doc(petId).get();
+      if (!petDoc.exists) {
+        throw Exception('Hayvan bulunamadı');
+      }
+
+      final petData = petDoc.data()!;
+      final creatorId = petData['creator'] as String?;
+
+      // Sadece hayvanın yaratıcısı silebilir
+      if (creatorId != currentUser.uid) {
+        throw Exception('Bu hayvanı silme yetkiniz yok. Sadece hayvanın ana sahibi silebilir.');
+      }
+      
+      // Hayvanı sil
+      await FirebaseFirestore.instance.collection('hayvanlar').doc(petId).delete();
+      
+      // İlgili mesajları da sil
+      final messagesSnapshot = await FirebaseFirestore.instance
+          .collection('pet_messages')
+          .where('petId', isEqualTo: petId)
+          .get();
+      
+      for (final doc in messagesSnapshot.docs) {
+        await doc.reference.delete();
+      }
+      
+      // Eş sahip isteklerini de sil
+      final requestsSnapshot = await FirebaseFirestore.instance
+          .collection('co_owner_requests')
+          .where('petId', isEqualTo: petId)
+          .get();
+      
+      for (final doc in requestsSnapshot.docs) {
+        await doc.reference.delete();
+      }
+      
+      print('✅ Hayvan ve ilgili tüm veriler silindi');
+    } catch (e) {
+      print('❌ HATA - Hayvan silinemedi: $e');
+      
+      // Hata türüne göre özel mesajlar
+      if (e.toString().contains('permission-denied')) {
+        throw Exception('Yetki hatası: Bu işlemi gerçekleştirmek için gerekli izinleriniz yok. Lütfen tekrar giriş yapın veya uygulama ayarlarını kontrol edin.');
+      } else if (e.toString().contains('not-found')) {
+        throw Exception('Hayvan bulunamadı. Lütfen sayfayı yenileyin.');
+      } else {
+        throw Exception('Hayvan silinirken beklenmeyen bir hata oluştu: ${e.toString()}');
+      }
+    }
+  }
+
+  /// Eş sahip olarak kendini kaldırma (sahipliği bırakma)
+  static Future<void> leavePetOwnership(String petId) async {
+    try {
+      // Mevcut kullanıcıyı kontrol et
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) {
+        throw Exception('Kullanıcı oturumu yok. Lütfen tekrar giriş yapın.');
+      }
+
+      // Hayvan dokümanını getir ve yetkiyi kontrol et
+      final petDoc = await FirebaseFirestore.instance.collection('hayvanlar').doc(petId).get();
+      if (!petDoc.exists) {
+        throw Exception('Hayvan bulunamadı');
+      }
+
+      final petData = petDoc.data()!;
+      final ownerIds = List<String>.from(petData['owners'] ?? []);
+      final creatorId = petData['creator'] as String?;
+
+      // Kullanıcının bu hayvana sahip olup olmadığını kontrol et
+      if (!ownerIds.contains(currentUser.uid)) {
+        throw Exception('Bu hayvandan sahiplik bırakma yetkiniz yok. Zaten sahip değilsiniz.');
+      }
+
+      // Ana sahip (creator) sahipliği bırakamaz
+      if (creatorId == currentUser.uid) {
+        throw Exception('Ana sahip olarak sahipliği bırakamazsınız. Önce hayvanı silmeniz gerekiyor.');
+      }
+
+      // En az bir sahip kalmalı
+      if (ownerIds.length <= 1) {
+        throw Exception('Sahipliği bırakamazsınız. En az bir sahip kalmalı.');
+      }
+      
+      // Kendini hayvandan kaldır
+      await FirebaseFirestore.instance.collection('hayvanlar').doc(petId).update({
+        'owners': FieldValue.arrayRemove([currentUser.uid])
+      });
+      
+      print('✅ Sahiplik bırakıldı');
+    } catch (e) {
+      print('❌ HATA - Sahiplik bırakılamadı: $e');
+      
+      // Hata türüne göre özel mesajlar
+      if (e.toString().contains('permission-denied')) {
+        throw Exception('Yetki hatası: Bu işlemi gerçekleştirmek için gerekli izinleriniz yok. Lütfen tekrar giriş yapın veya uygulama ayarlarını kontrol edin.');
+      } else if (e.toString().contains('not-found')) {
+        throw Exception('Hayvan bulunamadı. Lütfen sayfayı yenileyin.');
+      } else {
+        throw Exception('Sahiplik bırakılırken beklenmeyen bir hata oluştu: ${e.toString()}');
       }
     }
   }
@@ -889,4 +1005,97 @@ class FirestoreService {
       print('❌ HATA - Feedback mesajı kaydedilemedi: $e');
     }
   }
+
+  /// Eş sahip mesajlaşma metodları
+  static Future<void> sendCoOwnerMessage(
+    String petId,
+    String message,
+    String messageType, {
+    File? imageFile,
+    String? caption,
+    int? durationSeconds,
+  }) async {
+    try {
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) {
+        throw Exception('Kullanıcı giriş yapmamış');
+      }
+
+      final messageData = {
+        'petId': petId,
+        'senderId': currentUser.uid,
+        'senderEmail': currentUser.email,
+        'message': message,
+        'messageType': messageType,
+        'timestamp': FieldValue.serverTimestamp(),
+        'caption': caption,
+        'durationSeconds': durationSeconds,
+      };
+
+      // Eğer resim dosyası varsa, önce yükle
+      if (imageFile != null) {
+        // Resim yükleme işlemi burada yapılacak
+        // Şimdilik sadece caption'ı gönderelim
+        messageData['imageUrl'] = 'placeholder_image_url';
+      }
+
+      await FirebaseFirestore.instance
+          .collection('coOwnerMessages')
+          .add(messageData);
+
+      // Pet dokümanına son mesaj bilgisini güncelle
+      await FirebaseFirestore.instance
+          .collection('pets')
+          .doc(petId)
+          .update({
+        'lastMessage': message,
+        'lastMessageTime': FieldValue.serverTimestamp(),
+      });
+
+    } catch (e) {
+      throw Exception('Mesaj gönderilirken hata: $e');
+    }
+  }
+
+  /// Eş sahip mesajlarını real-time olarak dinle
+  static Stream<List<Map<String, dynamic>>> streamCoOwnerMessages(String petId) {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) throw Exception('Kullanıcı oturumu yok');
+      
+      return FirebaseFirestore.instance
+          .collection('pet_messages')
+          .where('petId', isEqualTo: petId)
+          .orderBy('timestamp', descending: true)
+          .snapshots()
+          .map((snapshot) {
+        return snapshot.docs.map((doc) {
+          final data = doc.data();
+          return {
+            'messageId': doc.id,
+            'petId': data['petId'],
+            'petName': data['petName'],
+            'senderId': data['senderId'],
+            'senderName': data['senderName'],
+            'senderEmail': data['senderEmail'],
+            'message': data['message'],
+            'timestamp': data['timestamp'],
+            'isOwnMessage': data['senderId'] == user.uid,
+            'messageType': data['messageType'] ?? 'text',
+            'imageUrl': data['imageUrl'],
+            'caption': data['caption'],
+            'audioUrl': data['audioUrl'],
+            'durationSeconds': data['durationSeconds'],
+            'isEdited': data['isEdited'] ?? false,
+            'editedAt': data['editedAt'],
+          };
+        }).toList();
+      });
+    } catch (e) {
+      print('❌ HATA - Mesaj stream\'i oluşturulamadı: $e');
+      return Stream.value([]);
+    }
+  }
+
+
 }

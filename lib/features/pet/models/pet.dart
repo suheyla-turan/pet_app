@@ -38,6 +38,7 @@ class Pet {
   List<String> owners;
   String? id;
   String? creator;
+  DateTime? vetAppointment; // Veteriner randevu tarihi
 
   Pet({
     required this.name,
@@ -59,6 +60,7 @@ class Pet {
     List<String>? owners,
     this.id,
     this.creator,
+    this.vetAppointment,
   }) : 
     vaccines = vaccines ?? [],
     lastUpdate = lastUpdate ?? DateTime.now(),
@@ -120,6 +122,7 @@ class Pet {
       'owners': owners,
       if (id != null) 'id': id,
       if (creator != null) 'creator': creator,
+      if (vetAppointment != null) 'vetAppointment': vetAppointment!.toIso8601String(),
     };
   }
 
@@ -146,6 +149,7 @@ class Pet {
       owners: owners,
       id: map['id'],
       creator: map['creator'] ?? (owners.isNotEmpty ? owners.first : null),
+      vetAppointment: map['vetAppointment'] != null ? DateTime.parse(map['vetAppointment']) : null,
     );
   }
 }

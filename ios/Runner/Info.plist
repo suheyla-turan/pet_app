@@ -45,5 +45,17 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	
+	<!-- Background processing için -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>background-processing</string>
+		<string>background-fetch</string>
+		<string>remote-notification</string>
+	</array>
+	
+	<!-- Notification izinleri -->
+	<key>NSUserNotificationUsageDescription</key>
+	<string>Evcil hayvan bakım hatırlatmaları için bildirim izni gereklidir.</string>
 </dict>
 </plist>

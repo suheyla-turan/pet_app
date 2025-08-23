@@ -4,7 +4,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:pati_takip/services/media_service.dart';
 import 'package:pati_takip/services/voice_service.dart';
+import 'package:pati_takip/services/chat_history_service.dart';
 import 'package:pati_takip/features/pet/models/pet.dart';
+import 'package:pati_takip/features/pet/models/chat_history.dart';
+import 'package:pati_takip/features/pet/widgets/chat_history_overlay.dart';
 import 'package:pati_takip/providers/auth_provider.dart';
 
 class AIChatPage extends StatefulWidget {
@@ -29,11 +32,21 @@ class _AIChatPageState extends State<AIChatPage> {
   bool _isRecording = false;
   bool _isSpeaking = false;
   int _recordingDuration = 0;
+  
+  // Chat history overlay
+  bool _showChatHistoryOverlay = false;
+  ChatHistory? _currentChatHistory;
 
   @override
   void initState() {
     super.initState();
     _initializeServices();
+    
+    // Initialize current chat history
+    _currentChatHistory = ChatHistoryService.createNewChat(
+      petId: widget.pet?.id,
+      petName: widget.pet?.name,
+    );
     
     // Add personalized welcome message
     _messages.add(ChatMessage(
@@ -44,13 +57,32 @@ class _AIChatPageState extends State<AIChatPage> {
   }
 
   void _showChatHistory() {
+    setState(() {
+      _showChatHistoryOverlay = true;
+    });
+  }
+
+  void _hideChatHistoryOverlay() {
+    setState(() {
+      _showChatHistoryOverlay = false;
+    });
+  }
+
+  void _onChatSelected(ChatHistory chat) {
+    // TODO: Load the selected chat
+    _hideChatHistoryOverlay();
+    
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Sohbet geçmişi yakında eklenecek!'),
+      SnackBar(
+        content: Text('${chat.title} yükleniyor...'),
         backgroundColor: Colors.blue,
-        duration: Duration(seconds: 2),
+        duration: const Duration(seconds: 2),
       ),
     );
+  }
+
+  void _onNewChat() {
+    _startNewChat();
   }
 
   String _getPersonalizedWelcomeMessage() {
@@ -127,6 +159,9 @@ class _AIChatPageState extends State<AIChatPage> {
       final aiResponse = "Görselinizi aldım. Bu görsel hakkında size nasıl yardımcı olabilirim?";
       _simulateAIResponse(aiResponse);
       
+      // Save chat history after adding image
+      _saveChatHistory();
+      
       // AI yanıtını sesli okut
       Future.delayed(const Duration(seconds: 3), () {
         if (mounted) {
@@ -150,6 +185,9 @@ class _AIChatPageState extends State<AIChatPage> {
       // AI yanıtı simüle et ve sesli okut
       final aiResponse = "Sesli mesajınızı aldım. Size nasıl yardımcı olabilirim?";
       _simulateAIResponse(aiResponse);
+      
+      // Save chat history after adding voice message
+      _saveChatHistory();
       
       // AI yanıtını sesli okut
       Future.delayed(const Duration(seconds: 3), () {
@@ -204,7 +242,7 @@ class _AIChatPageState extends State<AIChatPage> {
       _isTyping = true;
     });
 
-    Future.delayed(const Duration(seconds: 2), () {
+    Future.delayed(const Duration(seconds: 2), () async {
       if (mounted) {
         setState(() {
           _isTyping = false;
@@ -214,6 +252,9 @@ class _AIChatPageState extends State<AIChatPage> {
             timestamp: DateTime.now(),
           ));
         });
+        
+        // Save chat history after AI response
+        _saveChatHistory();
       }
     });
   }
@@ -224,7 +265,7 @@ class _AIChatPageState extends State<AIChatPage> {
     super.dispose();
   }
 
-  void _sendMessage() {
+  void _sendMessage() async {
     final text = _messageController.text.trim();
     if (text.isEmpty) return;
 
@@ -240,18 +281,52 @@ class _AIChatPageState extends State<AIChatPage> {
     _messageController.clear();
 
     // Simulate AI response
-    Future.delayed(const Duration(seconds: 2), () {
+    Future.delayed(const Duration(seconds: 2), () async {
       if (mounted) {
+        final aiResponse = _generateAIResponse(text);
         setState(() {
           _isTyping = false;
           _messages.add(ChatMessage(
-            text: _generateAIResponse(text),
+            text: aiResponse,
             isUser: false,
             timestamp: DateTime.now(),
           ));
         });
+        
+        // Save chat history after AI response
+        _saveChatHistory();
       }
     });
+  }
+
+  void _saveChatHistory() async {
+    try {
+      if (_currentChatHistory == null) {
+        _currentChatHistory = ChatHistoryService.createNewChat(
+          petId: widget.pet?.id,
+          petName: widget.pet?.name,
+        );
+      }
+      
+      final messages = _messages.map((msg) => {
+        'text': msg.text,
+        'isUser': msg.isUser,
+        'timestamp': msg.timestamp.millisecondsSinceEpoch,
+        'imagePath': msg.imagePath,
+        'audioPath': msg.audioPath,
+      }).toList();
+      
+      final updatedHistory = _currentChatHistory!.copyWith(
+        messageCount: messages.length,
+        lastMessage: messages.isNotEmpty ? messages.last['text'] as String? : null,
+        lastModified: DateTime.now(),
+      );
+      
+      await ChatHistoryService.saveChatHistory(updatedHistory);
+      _currentChatHistory = updatedHistory;
+    } catch (e) {
+      print('❌ Chat geçmişi kaydedilemedi: $e');
+    }
   }
 
   String _generateAIResponse(String userMessage) {
@@ -728,69 +803,9 @@ class _AIChatPageState extends State<AIChatPage> {
     }
   }
 
-  void _showMenu() {
-    showMenu(
-      context: context,
-      position: RelativeRect.fromLTRB(
-        MediaQuery.of(context).size.width - 50,
-        100,
-        20,
-        0,
-      ),
-      color: const Color(0xFF2C2C2C),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      items: [
-        PopupMenuItem(
-          value: 'history',
-          child: _buildPopupMenuItem(
-            icon: Icons.history,
-            title: "Sohbet Geçmişi",
-          ),
-        ),
-        PopupMenuItem(
-          value: 'new_chat',
-          child: _buildPopupMenuItem(
-            icon: Icons.add_comment,
-            title: "Yeni Sohbet",
-          ),
-        ),
-        PopupMenuItem(
-          value: 'clear_chat',
-          child: _buildPopupMenuItem(
-            icon: Icons.clear,
-            title: "Mevcut Sohbeti Temizle",
-          ),
-        ),
-      ],
-    ).then((value) {
-      if (value != null) {
-        _handleMenuAction(value);
-      }
-    });
-  }
 
-  void _handleMenuAction(String action) {
-    switch (action) {
-      case 'history':
-        // TODO: Implement chat history
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Sohbet geçmişi yakında eklenecek!'),
-            backgroundColor: Colors.blue,
-            duration: Duration(seconds: 2),
-          ),
-        );
-        break;
-      case 'new_chat':
-        _startNewChat();
-        break;
-      case 'clear_chat':
-        _clearCurrentChat();
-        break;
-    }
-  }
+
+
 
   bool _hasMeaningfulChat() {
     // Check if there are actual conversation messages (not just welcome message)
@@ -807,7 +822,7 @@ class _AIChatPageState extends State<AIChatPage> {
     }
   }
 
-  void _startNewChat() {
+  void _startNewChat() async {
     if (_messages.length <= 1) {
       // If there's only the welcome message or no messages, just start fresh
       setState(() {
@@ -818,6 +833,12 @@ class _AIChatPageState extends State<AIChatPage> {
           timestamp: DateTime.now(),
         ));
       });
+      
+      // Create new chat history
+      _currentChatHistory = ChatHistoryService.createNewChat(
+        petId: widget.pet?.id,
+        petName: widget.pet?.name,
+      );
       
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -874,8 +895,34 @@ class _AIChatPageState extends State<AIChatPage> {
                 ),
               ),
               ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
                   Navigator.of(context).pop();
+                  
+                  // Save current chat to history
+                  if (_currentChatHistory != null) {
+                    final messages = _messages.map((msg) => {
+                      'text': msg.text,
+                      'isUser': msg.isUser,
+                      'timestamp': msg.timestamp.millisecondsSinceEpoch,
+                      'imagePath': msg.imagePath,
+                      'audioPath': msg.audioPath,
+                    }).toList();
+                    
+                    final updatedHistory = _currentChatHistory!.copyWith(
+                      messageCount: messages.length,
+                      lastMessage: messages.isNotEmpty ? messages.last['text'] as String? : null,
+                      lastModified: DateTime.now(),
+                    );
+                    
+                    await ChatHistoryService.saveChatHistory(updatedHistory);
+                  }
+                  
+                  // Create new chat
+                  _currentChatHistory = ChatHistoryService.createNewChat(
+                    petId: widget.pet?.id,
+                    petName: widget.pet?.name,
+                  );
+                  
                   setState(() {
                     _messages.clear();
                     _messages.add(ChatMessage(
@@ -884,6 +931,9 @@ class _AIChatPageState extends State<AIChatPage> {
                       timestamp: DateTime.now(),
                     ));
                   });
+                  
+                  // Close the overlay
+                  _hideChatHistoryOverlay();
                   
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
@@ -961,26 +1011,36 @@ class _AIChatPageState extends State<AIChatPage> {
                 ),
               ),
             ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                setState(() {
-                  _messages.clear();
-                  _messages.add(ChatMessage(
-                    text: _getPersonalizedWelcomeMessage(),
-                    isUser: false,
-                    timestamp: DateTime.now(),
-                  ));
-                });
-                
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Mevcut sohbet temizlendi!'),
-                    backgroundColor: Colors.orange,
-                    duration: Duration(seconds: 2),
-                  ),
-                );
-              },
+                          ElevatedButton(
+                onPressed: () async {
+                  Navigator.of(context).pop();
+                  
+                  // Create new chat history
+                  _currentChatHistory = ChatHistoryService.createNewChat(
+                    petId: widget.pet?.id,
+                    petName: widget.pet?.name,
+                  );
+                  
+                  setState(() {
+                    _messages.clear();
+                    _messages.add(ChatMessage(
+                      text: _getPersonalizedWelcomeMessage(),
+                      isUser: false,
+                      timestamp: DateTime.now(),
+                    ));
+                  });
+                  
+                  // Close the overlay
+                  _hideChatHistoryOverlay();
+                  
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Mevcut sohbet temizlendi!'),
+                      backgroundColor: Colors.orange,
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.orange,
                 shape: RoundedRectangleBorder(
@@ -1002,45 +1062,9 @@ class _AIChatPageState extends State<AIChatPage> {
     );
   }
 
-  Widget _buildMenuItem({
-    required IconData icon,
-    required String title,
-    required VoidCallback onTap,
-  }) {
-    return ListTile(
-      leading: Icon(icon, color: Colors.white, size: 24),
-      title: Text(
-        title,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-      onTap: onTap,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-    );
-  }
 
-  Widget _buildPopupMenuItem({
-    required IconData icon,
-    required String title,
-  }) {
-    return Row(
-      children: [
-        Icon(icon, color: Colors.white, size: 20),
-        const SizedBox(width: 12),
-        Text(
-          title,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
-    );
-  }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -1078,27 +1102,47 @@ class _AIChatPageState extends State<AIChatPage> {
       );
     }
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      // Klavye açılırken performans optimizasyonu
-      resizeToAvoidBottomInset: false,
-      appBar: _buildEnhancedAppBar(),
-              // FloatingActionButton kaldırıldı
-      body: SafeArea(
-        bottom: false, // Alt kısmı SafeArea'dan çıkar çünkü kendi padding'imizi ekleyeceğiz
-        child: Column(
-          children: [
-            // Main content area with robot icon
-            Expanded(
-              child: _messages.isEmpty
-                  ? _buildWelcomeSection()
-                  : _buildChatSection(),
+    return Stack(
+      children: [
+        Scaffold(
+          backgroundColor: Colors.transparent,
+          // Klavye açılırken performans optimizasyonu
+          resizeToAvoidBottomInset: false,
+          appBar: _buildEnhancedAppBar(),
+          // FloatingActionButton kaldırıldı
+          body: SafeArea(
+            bottom: false, // Alt kısmı SafeArea'dan çıkar çünkü kendi padding'imizi ekleyeceğiz
+            child: Column(
+              children: [
+                // Main content area with robot icon
+                Expanded(
+                  child: _messages.isEmpty
+                      ? _buildWelcomeSection()
+                      : _buildChatSection(),
+                ),
+                // Input section
+                _buildInputSection(),
+              ],
             ),
-            // Input section
-            _buildInputSection(),
-          ],
+          ),
         ),
-      ),
+        
+        // Chat History Overlay
+        if (_showChatHistoryOverlay)
+          Positioned(
+            right: 0,
+            top: 0,
+            bottom: 0,
+            child: ChatHistoryOverlay(
+              petId: widget.pet?.id,
+              petName: widget.pet?.name,
+              onNewChat: _onNewChat,
+              onChatSelected: _onChatSelected,
+              onClose: _hideChatHistoryOverlay,
+              onClearCurrentChat: _clearCurrentChat,
+            ),
+          ),
+      ],
     );
   }
 
@@ -1196,40 +1240,9 @@ class _AIChatPageState extends State<AIChatPage> {
             color: Colors.white.withOpacity(0.1),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: PopupMenuButton<String>(
+          child: IconButton(
             icon: const Icon(Icons.more_vert, color: Colors.white),
-            onSelected: (value) {
-              switch (value) {
-                case 'new_chat':
-                  _startNewChat();
-                  break;
-                case 'chat_history':
-                  _showChatHistory();
-                  break;
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem<String>(
-                value: 'new_chat',
-                child: Row(
-                  children: [
-                    Icon(Icons.add_circle_outline, color: Colors.purple),
-                    SizedBox(width: 12),
-                    Text('Yeni Sohbet'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem<String>(
-                value: 'chat_history',
-                child: Row(
-                  children: [
-                    Icon(Icons.history, color: Colors.blue),
-                    SizedBox(width: 12),
-                    Text('Sohbet Geçmişi'),
-                  ],
-                ),
-              ),
-            ],
+            onPressed: _showChatHistory,
           ),
         ),
       ],
@@ -1716,16 +1729,20 @@ class _AIChatPageState extends State<AIChatPage> {
       });
       
       // AI yanıtını simüle et
-      Future.delayed(const Duration(seconds: 2), () {
+      Future.delayed(const Duration(seconds: 2), () async {
         if (mounted) {
+          final aiResponse = _generateAIResponse(question);
           setState(() {
             _isTyping = false;
             _messages.add(ChatMessage(
-              text: _generateAIResponse(question),
+              text: aiResponse,
               isUser: false,
               timestamp: DateTime.now(),
             ));
           });
+          
+          // Save chat history after AI response
+          _saveChatHistory();
         }
       });
     }
@@ -1757,16 +1774,20 @@ class _AIChatPageState extends State<AIChatPage> {
     });
     
     // AI yanıtını simüle et
-    Future.delayed(const Duration(seconds: 2), () {
+    Future.delayed(const Duration(seconds: 2), () async {
       if (mounted) {
+        final aiResponse = _generateAIResponse(question);
         setState(() {
           _isTyping = false;
           _messages.add(ChatMessage(
-            text: _generateAIResponse(question),
+            text: aiResponse,
             isUser: false,
             timestamp: DateTime.now(),
           ));
         });
+        
+        // Save chat history after AI response
+        _saveChatHistory();
       }
     });
   }

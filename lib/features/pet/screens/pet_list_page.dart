@@ -44,6 +44,8 @@ class _PetListPageState extends State<PetListPage> with TickerProviderStateMixin
     // _speech = stt.SpeechToText(); // KALDIRILDI
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<PetProvider>().loadPets();
+      // Background service'i başlat
+      context.read<PetProvider>().initializeBackgroundService();
     });
   }
 

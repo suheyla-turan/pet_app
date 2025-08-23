@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'features/pet/screens/pet_list_page.dart';
 import 'services/notification_service.dart';
 import 'services/media_service.dart';
+import 'services/background_service.dart';
 import 'providers/pet_provider.dart';
 
 import 'providers/theme_provider.dart';
@@ -28,6 +29,9 @@ void main() async {
   );
   
   await NotificationService.initialize();
+  
+  // Background service'i başlat
+  await BackgroundService.initialize();
   
   // Servisleri sıralı başlat
   final mediaService = MediaService();

@@ -11,6 +11,7 @@ import 'package:pati_takip/features/pet/screens/vaccine_page.dart';
 import 'package:pati_takip/features/pet/screens/pet_form_page.dart';
 import 'package:pati_takip/features/pet/screens/ai_chat_page.dart';
 import 'package:pati_takip/features/pet/screens/pet_co_owner_management_page.dart';
+import 'package:pati_takip/features/pet/screens/vet_appointment_page.dart';
 // Eş sahip yönetimi import'u kaldırıldı - Ana menüdeki eşsahip yönetimi kullanılıyor
 
 import 'package:pati_takip/providers/pet_provider.dart';
@@ -889,6 +890,79 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                               
                               const SizedBox(height: 20),
                               
+                              // Veteriner Butonu
+                              Card(
+                                elevation: 8,
+                                shadowColor: theme.colorScheme.primary.withOpacity(0.2),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(20),
+                                    color: isDark 
+                                      ? Colors.grey.shade800.withOpacity(0.9)
+                                      : Colors.white,
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(20),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        // Başlık
+                                        Row(
+                                          children: [
+                                            Container(
+                                              width: 40,
+                                              height: 40,
+                                              decoration: BoxDecoration(
+                                                color: const Color(0xFF8B5CF6),
+                                                borderRadius: BorderRadius.circular(8),
+                                              ),
+                                              child: const Icon(
+                                                Icons.local_hospital,
+                                                color: Colors.white,
+                                                size: 20,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Text(
+                                              'Veteriner İşlemleri',
+                                              style: TextStyle(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.w700,
+                                                color: isDark ? Colors.white : Colors.black87,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 20),
+                                        
+                                        // Veteriner butonu
+                                        SizedBox(
+                                          width: double.infinity,
+                                          child: ElevatedButton.icon(
+                                            onPressed: () => _openVetAppointment(),
+                                            icon: const Icon(Icons.local_hospital, size: 20),
+                                            label: const Text(
+                                              'Veteriner Randevusu',
+                                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                                            ),
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: const Color(0xFF8B5CF6),
+                                              foregroundColor: Colors.white,
+                                              padding: const EdgeInsets.symmetric(vertical: 16),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(12),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              
+                              const SizedBox(height: 20),
+                              
                               // Aşı Bilgileri Kartı - Yeni tasarım
                                Card(
                                  elevation: 8,
@@ -995,6 +1069,107 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
                              ),
                              
                              const SizedBox(height: 20),
+                             
+                             // Veteriner Randevu Kartı
+                             if (_pet.vetAppointment != null) ...[
+                               Card(
+                                 elevation: 8,
+                                 shadowColor: theme.colorScheme.primary.withOpacity(0.2),
+                                 child: Container(
+                                   decoration: BoxDecoration(
+                                     borderRadius: BorderRadius.circular(20),
+                                     color: isDark 
+                                       ? Colors.grey.shade800.withOpacity(0.9)
+                                       : Colors.white,
+                                   ),
+                                   child: Padding(
+                                     padding: const EdgeInsets.all(20),
+                                     child: Column(
+                                       crossAxisAlignment: CrossAxisAlignment.start,
+                                       children: [
+                                         // Başlık
+                                         Row(
+                                           children: [
+                                             Container(
+                                               width: 40,
+                                               height: 40,
+                                               decoration: BoxDecoration(
+                                                 color: const Color(0xFF8B5CF6),
+                                                 borderRadius: BorderRadius.circular(8),
+                                               ),
+                                               child: const Icon(
+                                                 Icons.local_hospital,
+                                                 color: Colors.white,
+                                                 size: 20,
+                                               ),
+                                             ),
+                                             const SizedBox(width: 12),
+                                             Text(
+                                               'Veteriner Randevusu',
+                                               style: TextStyle(
+                                                 fontSize: 18,
+                                                 fontWeight: FontWeight.w700,
+                                                 color: isDark ? Colors.white : Colors.black87,
+                                               ),
+                                             ),
+                                           ],
+                                         ),
+                                         const SizedBox(height: 20),
+                                         
+                                         // Randevu bilgisi
+                                         Container(
+                                           padding: const EdgeInsets.all(16),
+                                           decoration: BoxDecoration(
+                                             color: const Color(0xFF8B5CF6).withOpacity(0.1),
+                                             borderRadius: BorderRadius.circular(12),
+                                             border: Border.all(
+                                               color: const Color(0xFF8B5CF6).withOpacity(0.3),
+                                             ),
+                                           ),
+                                           child: Row(
+                                             children: [
+                                               const Icon(
+                                                 Icons.calendar_today,
+                                                 color: Color(0xFF8B5CF6),
+                                                 size: 24,
+                                               ),
+                                               const SizedBox(width: 12),
+                                               Expanded(
+                                                 child: Column(
+                                                   crossAxisAlignment: CrossAxisAlignment.start,
+                                                   children: [
+                                                     Text(
+                                                       DateFormat('EEEE, d MMMM yyyy', 'tr_TR').format(_pet.vetAppointment!),
+                                                       style: const TextStyle(
+                                                         fontSize: 16,
+                                                         fontWeight: FontWeight.w600,
+                                                       ),
+                                                     ),
+                                                     Text(
+                                                       DateFormat('HH:mm').format(_pet.vetAppointment!),
+                                                       style: TextStyle(
+                                                         fontSize: 14,
+                                                         color: Colors.grey[600],
+                                                       ),
+                                                     ),
+                                                   ],
+                                                 ),
+                                               ),
+                                               IconButton(
+                                                 onPressed: () => _openVetAppointment(),
+                                                 icon: const Icon(Icons.edit, color: Color(0xFF8B5CF6)),
+                                                 tooltip: 'Randevuyu Düzenle',
+                                               ),
+                                             ],
+                                           ),
+                                         ),
+                                       ],
+                                     ),
+                                   ),
+                                 ),
+                               ),
+                               const SizedBox(height: 20),
+                             ],
                              
                              // Eş Sahip Yönetimi Kartı kaldırıldı - Ana menüdeki eşsahip yönetimi kullanılıyor
                             
@@ -2015,6 +2190,29 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
       context,
       MaterialPageRoute(
         builder: (context) => AIChatPage(pet: _pet),
+      ),
+    );
+  }
+
+  // Veteriner randevu sayfasına yönlendir
+  void _openVetAppointment() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => VetAppointmentPage(pet: _pet),
+      ),
+    );
+  }
+
+  // Aşı sayfasına yönlendir
+  void _openVaccinePage() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => VaccinePage(
+          vaccines: _pet.vaccines,
+          showDone: false,
+        ),
       ),
     );
   }
