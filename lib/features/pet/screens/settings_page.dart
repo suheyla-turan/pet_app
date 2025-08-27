@@ -8,8 +8,6 @@ import '../../profile/profile_page.dart';
 import 'about_page.dart';
 import 'feedback_page.dart';
 import 'faq_page.dart';
-import 'notification_test_page.dart';
-import '../../debug/debug_page.dart';
 
 import 'package:pati_takip/l10n/app_localizations.dart';
 
@@ -50,32 +48,40 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
     final isDark = theme.brightness == Brightness.dark;
     
     return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.transparent, // Şeffaf app bar - sayfa arka planı ile uyumlu
-        title: const Text('PatiTakip'),
-        centerTitle: true,
-        foregroundColor: themeProvider.getPrimaryTextColor(isDark),
-        titleTextStyle: TextStyle(
-          fontSize: 24,
-          fontWeight: FontWeight.w700,
-          color: themeProvider.getPrimaryTextColor(isDark),
-        ),
-        iconTheme: IconThemeData(
-          color: themeProvider.getPrimaryTextColor(isDark),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-              body: Container(
+      body: Container(
         decoration: BoxDecoration(
           gradient: themeProvider.getBackgroundGradient(isDark),
         ),
         child: SafeArea(
           child: Column(
             children: [
+              // App Bar
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: Icon(
+                        Icons.arrow_back,
+                        color: themeProvider.getPrimaryTextColor(isDark),
+                      ),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                    Expanded(
+                      child: Text(
+                        'PatiTakip',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w700,
+                          color: themeProvider.getPrimaryTextColor(isDark),
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
               // Page Title
               Container(
                 padding: const EdgeInsets.all(20),
@@ -84,17 +90,23 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                     Text(
                       AppLocalizations.of(context)!.settings,
                       style: TextStyle(
-                        fontSize: 24,
+                        fontSize: 28,
                         fontWeight: FontWeight.w800,
-                        color: themeProvider.getPrimaryTextColor(isDark),
+                        color: themeProvider.getHighContrastTextColor(isDark),
+                        letterSpacing: 0.5,
                       ),
                     ),
+                    const SizedBox(height: 8),
                     Text(
                       AppLocalizations.of(context)!.settingsDescription,
                       style: TextStyle(
                         fontSize: 16,
-                        color: themeProvider.getSecondaryTextColor(isDark),
+                        color: themeProvider.getHighContrastSecondaryTextColor(isDark),
+                        fontWeight: FontWeight.w500,
                       ),
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
@@ -402,69 +414,7 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                           ),
                         ),
                         
-                        // Bildirim Test Linki
-                        const SizedBox(height: 16),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: ElevatedButton.icon(
-                                onPressed: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (_) => const NotificationTestPage(),
-                                    ),
-                                  );
-                                },
-                                icon: const Icon(Icons.science, color: Colors.white),
-                                label: const Text(
-                                  '🧪 Bildirimleri Test Et',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.purple,
-                                  padding: const EdgeInsets.symmetric(vertical: 16),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: ElevatedButton.icon(
-                                onPressed: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (_) => const DebugPage(),
-                                    ),
-                                  );
-                                },
-                                icon: const Icon(Icons.bug_report, color: Colors.white),
-                                label: const Text(
-                                  '🐛 Debug Menüsü',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.red,
-                                  padding: const EdgeInsets.symmetric(vertical: 16),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        
-                        const SizedBox(height: 20),
+
                         
                         // Update Settings Card
                         _buildSettingsCard(
@@ -573,19 +523,8 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isDark
-                ? [
-                    Colors.grey.shade800,
-                    Colors.grey.shade700,
-                  ]
-                : [
-                    Colors.white,
-                    Colors.grey.shade50,
-                  ],
-          ),
+          color: Provider.of<ThemeProvider>(context).getReadableCardBackgroundColor(isDark),
+          boxShadow: Provider.of<ThemeProvider>(context).getReadableCardShadow(isDark),
         ),
         child: Padding(
           padding: const EdgeInsets.all(20),
@@ -614,9 +553,10 @@ class _SettingsPageState extends State<SettingsPage> with TickerProviderStateMix
                         Text(
                           title,
                           style: TextStyle(
-                            fontSize: 18,
+                            fontSize: 20,
                             fontWeight: FontWeight.w700,
-                            color: isDark ? Colors.white : const Color(0xFF2D3748),
+                            color: Provider.of<ThemeProvider>(context).getHighContrastTextColor(isDark),
+                            letterSpacing: 0.3,
                           ),
                         ),
                         if (subtitle != null) ...[

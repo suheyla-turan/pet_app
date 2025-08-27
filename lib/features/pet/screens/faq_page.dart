@@ -44,12 +44,12 @@ class _FAQPageState extends State<FAQPage> with TickerProviderStateMixin {
             answer: l10n.faqMultiplePetsAnswer,
           ),
           FAQItem(
-            question: "Uygulama ücretsiz mi?",
-            answer: "Evet, PatiTakip tamamen ücretsizdir. Tüm temel özellikler herkes tarafından kullanılabilir.",
+            question: l10n.faqAppFree,
+            answer: l10n.faqAppFreeAnswer,
           ),
           FAQItem(
-            question: "Hangi cihazlarda çalışır?",
-            answer: "PatiTakip şu anda sadece Android cihazlarda çalışmaktadır.",
+            question: l10n.faqDeviceSupport,
+            answer: l10n.faqDeviceSupportAnswer,
           ),
         ],
       ),
@@ -71,8 +71,8 @@ class _FAQPageState extends State<FAQPage> with TickerProviderStateMixin {
             answer: l10n.faqNotificationsAnswer,
           ),
           FAQItem(
-            question: "Verilerim güvenli mi?",
-            answer: "Evet, tüm verileriniz Firebase güvenli bulut sunucularında şifrelenmiş olarak saklanır. Hesabınıza giriş yaptığınızda verileriniz her zaman erişilebilir.",
+            question: l10n.faqDataSecurity,
+            answer: l10n.faqDataSecurityAnswer,
           ),
         ],
       ),
@@ -271,58 +271,69 @@ class _FAQPageState extends State<FAQPage> with TickerProviderStateMixin {
     final l10n = AppLocalizations.of(context)!;
     
     return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.transparent, // Şeffaf app bar - sayfa arka planı ile uyumlu
-        title: const Text('PatiTakip'),
-        centerTitle: true,
-        foregroundColor: themeProvider.getPrimaryTextColor(isDark),
-        titleTextStyle: TextStyle(
-          fontSize: 24,
-          fontWeight: FontWeight.w700,
-          color: themeProvider.getPrimaryTextColor(isDark),
-        ),
-        iconTheme: IconThemeData(
-          color: themeProvider.getPrimaryTextColor(isDark),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-              body: Container(
+      body: Container(
         decoration: BoxDecoration(
           gradient: themeProvider.getBackgroundGradient(isDark),
         ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // Page Title
-              Container(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  children: [
-                    Text(
-                      l10n.faqTitle,
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w800,
-                        color: themeProvider.getPrimaryTextColor(isDark),
-                      ),
+                    child: SafeArea(
+              child: Column(
+                children: [
+                  // App Bar
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    child: Row(
+                      children: [
+                        IconButton(
+                          icon: Icon(
+                            Icons.arrow_back,
+                            color: themeProvider.getPrimaryTextColor(isDark),
+                          ),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                        Expanded(
+                          child: Text(
+                            'PatiTakip',
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w700,
+                              color: themeProvider.getPrimaryTextColor(isDark),
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    Text(
-                      l10n.faqDescription,
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: themeProvider.getSecondaryTextColor(isDark),
-                      ),
+                  ),
+                  
+                  // Page Title
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      children: [
+                        Text(
+                          l10n.faqTitle,
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w800,
+                            color: themeProvider.getHighContrastTextColor(isDark),
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          l10n.faqDescription,
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: themeProvider.getHighContrastSecondaryTextColor(isDark),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
-              
-              // FAQ Content
-              Expanded(
+                  ),
+                  
+                  // FAQ Content
+                  Expanded(
                 child: FadeTransition(
                   opacity: _fadeAnimation,
                   child: SingleChildScrollView(
@@ -338,15 +349,9 @@ class _FAQPageState extends State<FAQPage> with TickerProviderStateMixin {
                           margin: const EdgeInsets.only(bottom: 20),
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           decoration: BoxDecoration(
-                            color: isDark ? Colors.grey.shade800 : Colors.white,
+                            color: themeProvider.getReadableCardBackgroundColor(isDark),
                             borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withAlpha(25),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
+                            boxShadow: themeProvider.getReadableCardShadow(isDark),
                           ),
                           child: TextField(
                             controller: _searchController,
@@ -409,6 +414,7 @@ class _FAQPageState extends State<FAQPage> with TickerProviderStateMixin {
   Widget _buildFAQExpansionPanel(AppLocalizations l10n) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final themeProvider = Provider.of<ThemeProvider>(context);
     final faqCategories = _getFilteredFAQCategories(l10n);
     
     return Column(
@@ -420,15 +426,9 @@ class _FAQPageState extends State<FAQPage> with TickerProviderStateMixin {
         return Container(
           margin: const EdgeInsets.only(bottom: 16),
           decoration: BoxDecoration(
-            color: isDark ? Colors.grey.shade800 : Colors.white,
+            color: themeProvider.getReadableCardBackgroundColor(isDark),
             borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withAlpha(25),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
+            boxShadow: themeProvider.getReadableCardShadow(isDark),
           ),
           child: Column(
             children: [
@@ -464,9 +464,10 @@ class _FAQPageState extends State<FAQPage> with TickerProviderStateMixin {
                         child: Text(
                           category.title,
                           style: TextStyle(
-                            fontSize: 18,
+                            fontSize: 20,
                             fontWeight: FontWeight.w700,
-                            color: isDark ? Colors.white : const Color(0xFF2D3748),
+                            color: themeProvider.getHighContrastTextColor(isDark),
+                            letterSpacing: 0.3,
                           ),
                         ),
                       ),

@@ -22,6 +22,7 @@ class AuthProvider extends ChangeNotifier {
 
   void _init() {
     _authService.authStateChanges.listen((User? user) {
+      print('🔍 Auth state değişikliği: ${user?.email ?? 'null'}');
       _user = user;
       
       // Eğer kullanıcı giriş yapmış ama e-posta doğrulanmamışsa otomatik çıkış yap
@@ -139,6 +140,11 @@ class AuthProvider extends ChangeNotifier {
     try {
       _setLoading(true);
       clearError();
+      
+      // Önce user'ı null yap ki UI hemen güncellensin
+      _user = null;
+      notifyListeners();
+      
       await _authService.signOut();
       
       // Çıkış yapıldıktan sonra kullanıcı otomatik olarak giriş ekranına yönlendirilecek

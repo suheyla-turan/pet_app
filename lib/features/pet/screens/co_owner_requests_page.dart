@@ -43,7 +43,7 @@ class _CoOwnerRequestsPageState extends State<CoOwnerRequestsPage> {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('İstekler yüklenirken hata: $e')),
+        SnackBar(content: Text('${AppLocalizations.of(context)!.coOwnerRequestsLoadingError}: ${e.toString()}')),
       );
     } finally {
       setState(() {
@@ -66,15 +66,15 @@ class _CoOwnerRequestsPageState extends State<CoOwnerRequestsPage> {
       
       await _loadRequests();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('✅ İstek kabul edildi. Hayvan ana sayfada görünecek.'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.requestAccepted),
           backgroundColor: Colors.green,
         ),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('İstek kabul edilirken hata: $e'),
+          content: Text(AppLocalizations.of(context)!.errorAcceptingRequest(e.toString())),
           backgroundColor: Colors.red,
         ),
       );
@@ -85,17 +85,17 @@ class _CoOwnerRequestsPageState extends State<CoOwnerRequestsPage> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('İsteği Reddet'),
-        content: const Text('Bu isteği reddetmek istediğinizden emin misiniz? İstek atan kişiye red bildirimi gidecek ve tekrar istek atabilecek.'),
+        title: Text(AppLocalizations.of(context)!.rejectRequest),
+        content: Text(AppLocalizations.of(context)!.rejectRequestConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('İptal'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Reddet'),
+            child: Text(AppLocalizations.of(context)!.reject),
           ),
         ],
       ),
@@ -110,15 +110,15 @@ class _CoOwnerRequestsPageState extends State<CoOwnerRequestsPage> {
         
         await _loadRequests();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('❌ İstek reddedildi. İstek atan kişiye bildirim gitti.'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.requestRejected),
             backgroundColor: Colors.red,
           ),
         );
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('İstek reddedilirken hata: $e'),
+            content: Text(AppLocalizations.of(context)!.errorRejectingRequest(e.toString())),
             backgroundColor: Colors.red,
           ),
         );
@@ -130,17 +130,17 @@ class _CoOwnerRequestsPageState extends State<CoOwnerRequestsPage> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('İsteği İptal Et'),
-        content: const Text('Bu isteği iptal etmek istediğinizden emin misiniz?'),
+        title: Text(AppLocalizations.of(context)!.cancelRequest),
+        content: Text(AppLocalizations.of(context)!.cancelRequestConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Hayır'),
+            child: Text(AppLocalizations.of(context)!.no),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('İptal Et'),
+            child: Text(AppLocalizations.of(context)!.cancelRequestButton),
           ),
         ],
       ),
@@ -151,15 +151,15 @@ class _CoOwnerRequestsPageState extends State<CoOwnerRequestsPage> {
         await FirestoreService.cancelCoOwnerRequest(requestId);
         await _loadRequests();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('🔄 İstek iptal edildi'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.requestCancelled),
             backgroundColor: Colors.orange,
           ),
         );
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('İstek iptal edilirken hata: $e'),
+            content: Text(AppLocalizations.of(context)!.errorCancellingRequest(e.toString())),
             backgroundColor: Colors.red,
           ),
         );
@@ -170,13 +170,13 @@ class _CoOwnerRequestsPageState extends State<CoOwnerRequestsPage> {
   String _getStatusText(String status) {
     switch (status) {
       case 'pending':
-        return 'Bekliyor';
+        return AppLocalizations.of(context)!.statusPending;
       case 'accepted':
-        return 'Kabul Edildi';
+        return AppLocalizations.of(context)!.statusAccepted;
       case 'rejected':
-        return 'Reddedildi';
+        return AppLocalizations.of(context)!.statusRejected;
       default:
-        return 'Bilinmiyor';
+        return AppLocalizations.of(context)!.statusUnknown;
     }
   }
 
@@ -212,31 +212,46 @@ class _CoOwnerRequestsPageState extends State<CoOwnerRequestsPage> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
     return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.transparent, // Şeffaf app bar - sayfa arka planı ile uyumlu
-        title: const Text('Eş Sahip İstekleri'),
-        centerTitle: true,
-        foregroundColor: themeProvider.getPrimaryTextColor(isDark),
-        titleTextStyle: TextStyle(
-          fontSize: 24,
-          fontWeight: FontWeight.w700,
-          color: themeProvider.getPrimaryTextColor(isDark),
-        ),
-        iconTheme: IconThemeData(
-          color: themeProvider.getPrimaryTextColor(isDark),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-              body: Container(
+      body: Container(
         decoration: BoxDecoration(
           gradient: themeProvider.getBackgroundGradient(isDark),
         ),
         child: SafeArea(
-          child: _buildPendingRequestsTab(),
+          child: Column(
+            children: [
+              // App Bar
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: Icon(
+                        Icons.arrow_back,
+                        color: themeProvider.getPrimaryTextColor(isDark),
+                      ),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                    Expanded(
+                      child: Text(
+                        AppLocalizations.of(context)!.coOwnerRequestsTitle,
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w700,
+                          color: themeProvider.getPrimaryTextColor(isDark),
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              // Content
+              Expanded(
+                child: _buildPendingRequestsTab(),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -252,28 +267,28 @@ class _CoOwnerRequestsPageState extends State<CoOwnerRequestsPage> {
     }
 
     if (_pendingRequests.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
+            const Icon(
               Icons.inbox_outlined,
               color: Colors.grey,
               size: 64,
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Text(
-              'Bekleyen istek yok',
-              style: TextStyle(
+              AppLocalizations.of(context)!.noPendingRequests,
+              style: const TextStyle(
                 color: Colors.grey,
                 fontSize: 18,
                 fontWeight: FontWeight.w500,
               ),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Text(
-              'Gelen eş sahip istekleri burada görünecek',
-              style: TextStyle(
+              AppLocalizations.of(context)!.noPendingRequestsDescription,
+              style: const TextStyle(
                 color: Colors.grey,
                 fontSize: 14,
               ),
@@ -321,7 +336,7 @@ class _CoOwnerRequestsPageState extends State<CoOwnerRequestsPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Eş Sahip İsteği',
+                            AppLocalizations.of(context)!.coOwnerRequest,
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 16,
@@ -329,7 +344,7 @@ class _CoOwnerRequestsPageState extends State<CoOwnerRequestsPage> {
                             ),
                           ),
                           Text(
-                            '${request['requesterName']} tarafından',
+                            AppLocalizations.of(context)!.byUser(request['requesterName']),
                             style: TextStyle(
                               color: Colors.grey[400],
                               fontSize: 14,
@@ -402,8 +417,8 @@ class _CoOwnerRequestsPageState extends State<CoOwnerRequestsPage> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        child: const Text(
-                          'Kabul Et',
+                        child: Text(
+                          AppLocalizations.of(context)!.accept,
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 16,
@@ -427,8 +442,8 @@ class _CoOwnerRequestsPageState extends State<CoOwnerRequestsPage> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        child: const Text(
-                          'Reddet',
+                        child: Text(
+                          AppLocalizations.of(context)!.reject,
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 16,

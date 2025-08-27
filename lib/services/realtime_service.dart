@@ -70,11 +70,12 @@ extension PetChatRealtime on RealtimeService {
   }) async {
     await _safeDatabaseOperation(() async {
       final msgRef = _db.child('pet_chats').child(petId).child('messages').push();
-      await msgRef.set({
+      final messageData = {
         'sender': senderUid,
         'text': text,
         'timestamp': DateTime.now().millisecondsSinceEpoch,
-      });
+      };
+      await msgRef.set(messageData);
       
       // Eş sahipten mesaj geldiğinde bildirim gönder
       if (petName != null && senderName != null) {
@@ -89,7 +90,6 @@ extension PetChatRealtime on RealtimeService {
 
   Stream<List<PetMessage>> getPetMessagesStream(String petId) {
     if (!_isUserAuthenticated()) {
-      print('❌ Kullanıcı kimlik doğrulaması yapılmamış');
       return Stream.value([]); // Boş liste döndür, hata fırlatma
     }
 
@@ -98,25 +98,32 @@ extension PetChatRealtime on RealtimeService {
         .orderByChild('timestamp')
         .onValue
         .handleError((error) {
-          print('❌ Pet messages stream hatası: $error');
           // Hata durumunda boş liste döndür
           return [];
         })
-        .map((event) {
+        .map<List<PetMessage>>((event) {
           try {
             final data = event.snapshot.value;
-            if (data == null || data is! Map) return [];
+            if (data == null) {
+              return [];
+            }
+            if (data is! Map) {
+              return [];
+            }
             final mapData = data;
-            if (mapData.isEmpty) return [];
-            return mapData.entries.map((e) => PetMessage.fromMap(e.value, e.key)).toList()
-              ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
+            if (mapData.isEmpty) {
+              return [];
+            }
+            final messages = mapData.entries.map((e) {
+              return PetMessage.fromMap(e.value, e.key);
+            }).toList();
+            messages.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+            return messages;
           } catch (e) {
-            print('❌ Pet messages parse hatası: $e');
             return []; // Hata durumunda boş liste döndür
           }
         });
     } catch (e) {
-      print('❌ Pet messages stream oluşturulamadı: $e');
       return Stream.value([]); // Hata durumunda boş liste döndür
     }
   }

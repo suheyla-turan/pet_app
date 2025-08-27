@@ -19,6 +19,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'firebase_options.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:pati_takip/l10n/app_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // Background callback fonksiyonu
 @pragma('vm:entry-point')
@@ -217,7 +218,7 @@ class _PatiTakipAppState extends State<PatiTakipApp> {
       child: Consumer2<ThemeProvider, SettingsProvider>(
         builder: (context, themeProvider, settingsProvider, child) {
                       return MaterialApp(
-              key: ValueKey(settingsProvider.locale?.languageCode ?? 'system'),
+              key: ValueKey(settingsProvider.locale?.languageCode ?? 'tr'),
               title: 'PatiTakip',
               theme: themeProvider.lightTheme,
               darkTheme: themeProvider.darkTheme,
@@ -249,7 +250,7 @@ class _PatiTakipAppState extends State<PatiTakipApp> {
               },
             ),
             debugShowCheckedModeBanner: false,
-            locale: settingsProvider.locale,
+            locale: settingsProvider.locale ?? const Locale('tr'),
             localizationsDelegates: [
               AppLocalizations.delegate,
               GlobalMaterialLocalizations.delegate,
@@ -266,11 +267,51 @@ class _PatiTakipAppState extends State<PatiTakipApp> {
 } 
 
 // Ana yönlendirme widget'ı
-class RootPage extends StatelessWidget {
+class RootPage extends StatefulWidget {
   const RootPage({super.key});
 
   @override
+  State<RootPage> createState() => _RootPageState();
+}
+
+class _RootPageState extends State<RootPage> {
+  bool _isFirstLaunch = true;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkFirstLaunch();
+  }
+
+  Future<void> _checkFirstLaunch() async {
+    final prefs = await SharedPreferences.getInstance();
+    _isFirstLaunch = prefs.getBool('isFirstLaunch') ?? true;
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    // İlk açılış ise onboarding'den başla
+    if (_isFirstLaunch) {
+      return OnboardingPage(
+        initialPage: 0,
+        onComplete: () async {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setBool('isFirstLaunch', false);
+          setState(() {
+            _isFirstLaunch = false;
+          });
+        },
+      );
+    }
+
     return Consumer<AuthProvider>(
       builder: (context, authProvider, _) {
         if (authProvider.isLoading) {

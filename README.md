@@ -1,20 +1,22 @@
 # 🐾 PatiTakip - Evcil Hayvan Bakım Uygulaması
 
-Modern Flutter ile geliştirilmiş kapsamlı evcil hayvan bakım ve takip uygulaması.
+Modern Flutter ile geliştirilmiş kapsamlı evcil hayvan bakım ve takip uygulaması. AI destekli asistan, çoklu kullanıcı sistemi ve 7/24 background monitoring ile evcil hayvanlarınız için en iyi bakım deneyimi.
 
 ## 🌟 Öne Çıkan Özellikler
 
 ### 🐕 Evcil Hayvan Yönetimi
 - **Kapsamlı Profil Sistemi**: Evcil hayvan ekleme, düzenleme, silme
-- **Detaylı Bilgi Takibi**: İsim, tür, cinsiyet, doğum tarihi, ağırlık, renk
+- **Detaylı Bilgi Takibi**: İsim, tür, cinsiyet, doğum tarihi, ağırlık, renk, cins
 - **Fotoğraf Yönetimi**: Galeri veya kamera ile fotoğraf ekleme
 - **Çoklu Sahip Desteği**: Her hayvana birden fazla sahip ekleme ve yönetimi
+- **Gerçek Zamanlı Durum**: Anlık sağlık değeri güncellemeleri
 
 ### 📊 Akıllı Durum Takibi
 - **4 Temel Metrik**: Açlık, mutluluk, enerji, bakım seviyeleri
 - **Görsel Göstergeler**: Progress bar'lar ile anlık durum görüntüleme
 - **Otomatik Azalma**: Zamanla doğal olarak azalan değerler
 - **Sesli Geri Bildirim**: Her bakım işleminde hayvan adıyla sesli onay
+- **Özelleştirilebilir Aralıklar**: Her metrik için ayrı güncelleme sıklığı
 
 ### 💉 Gelişmiş Aşı Takip Sistemi
 - **Ayrı Listeler**: Yapılacak ve yapılmış aşılar için ayrı sayfalar
@@ -22,41 +24,76 @@ Modern Flutter ile geliştirilmiş kapsamlı evcil hayvan bakım ve takip uygula
 - **Kolay İşaretleme**: Tik atarak aşıları tamamlama
 - **Tarih Yönetimi**: Geçmiş ve gelecek aşılar için esnek tarih sistemi
 - **Otomatik Bildirimler**: Planlanan aşılar için zamanlı hatırlatmalar
+- **Aşı Geçmişi**: Detaylı aşı kayıtları ve takip
 
+### 🤖 AI Destekli Asistan
+- **Kişiselleştirilmiş Tavsiyeler**: Evcil hayvan bilgilerine göre özel öneriler
+- **Sağlık Danışmanlığı**: Yaş, tür ve cinsiyete göre sağlık tavsiyeleri
+- **Beslenme Rehberi**: Yaş ve türe uygun beslenme önerileri
+- **Egzersiz Programları**: Aktivite ve oyun önerileri
+- **Davranış Analizi**: Karakter ve kişilik değerlendirmesi
+- **Sesli Etkileşim**: Mikrofon ile soru sorma ve sesli yanıt alma
+- **Görsel Tanıma**: Fotoğraf ile soru sorma ve analiz
+- **Hızlı Eylemler**: Sağlık, davranış ve beslenme için önceden tanımlı sorular
 
+### 👥 Çoklu Kullanıcı Sistemi
+- **Eş Sahip İstekleri**: Güvenli davet sistemi ile eş sahip ekleme
+- **İstek Yönetimi**: Gelen ve giden eş sahip isteklerini görüntüleme
+- **Gerçek Zamanlı Mesajlaşma**: Eş sahipler arası anlık iletişim
+- **Medya Paylaşımı**: Fotoğraf ve ses mesajları ile bilgi paylaşımı
+- **İzin Yönetimi**: Sahiplik seviyeleri ve yetki kontrolü
+- **Aktivite Bildirimleri**: Eş sahip işlemleri için anlık bildirimler
 
 ### 🎤 Gelişmiş Ses Özellikleri
 - **Ses Mesajları**: Chat için ses kayıt ve oynatma
 - **Ses Servisi**: Ses kayıt ve TTS entegrasyonu
 - **Çakışma Yönetimi**: Akıllı ses servisi koordinasyonu
+- **Özelleştirilebilir TTS**: Ses, hız ve perde ayarları
+- **Sesli Bildirimler**: Özel bildirim sesleri ve efektler
 
 ### 📷 Medya Desteği
 - **Görsel Mesajlar**: Galeri ve kamera ile resim gönderme
 - **Ses Dosyaları**: AAC formatında ses kayıt ve oynatma
 - **Resim Önizleme**: Büyük görüntüleme ve açıklama ekleme
 - **Dosya Yönetimi**: Geçici dosya sistemi ile optimizasyon
+- **Medya Geçmişi**: Chat ve mesajlarda medya arşivi
 
 ### 🔔 Akıllı Bildirim Sistemi
 - **Doğum Günü Bildirimleri**: Otomatik kutlama ve sesli mesajlar
 - **Aşı Hatırlatmaları**: Planlanan aşılar için zamanlı bildirimler
 - **Özelleştirilebilir Sesler**: Kendi bildirim sesinizi seçme
 - **Zamanlı Bildirimler**: Belirli saatte hatırlatma sistemi
+- **Kritik Durum Uyarıları**: Düşük sağlık değerleri için acil bildirimler
+- **Eş Sahip Mesajları**: Yeni mesaj geldiğinde anlık bildirim
+
+### 🔄 Background Service & Monitoring
+- **7/24 İzleme**: Uygulama kapalıyken bile sürekli monitoring
+- **Otomatik Güncelleme**: Sağlık değerlerinin otomatik azalması
+- **Akıllı Bildirimler**: Kritik seviyelerde otomatik uyarılar
+- **Doğum Günü Kontrolü**: Günlük doğum günü taraması
+- **Aşı Takibi**: Yaklaşan aşılar için otomatik hatırlatmalar
+- **WorkManager Entegrasyonu**: Android ve iOS için native background processing
 
 ### 🌐 Çoklu Dil Desteği
 - **Tam Lokalizasyon**: Türkçe/İngilizce tam destek
 - **Dinamik Değişim**: Anında dil değişimi ve güncelleme
 - **ARB Tabanlı**: Flutter'ın resmi lokalizasyon sistemi
 - **Kapsamlı Çeviri**: Tüm UI elementleri ve metinler
+- **Kültürel Uyum**: Her dil için yerel kültüre uygun içerik
 
 ### 🎨 Kişiselleştirme
 - **Açık/Koyu Tema**: Otomatik ve manuel tema seçimi
 - **TTS Ayarları**: Ses seçimi, hız, perde kontrolü
 - **Bildirim Tercihleri**: Zaman ve ses ayarları
+- **Özelleştirilebilir Aralıklar**: Her metrik için ayrı güncelleme sıklığı
+- **Kişisel Profil**: Kullanıcı tercihleri ve ayarları
 
 ### 🚀 Kullanıcı Deneyimi
 - **Onboarding**: İlk kullanım rehberi ve kurulum
 - **Responsive Tasarım**: Tüm ekran boyutlarına uyum
 - **Smooth Animations**: Akıcı geçişler ve animasyonlar
+- **Intuitive Navigation**: Kolay kullanım ve erişilebilirlik
+- **Accessibility**: Engelli kullanıcılar için uyumluluk
 
 ## 🛠️ Teknik Özellikler
 
@@ -71,8 +108,10 @@ Modern Flutter ile geliştirilmiş kapsamlı evcil hayvan bakım ve takip uygula
 ### 🔧 Mimari
 - **Provider Pattern**: Merkezi state yönetimi
 - **Clean Architecture**: Katmanlı mimari yapısı
-- **Firebase Backend**: Cloud Firestore, Authentication
+- **Firebase Backend**: Cloud Firestore, Authentication, Realtime Database
 - **Local Storage**: SharedPreferences ile yerel veri
+- **Background Processing**: WorkManager ile arka plan işlemleri
+- **Real-time Updates**: Firebase Realtime Database entegrasyonu
 
 ### 📦 Kullanılan Teknolojiler
 - **Flutter 3.8+**: Cross-platform framework
@@ -82,6 +121,11 @@ Modern Flutter ile geliştirilmiş kapsamlı evcil hayvan bakım ve takip uygula
 - **Flutter Sound**: Ses kayıt ve oynatma
 - **Image Picker**: Medya seçimi
 - **Local Notifications**: Bildirim sistemi
+- **WorkManager**: Background task yönetimi
+- **Cloud Firestore**: NoSQL veritabanı
+- **Firebase Auth**: Kimlik doğrulama
+- **SharedPreferences**: Yerel veri saklama
+- **Timezone**: Zaman dilimi yönetimi
 
 ## 🚀 Kurulum ve Yapılandırma
 
@@ -91,6 +135,7 @@ Flutter SDK: ^3.8.1
 Dart SDK: ^3.8.1
 Android Studio / VS Code
 Git
+Firebase Projesi
 ```
 
 ### 2. Projeyi Klonlayın
@@ -104,67 +149,41 @@ cd pet_app
 flutter pub get
 ```
 
-### 4. API Key Yapılandırması
+### 4. Firebase Yapılandırması
 
 #### 🔑 Güvenlik Önemli!
-API key'lerinizi güvenli bir şekilde yapılandırmanız gerekiyor:
+Firebase projenizi yapılandırmanız gerekiyor:
 
-1. `lib/secrets_example.dart` dosyasını `lib/secrets.dart` olarak kopyalayın
-2. API key'lerinizi `lib/secrets.dart` dosyasına ekleyin:
+1. [Firebase Console](https://console.firebase.google.com/) adresinden yeni proje oluşturun
+2. Authentication ve Firestore Database'i etkinleştirin
+3. Android ve iOS uygulamalarını ekleyin
 
-```dart
-const String firebaseApiKey = 'YOUR_ACTUAL_FIREBASE_API_KEY';
-```
+#### 📋 Gerekli Firebase Servisleri:
 
-#### 📋 Gerekli API Key'ler:
+1. **Firebase Authentication**
+   - Email/Password authentication
+   - Email verification
 
-1. **Firebase API Key**
-   - [Firebase Console](https://console.firebase.google.com/) adresinden alın
-   - Authentication ve Firestore erişimi gerekli
+2. **Cloud Firestore**
+   - Veritabanı kuralları
+   - Indexes yapılandırması
 
-### 5. Firebase Yapılandırması
+3. **Firebase Realtime Database**
+   - Real-time veri senkronizasyonu
 
-1. **Firebase Projesi Oluşturun**
-   ```bash
-   # Firebase CLI kurulumu
-   npm install -g firebase-tools
-   firebase login
-   firebase init
-   ```
+4. **Firebase Storage**
+   - Medya dosyaları için
 
-2. **Android Yapılandırması**
-   - Firebase Console'da Android uygulaması ekleyin
-   - `google-services.json` dosyasını `android/app/` klasörüne yerleştirin
-   - Package name: `com.example.pati_takip`
+### 5. Platform Yapılandırması
 
-3. **iOS Yapılandırması**
-   - Firebase Console'da iOS uygulaması ekleyin
-   - `GoogleService-Info.plist` dosyasını `ios/Runner/` klasörüne yerleştirin
-   - Bundle ID: `com.example.patiTakip`
+#### Android (`android/app/`)
+- `google-services.json` dosyasını yerleştirin
+- Package name: `com.example.pati_takip`
+- Minimum SDK: API 21
 
-4. **Firestore Database**
-   - Firestore Database'i etkinleştirin
-   - Güvenlik kurallarını yapılandırın:
-
-```javascript
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-    match /users/{userId}/pets/{petId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-    match /users/{userId}/pets/{petId}/vaccines/{vaccineId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-    match /users/{userId}/pets/{petId}/chat/{messageId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-  }
-}
-```
+#### iOS (`ios/Runner/`)
+- `GoogleService-Info.plist` dosyasını yerleştirin
+- Bundle ID: `com.example.patiTakip`
 
 ### 6. İzinler
 
@@ -177,6 +196,8 @@ service cloud.firestore {
 <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 <uses-permission android:name="android.permission.VIBRATE" />
 <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+<uses-permission android:name="android.permission.WAKE_LOCK" />
+<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 ```
 
 #### iOS (`ios/Runner/Info.plist`)
@@ -187,6 +208,12 @@ service cloud.firestore {
 <string>Bu uygulama fotoğraf çekimi için kamera izni gerektirir</string>
 <key>NSPhotoLibraryUsageDescription</key>
 <string>Bu uygulama fotoğraf seçimi için galeri izni gerektirir</string>
+<key>UIBackgroundModes</key>
+<array>
+    <string>background-processing</string>
+    <string>background-fetch</string>
+    <string>remote-notification</string>
+</array>
 ```
 
 ### 7. Uygulamayı Çalıştırın
@@ -204,7 +231,7 @@ flutter build ios --release
 ### 🐕 Evcil Hayvan Ekleme
 1. Ana sayfada **+** butonuna tıklayın
 2. Hayvan bilgilerini doldurun:
-   - İsim, tür, cinsiyet
+   - İsim, tür, cinsiyet, cins
    - Doğum tarihi, ağırlık, renk
    - Fotoğraf (opsiyonel)
 3. **Kaydet** butonuna tıklayın
@@ -222,7 +249,18 @@ flutter build ios --release
 4. **Tik** atarak aşıyı tamamlayın
 5. Aşı otomatik olarak **Yapılmış Aşılar** listesine taşınır
 
+### 🤖 AI Asistan Kullanımı
+1. **AI Chat** butonuna tıklayın
+2. Sorunuzu yazın veya sesli sorun
+3. AI kişiselleştirilmiş yanıt verir
+4. Hızlı eylemler ile önceden tanımlı sorular sorun
+5. Fotoğraf ile soru sorun
 
+### 👥 Eş Sahip Yönetimi
+1. **Eş Sahip Yönetimi** sayfasına gidin
+2. Email adresini girin ve istek gönderin
+3. Kişi isteği kabul ettiğinde eş sahip olur
+4. **Eş Sahip İstekleri** sayfasından istekleri yönetin
 
 ### 📷 Medya Mesajları
 1. **Ses Mesajı**: Mikrofon butonu ile kayıt
@@ -234,6 +272,7 @@ flutter build ios --release
 - **Dil**: Türkçe/İngilizce dil değişimi
 - **TTS**: Ses, hız, perde ayarları
 - **Bildirimler**: Zaman ve ses tercihleri
+- **Background Service**: Otomatik izleme ayarları
 
 ## 📁 Proje Yapısı
 
@@ -242,48 +281,56 @@ lib/
 ├── features/                    # Özellik bazlı klasörler
 │   ├── onboarding/             # İlk kurulum
 │   │   └── onboarding_page.dart
+│   ├── auth/                   # Kimlik doğrulama
+│   │   └── email_verification_screen.dart
 │   ├── pet/                    # Evcil hayvan özellikleri
 │   │   ├── models/             # Veri modelleri
 │   │   │   ├── pet.dart
 │   │   │   ├── vaccine.dart
-
+│   │   │   └── chat_history.dart
 │   │   ├── screens/            # Ekranlar
 │   │   │   ├── pet_list_page.dart
 │   │   │   ├── pet_detail_page.dart
 │   │   │   ├── pet_form_page.dart
 │   │   │   ├── vaccine_page.dart
-
+│   │   │   ├── ai_chat_page.dart
+│   │   │   ├── co_owner_requests_page.dart
+│   │   │   ├── pet_co_owner_management_page.dart
 │   │   │   ├── settings_page.dart
 │   │   │   ├── about_page.dart
 │   │   │   └── feedback_page.dart
 │   │   └── widgets/            # Özel widget'lar
-│   │       └── progress_indicator.dart
-│   └── profile/                # Profil özellikleri
-│       └── profile_page.dart
+│   │       ├── progress_indicator.dart
+│   │       └── chat_history_overlay.dart
+│   ├── profile/                # Profil özellikleri
+│   │   └── profile_page.dart
+│   └── debug/                  # Debug özellikleri
+│       ├── debug_page.dart
+│       └── background_service_test_page.dart
 ├── providers/                  # State management
 │   ├── pet_provider.dart       # Evcil hayvan yönetimi
-
 │   ├── auth_provider.dart      # Kimlik doğrulama
 │   ├── settings_provider.dart  # Ayarlar
 │   └── theme_provider.dart     # Tema yönetimi
 ├── services/                   # Servisler
 │   ├── firestore_service.dart  # Firebase veritabanı
-
 │   ├── notification_service.dart # Bildirimler
 │   ├── media_service.dart      # Medya işlemleri
 │   ├── voice_service.dart      # Ses servisleri
 │   ├── auth_service.dart       # Kimlik doğrulama
 │   ├── firebase_config.dart    # Firebase yapılandırması
-│   └── realtime_service.dart   # Gerçek zamanlı veri
+│   ├── realtime_service.dart   # Gerçek zamanlı veri
+│   ├── background_service.dart # Background service
+│   └── chat_history_service.dart # Chat geçmişi
 ├── widgets/                    # Genel widget'lar
-
+│   ├── paw_icon.dart
+│   └── email_verification_dialog.dart
 ├── l10n/                      # Lokalizasyon
 │   ├── app_en.arb            # İngilizce çeviriler
 │   ├── app_tr.arb            # Türkçe çeviriler
 │   ├── app_localizations.dart # Lokalizasyon sınıfı
 │   ├── app_localizations_en.dart
 │   └── app_localizations_tr.dart
-├── secrets.dart               # API key'ler (güvenli)
 ├── firebase_options.dart      # Firebase yapılandırması
 └── main.dart                  # Ana uygulama
 ```
@@ -327,10 +374,10 @@ flutter build web --release
 ## 🚨 Önemli Notlar
 
 ### 🔒 Güvenlik
-1. **API Key'leri Asla Paylaşmayın!**
-2. `lib/secrets.dart` dosyasını GitHub'a yüklemeyin
-3. Production'da environment variables kullanın
-4. Firebase güvenlik kurallarını düzenli kontrol edin
+1. **Firebase Güvenlik Kuralları**: Firestore ve Realtime Database için güvenlik kurallarını yapılandırın
+2. **API Key'leri**: Production'da environment variables kullanın
+3. **Kullanıcı İzinleri**: Eş sahip sisteminde yetki kontrolü yapın
+4. **Veri Doğrulama**: Client-side ve server-side validation
 
 ### 📱 Platform Özellikleri
 - **Android**: Tam destek, tüm özellikler aktif
@@ -341,8 +388,8 @@ flutter build web --release
 ### 🔄 Güncellemeler
 - Flutter SDK güncellemeleri
 - Firebase SDK güncellemeleri
-
 - Güvenlik yamaları
+- Yeni özellik eklemeleri
 
 ## 🤝 Katkıda Bulunma
 
@@ -372,11 +419,11 @@ Bu proje **MIT lisansı** altında lisanslanmıştır. Detaylar için `LICENSE` 
 
 - **Flutter Team**: Harika framework için
 - **Firebase Team**: Backend servisleri için
-
+- **WorkManager Team**: Background processing için
 - **Tüm Katkıda Bulunanlar**: Projeye destek için
 
 ---
 
-**⚠️ Güvenlik Uyarısı**: API key'lerinizi güvenli tutun ve asla public repository'lere yüklemeyin!
+**⚠️ Güvenlik Uyarısı**: Firebase güvenlik kurallarınızı düzenli kontrol edin ve production'da environment variables kullanın!
 
 **🐾 PatiTakip** - Evcil hayvanlarınız için en iyi bakım deneyimi! 🐕❤️

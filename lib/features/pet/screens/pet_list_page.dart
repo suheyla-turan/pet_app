@@ -123,7 +123,7 @@ class _PetListPageState extends State<PetListPage> with TickerProviderStateMixin
                                 fontSize: 32,
                                 fontWeight: FontWeight.bold,
                                 letterSpacing: 1.2,
-                                color: Color(0xFF4A5568),
+                                color: isDark ? Colors.white : Colors.black87,
                               ),
                             ),
                             const SizedBox(height: 16),
@@ -534,6 +534,8 @@ class _PetListPageState extends State<PetListPage> with TickerProviderStateMixin
                                 fontWeight: FontWeight.w800,
                                 color: isDark ? Colors.white : const Color(0xFF2D3748),
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           if (pet.isBirthday)
@@ -576,6 +578,8 @@ class _PetListPageState extends State<PetListPage> with TickerProviderStateMixin
                           color: isDark ? Colors.grey.shade300 : Colors.grey.shade600,
                           fontWeight: FontWeight.w500,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       
                       const SizedBox(height: 16),

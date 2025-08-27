@@ -15,6 +15,18 @@ service cloud.firestore {
     // Hayvan bilgileri - sadece e-posta doğrulanmış kullanıcılar
     match /hayvanlar/{petId} {
       allow read, write: if isEmailVerified();
+      
+      // Pet mesajları - sadece pet sahipleri ve eş sahipleri
+      match /messages/{messageId} {
+        allow read, write: if isEmailVerified() && 
+           exists(/databases/$(database)/documents/hayvanlar/$(petId)) &&
+           request.auth.uid in get(/databases/$(database)/documents/hayvanlar/$(petId)).data.owners;
+      }
+    }
+    
+    // Pets koleksiyonu - e-posta doğrulanmış kullanıcılar
+    match /pets/{petId} {
+      allow read, write: if isEmailVerified();
     }
     
     // Ortak sahip istekleri - sadece e-posta doğrulanmış kullanıcılar

@@ -48,9 +48,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get advancedNotifications => 'Advanced Notifications';
 
   @override
-  String get scheduledNotifications => 'Scheduled Notifications';
-
-  @override
   String get updateInterval => 'Update Interval';
 
   @override
@@ -79,6 +76,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cancel => 'Cancel';
+
+  @override
+  String get edit => 'Edit';
 
   @override
   String get ask => 'Ask';
@@ -207,9 +207,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationsAlert => 'Alert Sound';
 
   @override
-  String get scheduledNotificationsDesc => 'Daily reminder notifications';
-
-  @override
   String get update => 'Update';
 
   @override
@@ -295,6 +292,72 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get hunger => 'Hunger';
+
+  @override
+  String get veterinaryProcedures => 'Veterinary Procedures';
+
+  @override
+  String get veterinaryAppointment => 'Veterinary Appointment';
+
+  @override
+  String get vaccineInformation => 'Vaccine Information';
+
+  @override
+  String get vaccinesToBeTaken => 'Vaccines to be Taken';
+
+  @override
+  String get completedVaccines => 'Completed Vaccines';
+
+  @override
+  String get coOwnerManagement => 'Co-owner Management';
+
+  @override
+  String get diaryChat => 'Diary Chat';
+
+  @override
+  String get noMessages => 'No messages yet.';
+
+  @override
+  String get writeMessage => 'Write a message...';
+
+  @override
+  String get deleteNote => 'Delete Note';
+
+  @override
+  String get deleteNoteConfirm => 'Are you sure you want to delete this note?';
+
+  @override
+  String get noteDeleted => 'Note deleted successfully!';
+
+  @override
+  String noteDeleteError(Object error) {
+    return 'Error deleting note: $error';
+  }
+
+  @override
+  String get deletePet => 'Delete Pet';
+
+  @override
+  String get deletePetConfirm => 'Are you sure you want to delete this pet? This action cannot be undone.';
+
+  @override
+  String get petDeleted => 'Pet deleted successfully!';
+
+  @override
+  String petDeleteError(Object error) {
+    return 'Error deleting pet: $error';
+  }
+
+  @override
+  String get chatHistory => 'Chat History';
+
+  @override
+  String errorOccurred(Object error) {
+    return 'An error occurred: $error';
+  }
+
+  @override
   String get type => 'Type';
 
   @override
@@ -334,7 +397,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingWelcome => 'Welcome to PatiTakip!';
 
   @override
-  String get onboardingDescription => 'Track your pets, vaccinations, and more.';
+  String get onboardingDescription => 'Your comprehensive pet care companion. Track health, vaccinations, daily activities, and get AI-powered advice.';
 
   @override
   String get next => 'Next';
@@ -343,22 +406,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addPet => 'Add Pet';
 
   @override
-  String get addPetDescription => 'Add your pet to start tracking.';
+  String get addPetDescription => 'Create detailed pet profiles with photos, breed info, and personalized care schedules. Monitor multiple pets with ease.';
 
   @override
-  String get vaccinationAndCare => 'Vaccination & Care';
+  String get vaccinationAndCare => 'Health & Vaccination Tracking';
 
   @override
-  String get vaccinationAndCareDescription => 'Keep your pet healthy with reminders.';
+  String get vaccinationAndCareDescription => 'Never miss important vaccinations again. Set reminders, track medical history, and maintain complete health records.';
 
   @override
-  String get profileAndHistory => 'Profile & History';
+  String get profileAndHistory => 'AI Assistant & Analytics';
 
   @override
-  String get profileAndHistoryDescription => 'View your profile and pet history.';
+  String get profileAndHistoryDescription => 'Chat with AI for pet care advice, track daily activities, and analyze your pet\'s health patterns over time.';
 
   @override
-  String get start => 'Start';
+  String get start => 'Get Started';
 
   @override
   String get login => 'Login';
@@ -490,13 +553,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addPetHint => 'Tap the + button to add your first pet.';
 
   @override
-  String get hunger => 'Hunger';
-
-  @override
   String get feedingTimeSaved => 'Feeding time saved!';
-
-  @override
-  String get vaccinesToBeTaken => 'Vaccines to be taken';
 
   @override
   String get vaccinesTaken => 'Vaccines taken';
@@ -508,25 +565,36 @@ class AppLocalizationsEn extends AppLocalizations {
   String get owners => 'Owners';
 
   @override
-  String get diaryChat => 'Diary Chat';
-
-  @override
-  String get errorOccurred => 'An error occurred.';
-
-  @override
-  String get noMessages => 'No messages yet.';
-
-  @override
-  String get writeMessage => 'Write a message...';
-
-  @override
-  String get chatHistory => 'Chat History';
-
-  @override
   String get aiChat => 'AI Chat';
 
   @override
   String get newChat => 'New Chat';
+
+  @override
+  String get noChatYet => 'No chat yet';
+
+  @override
+  String get newChatStarted => 'New chat started';
+
+  @override
+  String messageCount(Object count) {
+    return '$count messages';
+  }
+
+  @override
+  String get newChatConfirmTitle => 'New Chat';
+
+  @override
+  String get newChatConfirmMessage => 'Current chat history will be saved and a new chat will be started. Do you want to continue?';
+
+  @override
+  String get clearChatConfirmMessage => 'Current chat history will be permanently deleted. This action cannot be undone. Do you want to continue?';
+
+  @override
+  String get imageSent => 'Image sent';
+
+  @override
+  String get voiceMessageSent => 'Voice message sent';
 
   @override
   String get speakQuestion => 'Speak your question';
@@ -568,8 +636,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get vaccines => 'Vaccines';
 
   @override
-  String noVaccines(Object showDone) {
-    return 'No vaccines found.';
+  String noVaccines(Object showDone, Object type) {
+    return 'No $type vaccines yet';
   }
 
   @override
@@ -580,34 +648,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String deletePetError(Object error) {
     return 'Failed to delete pet: $error';
-  }
-
-  @override
-  String get deleteNote => 'Delete Note';
-
-  @override
-  String get deleteNoteConfirm => 'Are you sure you want to delete this note?';
-
-  @override
-  String get noteDeleted => 'Note deleted successfully!';
-
-  @override
-  String noteDeleteError(Object error) {
-    return 'Error deleting note: $error';
-  }
-
-  @override
-  String get deletePet => 'Delete Pet';
-
-  @override
-  String get deletePetConfirm => 'Are you sure you want to delete this pet? This action cannot be undone.';
-
-  @override
-  String get petDeleted => 'Pet deleted successfully!';
-
-  @override
-  String petDeleteError(Object error) {
-    return 'Error deleting pet: $error';
   }
 
   @override
@@ -642,6 +682,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get logout => 'Logout';
 
   @override
+  String get logoutConfirm => 'Are you sure you want to logout from your account?';
+
+  @override
   String get deleteProfile => 'Delete Profile';
 
   @override
@@ -654,7 +697,53 @@ class AppLocalizationsEn extends AppLocalizations {
   String get editProfile => 'Edit Profile';
 
   @override
+  String get emailVerificationRequired => 'Email Verification Required';
+
+  @override
+  String get emailVerificationDescription => 'You need to verify your email address';
+
+  @override
+  String get redirectingToLogin => 'Redirecting to login screen...';
+
+  @override
+  String get emailNotFound => 'Email not found';
+
+  @override
+  String get profileEditTitle => 'Edit Profile';
+
+  @override
+  String get nameRequired => 'Name required';
+
+  @override
   String get nameMinLengthError => 'Name must be at least 2 characters.';
+
+  @override
+  String get profileUpdatedSuccessfully => 'Profile updated successfully!';
+
+  @override
+  String profileUpdateError(Object error) {
+    return 'Error updating profile: $error';
+  }
+
+  @override
+  String get profileUpdateErrorPlaceholder => 'error';
+
+  @override
+  String get profileDeletedSuccessfully => 'Profile deleted successfully';
+
+  @override
+  String profileDeleteError(Object error) {
+    return 'Error deleting profile: $error';
+  }
+
+  @override
+  String get profileDeleteErrorPlaceholder => 'error';
+
+  @override
+  String get selectFromGallery => 'Select from Gallery';
+
+  @override
+  String get takePhoto => 'Take Photo';
 
   @override
   String get minutes => 'minutes';
@@ -688,12 +777,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get other => 'Other';
-
-  @override
-  String get selectFromGallery => 'Select from Gallery';
-
-  @override
-  String get takePhoto => 'Take Photo';
 
   @override
   String get useRecognizedText => 'Use This Text';
@@ -753,7 +836,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get faqWhatIsPatiTakip => 'What is PatiTakip?';
 
   @override
-  String get faqWhatIsPatiTakipAnswer => 'PatiTakip is a comprehensive mobile app designed to make pet care easier. It offers vaccination tracking, daily notes, AI-powered chat, and voice command features.';
+  String get faqWhatIsPatiTakipAnswer => 'PatiTakip is a comprehensive mobile app designed to make pet care easier. It offers vaccination tracking, daily notes, and AI-powered chat features.';
 
   @override
   String get faqHowToAddPet => 'How do I add a pet?';
@@ -771,7 +854,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get faqHowToUseAI => 'How do I use the AI chat feature?';
 
   @override
-  String get faqHowToUseAIAnswer => 'Click the AI button in the bottom right corner of the main page to chat with artificial intelligence. You can ask questions both in writing and by voice.';
+  String get faqHowToUseAIAnswer => 'Click the AI button in the bottom right corner of the main page to chat with artificial intelligence. You can ask questions in writing.';
 
   @override
   String get faqVoiceCommands => 'How do voice commands work?';
@@ -783,7 +866,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get faqNotifications => 'How do I set up notifications?';
 
   @override
-  String get faqNotificationsAnswer => 'You can manage your notification preferences in Settings > Notifications. You can receive notifications for pet care reminders and vaccination times.';
+  String get faqNotificationsAnswer => 'You can manage your notification preferences in Settings > Notifications. You can receive notifications for vaccination times.';
 
   @override
   String get faqDataBackup => 'Is my data safe?';
@@ -801,7 +884,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get faqShareAccount => 'Can I share my account with others?';
 
   @override
-  String get faqShareAccountAnswer => 'Yes, you can add other users from the \'Owners\' section on the pet detail page. This way family members can also participate in pet care.';
+  String get faqShareAccountAnswer => 'Yes, you can add other users from the \'Co-owner Management\' section on the pet detail page. This way family members can also participate in pet care.';
 
   @override
   String get faqAppUpdates => 'How do app updates work?';
@@ -819,143 +902,817 @@ class AppLocalizationsEn extends AppLocalizations {
   String get faqPrivacyPolicy => 'What is the privacy policy?';
 
   @override
-  String get faqPrivacyPolicyAnswer => 'Your personal data is securely protected and not shared with third parties. You can find our detailed privacy policy in the app.';
+  String get faqPrivacyPolicyAnswer => 'Your personal data is securely protected and not shared with third parties. Our privacy policy is available on our website.';
 
   @override
   String get faqTermsOfService => 'What are the terms of service?';
 
   @override
-  String get faqTermsOfServiceAnswer => 'By using the app, you accept our terms of service. You can find the full text in the app.';
+  String get faqTermsOfServiceAnswer => 'By using the app, you accept our terms of service. You can find the full text on our website.';
 
   @override
-  String get faqPetHealth => 'How can I monitor my pet\'s health?';
+  String get faqAppFree => 'Is the app free?';
 
   @override
-  String get faqPetHealthAnswer => 'The app tracks your pet\'s satiety, happiness, energy, and care levels. You can view these statuses on the pet detail page and receive notifications when they need attention.';
+  String get faqAppFreeAnswer => 'Yes, PatiTakip is completely free. All basic features are available to everyone.';
+
+  @override
+  String get faqDeviceSupport => 'Which devices does it work on?';
+
+  @override
+  String get faqDeviceSupportAnswer => 'PatiTakip currently only works on Android devices.';
+
+  @override
+  String get faqMultiUserSupport => 'How does multi-user support work?';
+
+  @override
+  String get faqMultiUserSupportAnswer => 'You can add other users from the \'Co-owner Management\' section on the pet detail page. This way family members can also participate in pet care and access the same information.';
+
+  @override
+  String get faqDataSecurity => 'Is my data secure?';
+
+  @override
+  String get faqDataSecurityAnswer => 'Yes, all your data is stored securely on Firebase cloud servers with encryption. Your data is always accessible when you log into your account.';
+
+  @override
+  String get faqPetWeight => 'Can I track my pet\'s weight?';
+
+  @override
+  String get faqPetWeightAnswer => 'Yes, you can record your pet\'s weight in notes. This way you can track weight changes and monitor health status.';
+
+  @override
+  String get faqVetAppointments => 'Can I track vet appointments?';
+
+  @override
+  String get faqVetAppointmentsAnswer => 'Yes, you can record vet appointments in notes.';
+
+  @override
+  String get faqPetSleep => 'Can I track my pet\'s sleep schedule?';
+
+  @override
+  String get faqPetSleepAnswer => 'Yes, you can record your pet\'s sleep schedule in notes. You can take notes about sleep duration and quality.';
+
+  @override
+  String get faqPetSocial => 'How can I record social activities?';
+
+  @override
+  String get faqPetSocialAnswer => 'You can record your pet\'s playtime with other animals, park visits, and social activities in notes.';
+
+  @override
+  String get faqVaccineRequirements => 'Can I get information about vaccine requirements in different countries?';
+
+  @override
+  String get faqVaccineRequirementsAnswer => 'You can get general information using the AI chat feature, but we always recommend checking official veterinary sources.';
+
+  @override
+  String get faqOfflineUse => 'Can I use the app without internet connection?';
+
+  @override
+  String get faqOfflineUseAnswer => 'Basic features work limitedly offline, but internet connection is required for data synchronization and AI chat.';
+
+  @override
+  String get faqDataExport => 'Can I export my data?';
+
+  @override
+  String get faqDataExportAnswer => 'No, data export feature is not currently available.';
+
+  @override
+  String get faqAppSize => 'How much space does the app take?';
+
+  @override
+  String get faqAppSizeAnswer => 'PatiTakip takes approximately 50-100 MB. Photos are stored in the cloud so they don\'t take much space on your device.';
+
+  @override
+  String get faqBugReport => 'How can I send a bug report?';
+
+  @override
+  String get faqBugReportAnswer => 'You can send bug reports using the \'Feedback\' section in the app. If you provide detailed descriptions, we can help you faster.';
+
+  @override
+  String get faqFeatureRequest => 'How can I suggest features?';
+
+  @override
+  String get faqFeatureRequestAnswer => 'You can send new feature suggestions through the \'Feedback\' section. All suggestions are evaluated and the most popular ones are developed.';
+
+  @override
+  String get faqCommunityForum => 'Is there a community forum?';
+
+  @override
+  String get faqCommunityForumAnswer => 'Yes, a community forum for PatiTakip users will open soon. You can share your experiences and get advice from other users there.';
+
+  @override
+  String get faqPetHealth => 'How can I track my pet\'s health?';
+
+  @override
+  String get faqPetHealthAnswer => 'You can track your pet\'s health by monitoring their daily activities, setting vaccination reminders, and recording veterinary visits in the app.';
 
   @override
   String get faqPetPhotos => 'Can I add photos to my pet\'s profile?';
 
   @override
-  String get faqPetPhotosAnswer => 'Yes, you can add photos to your pet\'s profile. You can take a new photo or select one from your gallery. Photos are stored securely in the cloud.';
+  String get faqPetPhotosAnswer => 'Yes, you can add multiple photos to your pet\'s profile and update them anytime to keep track of their growth and changes.';
 
   @override
-  String get faqPetNotes => 'How do I add daily notes about my pet?';
+  String get faqPetNotes => 'How do I add notes about my pet?';
 
   @override
-  String get faqPetNotesAnswer => 'You can add daily notes about your pet\'s behavior, health, or activities. These notes are saved with timestamps and can be viewed in the pet\'s history.';
+  String get faqPetNotesAnswer => 'You can add text, voice, and visual notes about your pet\'s behavior, health, or special moments using the note features in the app.';
 
   @override
-  String get faqPetReminders => 'What kind of reminders does the app provide?';
+  String get faqPetReminders => 'Can I set reminders for pet care?';
 
   @override
-  String get faqPetRemindersAnswer => 'The app provides reminders for feeding times, care schedules, vaccination dates, and other important pet care activities. You can customize these reminders in the settings.';
+  String get faqPetRemindersAnswer => 'Yes, you can set reminders for vaccinations, vet appointments, grooming, feeding, and other important pet care activities.';
 
   @override
-  String get faqPetTraining => 'Can the app help with pet training?';
+  String get faqPetTraining => 'Does the app help with pet training?';
 
   @override
-  String get faqPetTrainingAnswer => 'While the app doesn\'t provide direct training programs, you can track your pet\'s progress, set training goals, and use the AI chat to ask for training advice and tips.';
+  String get faqPetTrainingAnswer => 'The AI assistant can provide training tips and advice, but for complex training issues, we recommend consulting with a professional trainer.';
 
   @override
-  String get faqPetSocial => 'Can I share my pet\'s achievements with others?';
+  String get faqPetEmergency => 'What should I do in a pet emergency?';
 
   @override
-  String get faqPetSocialAnswer => 'Currently, the app focuses on individual pet tracking. However, you can share your pet\'s photos and achievements through your device\'s sharing features.';
+  String get faqPetEmergencyAnswer => 'In case of emergency, contact your veterinarian immediately. The app can help you keep emergency contact information easily accessible.';
 
   @override
-  String get faqPetEmergency => 'What should I do in case of a pet emergency?';
+  String get faqPetTravel => 'How can I prepare my pet for travel?';
 
   @override
-  String get faqPetEmergencyAnswer => 'The app is not a substitute for veterinary care. In case of emergency, contact your veterinarian immediately. The app can help you track symptoms and share information with your vet.';
+  String get faqPetTravelAnswer => 'The app can help you prepare travel checklists, ensure vaccinations are up to date, and keep important documents organized.';
 
   @override
-  String get faqPetTravel => 'How can I use the app when traveling with my pet?';
+  String get faqPetGrooming => 'How often should I groom my pet?';
 
   @override
-  String get faqPetTravelAnswer => 'The app works anywhere with internet connection. You can continue tracking your pet\'s care schedule, add travel notes, and access all features while on the go.';
+  String get faqPetGroomingAnswer => 'Grooming frequency depends on your pet\'s breed, coat type, and lifestyle. The AI assistant can provide specific recommendations for your pet.';
 
   @override
-  String get faqPetGrooming => 'Can I track grooming appointments?';
+  String get faqPetExercise => 'How much exercise does my pet need?';
 
   @override
-  String get faqPetGroomingAnswer => 'Yes, you can add grooming appointments as custom care activities. Set reminders for grooming sessions and track your pet\'s grooming history.';
+  String get faqPetExerciseAnswer => 'Exercise needs vary by breed, age, and health. The app can help you create personalized exercise plans and track activity levels.';
 
   @override
-  String get faqPetExercise => 'How can I track my pet\'s exercise routine?';
+  String get faqPetDiet => 'What should I feed my pet?';
 
   @override
-  String get faqPetExerciseAnswer => 'You can add exercise activities to your pet\'s daily notes. Track exercise duration, type, and your pet\'s energy levels before and after exercise.';
+  String get faqPetDietAnswer => 'Diet recommendations depend on your pet\'s age, breed, health, and activity level. Consult with your veterinarian for personalized nutrition advice.';
 
   @override
-  String get faqPetDiet => 'Can I track my pet\'s diet and feeding schedule?';
+  String get aiChatInstructions => 'Ask me anything about pet care, health, training, or general questions. I\'m here to help!';
 
   @override
-  String get faqPetDietAnswer => 'Yes, the app tracks feeding times and satiety levels. You can add notes about diet changes, food preferences, and feeding amounts in the daily notes.';
+  String aiChatInstructionsWithPet(Object petName) {
+    return 'Ask me anything about $petName\'s care, health, training, or general pet questions. I\'m here to help!';
+  }
 
   @override
-  String get aboutAppVersion => 'App Version';
+  String get aiChatInstructionsWithPetPlaceholder => 'petName';
 
   @override
-  String get aboutAppVersionValue => '1.0.0';
+  String voiceMessage(Object duration) {
+    return 'Voice Message';
+  }
 
   @override
-  String get aboutDeveloper => 'Developer';
+  String voiceMessageError(Object error) {
+    return 'Voice message could not be sent: $error';
+  }
 
   @override
-  String get aboutDeveloperValue => 'PatiTakip Team';
+  String get imageNoteAdded => 'Image note added!';
 
   @override
-  String get aboutContact => 'Contact';
+  String imageNoteError(Object error) {
+    return 'Image note could not be added: $error';
+  }
 
   @override
-  String get aboutContactValue => 'info@patitakip.com';
+  String imageNoteWithText(Object note) {
+    return '📷 Image note: $note';
+  }
 
   @override
-  String get aboutWebsite => 'Website';
+  String get imageNoteAddedMessage => '📷 Image note added';
 
   @override
-  String get aboutWebsiteValue => 'www.patitakip.com';
+  String get unknownTime => 'Unknown time';
 
   @override
-  String get aboutFeatures => 'Features';
+  String get noVaccinesPlaceholder => 'type';
 
   @override
-  String get aboutFeaturesList => '• Pet profile management\n• Vaccination tracking system\n• AI-powered chat\n• Voice command feature\n• Notification system\n• Multi-user support\n• Cloud backup';
+  String get datePlaceholder => 'date';
 
   @override
-  String get aboutTechnology => 'Technologies';
+  String get markAsDone => 'Mark as Done';
 
   @override
-  String get aboutTechnologyList => '• Flutter & Dart\n• Firebase\n• OpenAI API\n• Speech Recognition\n• Text-to-Speech';
+  String get messaging => 'Messaging';
 
   @override
-  String get aboutPrivacy => 'Privacy';
+  String get emailAddress => 'Email Address';
 
   @override
-  String get aboutPrivacyText => 'Your data is stored securely and not shared with third parties. You can find our detailed privacy policy on our website.';
+  String get emailHint => 'coowner@email.com';
 
   @override
-  String get aboutSupport => 'Support';
+  String get addNoteOptional => 'Add note (optional)';
 
   @override
-  String get aboutSupportText => 'You can contact our support team for your questions. Your feedback is valuable to us.';
+  String get birthdayCongratulations => 'Happy Birthday!';
+
+  @override
+  String birthdayCongratulationsMessage(Object name) {
+    return 'Happy Birthday $name!';
+  }
+
+  @override
+  String get birthdayCongratulationsMessagePlaceholder => 'name';
+
+  @override
+  String get youAreOwner => 'You are the owner';
+
+  @override
+  String get youAreNotOwner => 'You are not the owner';
+
+  @override
+  String get statusInformation => 'Status Information';
+
+  @override
+  String get onlineCoOwner => '1 co-owner online';
+
+  @override
+  String get petTrackingApp => 'Pet Tracking Application';
+
+  @override
+  String appSharingMessage(Object appTitle) {
+    return '🐾 $appTitle - The best care experience for your pets! Share the app with your friends.';
+  }
+
+  @override
+  String get appSharingMessagePlaceholder => 'appTitle';
+
+  @override
+  String get onboardingFeature1 => 'Pet Management';
+
+  @override
+  String get onboardingFeature2 => 'Health Tracking';
+
+  @override
+  String get onboardingFeature3 => 'Vaccine Reminders';
+
+  @override
+  String get onboardingFeature4 => 'Veterinary Appointments';
+
+  @override
+  String get onboardingFeature5 => 'AI-Powered Chat';
+
+  @override
+  String get onboardingFeature9 => 'Multi-User Support';
+
+  @override
+  String get onboardingFeature10 => 'Voice Messaging';
+
+  @override
+  String get onboardingFeature11 => 'Notification System';
+
+  @override
+  String get onboardingFeature12 => 'Cloud Backup';
+
+  @override
+  String get onboardingFeature13 => 'Multi-Platform';
+
+  @override
+  String get onboardingFeature14 => 'Turkish/English Language';
+
+  @override
+  String get onboardingFeature15 => 'Light/Dark Theme';
+
+  @override
+  String get petManagement => 'Pet Management';
+
+  @override
+  String get petManagementDescription => 'Manage all your pet information in one place';
+
+  @override
+  String get healthTrackingDescription => 'Easily track health status and vaccination schedules';
+
+  @override
+  String get welcomeBack => 'Welcome Back';
+
+  @override
+  String get loginToYourAccount => 'Sign in to your account';
+
+  @override
+  String get emailRequired => 'Email required';
+
+  @override
+  String get emailInvalid => 'Invalid email address';
+
+  @override
+  String get passwordRequired => 'Password required';
+
+  @override
+  String get passwordTooShort => 'Password too short (minimum 6 characters)';
+
+  @override
+  String get resetPasswordTitle => 'Password Reset';
+
+  @override
+  String get resetPasswordDescription => 'A password reset link will be sent to your email address';
+
+  @override
+  String get coOwnerRequestsLoadingError => 'Error loading co-owner requests';
+
+  @override
+  String get requestAccepted => 'Request accepted';
+
+  @override
+  String get requestAcceptError => 'Error accepting request';
+
+  @override
+  String get rejectRequest => 'Reject Request';
+
+  @override
+  String get rejectRequestConfirm => 'Are you sure you want to reject this request?';
+
+  @override
+  String get reject => 'Reject';
+
+  @override
+  String get coOwnersLoadingError => 'Error loading co-owners';
+
+  @override
+  String get petNotFound => 'Pet not found. Please refresh the page.';
+
+  @override
+  String get startChattingWithCoOwners => 'Start chatting with co-owners';
+
+  @override
+  String get editAppointment => 'Edit Appointment';
+
+  @override
+  String get coOwnerManagementDescription => 'Manage users who share your pet';
+
+  @override
+  String get addImageNote => 'Add Image Note';
+
+  @override
+  String get camera => 'Camera';
+
+  @override
+  String get gallery => 'Gallery';
+
+  @override
+  String get vaccineTimeMessage => 'Vaccine time!';
+
+  @override
+  String get selectDateAndTime => 'Please select date and time';
+
+  @override
+  String get clearCurrentChat => 'Clear Current Chat';
+
+  @override
+  String get noChatHistoryYet => 'No chat history yet';
+
+  @override
+  String get startNewChat => 'Start New Chat';
+
+  @override
+  String get shareApp => 'Share App';
+
+  @override
+  String get appVersion => 'App Version';
+
+  @override
+  String copyrightText(Object appTitle) {
+    return '© 2025 $appTitle - All rights reserved';
+  }
+
+  @override
+  String get copyrightTextPlaceholder => 'appTitle';
+
+  @override
+  String appAboutSubject(Object appTitle) {
+    return '$appTitle App Information';
+  }
+
+  @override
+  String get appAboutSubjectPlaceholder => 'appTitle';
+
+  @override
+  String whatsappMessage(Object appTitle) {
+    return 'Hello, I would like to get information about the $appTitle app.';
+  }
+
+  @override
+  String get whatsappMessagePlaceholder => 'appTitle';
+
+  @override
+  String get languageSupport => '🌐 Turkish/English language support';
+
+  @override
+  String get appInfoAndFeatures => 'App Information and Features';
+
+  @override
+  String get features => 'Features';
+
+  @override
+  String get coOwnerRequestSent => 'Co-owner request sent';
+
+  @override
+  String get messageSendingError => 'Error sending message';
+
+  @override
+  String get voiceRecordingCompleted => 'Voice recording completed';
+
+  @override
+  String get addCoOwner => 'Add Co-owner';
+
+  @override
+  String get coOwners => 'Co-owners';
+
+  @override
+  String get noCoOwnersYet => 'No co-owners added yet';
+
+  @override
+  String get useFormAboveToAddCoOwner => 'Use the form above to add co-owners';
+
+  @override
+  String get sendCoOwnerRequest => 'Send Co-owner Request';
+
+  @override
+  String get sending => 'Sending...';
+
+  @override
+  String get mainOwner => 'Main Owner';
+
+  @override
+  String get anonymousUser => 'Anonymous User';
+
+  @override
+  String get removeCoOwner => 'Remove Co-owner';
+
+  @override
+  String get removeCoOwnerConfirmation => 'Are you sure you want to remove this co-owner?';
+
+  @override
+  String get remove => 'Remove';
+
+  @override
+  String get coOwnerRemoved => 'Co-owner removed';
+
+  @override
+  String get errorRemovingCoOwner => 'Error removing co-owner';
+
+  @override
+  String get noMessagesYet => 'No messages yet';
+
+  @override
+  String get coOwner => 'Co-owner';
+
+  @override
+  String get seconds => 'seconds';
+
+  @override
+  String get daysAgo => 'days ago';
+
+  @override
+  String get hoursAgo => 'hours ago';
+
+  @override
+  String get minutesAgo => 'minutes ago';
+
+  @override
+  String get justNow => 'Just now';
+
+  @override
+  String get aboutPageTitle => 'About App';
+
+  @override
+  String get aboutPageSubtitle => 'App Information and Features';
+
+  @override
+  String get aboutFeaturesTitle => 'Features';
+
+  @override
+  String get aboutFeaturesSubtitle => 'App Information and Features';
+
+  @override
+  String get aboutTechnologyTitle => 'Technology Stack';
+
+  @override
+  String get aboutTechnologySubtitle => 'Built with modern technologies';
+
+  @override
+  String get aboutPrivacyTitle => 'Privacy & Security';
+
+  @override
+  String get aboutPrivacySubtitle => 'Your data is safe with us';
+
+  @override
+  String get aboutSocialTitle => 'Follow Us';
+
+  @override
+  String get aboutSocialSubtitle => 'Stay connected on social media';
+
+  @override
+  String get aboutContactTitle => 'Contact & Support';
+
+  @override
+  String get aboutContactSubtitle => 'Get in touch with us';
+
+  @override
+  String get aboutActionsTitle => 'App Actions';
+
+  @override
+  String get aboutActionsSubtitle => 'Quick actions and settings';
+
+  @override
+  String get aboutPrivacyPolicy => '🔒 Privacy Policy';
+
+  @override
+  String get aboutPrivacyPolicyDesc => 'We protect your personal information';
+
+  @override
+  String get aboutDataSecurity => '🛡️ Data Security';
+
+  @override
+  String get aboutDataSecurityDesc => 'Your data is encrypted and secure';
+
+  @override
+  String get aboutCustomerSupport => '📞 Customer Support';
+
+  @override
+  String get aboutCustomerSupportDesc => '24/7 support available';
+
+  @override
+  String get aboutSendEmail => 'Send Email';
+
+  @override
+  String get aboutWhatsAppChat => 'WhatsApp Chat';
+
+  @override
+  String get aboutVisitWebsite => 'Visit Website';
 
   @override
   String get aboutRateApp => 'Rate App';
 
   @override
-  String get aboutRateAppText => 'Rate your experience and help us improve.';
+  String get aboutRateAppDesc => 'If you enjoy using our app, please take a moment to rate it on the app store.';
+
+  @override
+  String get aboutRateNow => 'Rate Now';
 
   @override
   String get aboutShareApp => 'Share App';
 
   @override
-  String get aboutShareAppText => 'Share PatiTakip with your friends.';
-
-  @override
   String get aboutFollowUs => 'Follow Us';
 
   @override
-  String get aboutFollowUsText => 'Follow us on social media for updates and news.';
+  String get aboutFollowUsDesc => 'Stay updated with our latest news and updates by following us on social media.';
+
+  @override
+  String get aboutFollow => 'Follow';
+
+  @override
+  String get aboutDeleteAccount => 'Delete Account';
+
+  @override
+  String get aboutDeleteAccountDesc => 'Are you sure you want to delete your account? This action cannot be undone.';
+
+  @override
+  String get aboutDelete => 'Delete';
+
+  @override
+  String get aboutDeleteAccountFinal => 'Final Confirmation';
+
+  @override
+  String get aboutDeleteAccountFinalDesc => 'This is your final warning. Once you confirm, your account and all data will be permanently deleted.';
+
+  @override
+  String get aboutConfirm => 'Confirm';
+
+  @override
+  String get aboutAccountDeleted => 'Account Deleted';
+
+  @override
+  String get aboutAccountDeletedDesc => 'Your account has been successfully deleted. If you want to continue using the app, you can register again.';
+
+  @override
+  String get aboutSocialMediaAccounts => 'Our Social Media Accounts';
+
+  @override
+  String get aboutClose => 'Close';
+
+  @override
+  String get aboutError => 'Error';
+
+  @override
+  String get aboutOk => 'OK';
+
+  @override
+  String get aboutCancel => 'Cancel';
+
+  @override
+  String get aboutEmailAppNotFound => 'Email application not found';
+
+  @override
+  String get aboutWebsiteNotOpened => 'Website could not be opened';
+
+  @override
+  String get aboutWhatsAppNotOpened => 'WhatsApp could not be opened';
+
+  @override
+  String aboutSocialMediaNotOpened(Object platform) {
+    return '$platform could not be opened';
+  }
+
+  @override
+  String get aboutSocialMediaNotOpenedPlaceholder => 'platform';
+
+  @override
+  String get aboutAppStoreNotOpened => 'App store could not be opened';
+
+  @override
+  String get aboutFlutterTech => 'Flutter 3.8+ & Dart';
+
+  @override
+  String get aboutFirebaseTech => 'Firebase (Auth, Firestore)';
+
+  @override
+  String get aboutProviderTech => 'Provider State Management';
+
+  @override
+  String get aboutTTSTech => 'Flutter TTS & Sound';
+
+  @override
+  String get aboutNotificationsTech => 'Local Notifications';
+
+  @override
+  String get aboutMediaTech => 'Image Picker & Media';
+
+  @override
+  String get aboutCrossPlatformTech => 'Cross-platform Support';
+
+  @override
+  String get aboutFacebook => 'Facebook';
+
+  @override
+  String get aboutInstagram => 'Instagram';
+
+  @override
+  String get aboutTwitter => 'Twitter';
+
+  @override
+  String get aboutYouTube => 'YouTube';
+
+  @override
+  String get vetAppointmentTitle => 'Veterinary Appointment';
+
+  @override
+  String get appointmentDate => 'Appointment date';
+
+  @override
+  String get selectTime => 'Select Time';
+
+  @override
+  String get appointmentTime => 'Appointment time';
+
+  @override
+  String get notes => 'Notes';
+
+  @override
+  String get appointmentNotesHint => 'Notes related to the appointment...';
+
+  @override
+  String get existingAppointment => 'Existing Appointment';
+
+  @override
+  String get cancelAppointment => 'Cancel Appointment';
+
+  @override
+  String get updateAppointment => 'Update Appointment';
+
+  @override
+  String get saveAppointment => 'Save Appointment';
+
+  @override
+  String appointmentSaved(Object petName) {
+    return 'Veterinary appointment saved for $petName';
+  }
+
+  @override
+  String appointmentCancelled(Object petName) {
+    return 'Veterinary appointment cancelled for $petName';
+  }
+
+  @override
+  String get vetAppointmentReminderTitle => '🏥 Veterinary Appointment Reminder';
+
+  @override
+  String vetAppointmentReminderBody(Object petName) {
+    return 'Veterinary appointment for $petName in 3 days! Don\'t forget to prepare.';
+  }
+
+  @override
+  String get vetAppointmentTodayTitle => '🏥 Veterinary Appointment Today!';
+
+  @override
+  String vetAppointmentTodayBody(Object petName) {
+    return 'Veterinary appointment for $petName today! Check the appointment time.';
+  }
+
+  @override
+  String get vetAppointmentChannelName => 'Veterinary Appointment Notifications';
+
+  @override
+  String get vetAppointmentChannelDescription => 'Veterinary appointment reminder notifications';
+
+  @override
+  String get coOwnerRequestsTitle => 'Co-owner Requests';
+
+  @override
+  String get noPendingRequests => 'No pending requests';
+
+  @override
+  String get noPendingRequestsDescription => 'Incoming co-owner requests will appear here';
+
+  @override
+  String get coOwnerRequest => 'Co-owner Request';
+
+  @override
+  String byUser(Object userName) {
+    return 'by $userName';
+  }
+
+  @override
+  String get byUserPlaceholder => 'userName';
+
+  @override
+  String get accept => 'Accept';
+
+  @override
+  String get cancelRequest => 'Cancel Request';
+
+  @override
+  String get cancelRequestConfirm => 'Are you sure you want to cancel this request?';
+
+  @override
+  String get no => 'No';
+
+  @override
+  String get cancelRequestButton => 'Cancel';
+
+  @override
+  String get requestCancelled => '🔄 Request cancelled';
+
+  @override
+  String get requestRejected => '❌ Request rejected. Notification sent to the requester.';
+
+  @override
+  String errorAcceptingRequest(Object error) {
+    return 'Error accepting request: $error';
+  }
+
+  @override
+  String errorRejectingRequest(Object error) {
+    return 'Error rejecting request: $error';
+  }
+
+  @override
+  String errorCancellingRequest(Object error) {
+    return 'Error cancelling request: $error';
+  }
+
+  @override
+  String get statusPending => 'Pending';
+
+  @override
+  String get statusAccepted => 'Accepted';
+
+  @override
+  String get statusRejected => 'Rejected';
+
+  @override
+  String get statusUnknown => 'Unknown';
+
+  @override
+  String get owner => 'Owner';
+
+  @override
+  String get notOwner => 'Not Owner';
+
+  @override
+  String get cow => 'Cow';
+
+  @override
+  String get horse => 'Horse';
+
+  @override
+  String get unknown => 'Unknown';
 }

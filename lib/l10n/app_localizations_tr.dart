@@ -48,9 +48,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get advancedNotifications => 'Gelişmiş Bildirimler';
 
   @override
-  String get scheduledNotifications => 'Zamanlı Bildirimler';
-
-  @override
   String get updateInterval => 'Güncelleme Aralığı';
 
   @override
@@ -79,6 +76,9 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get cancel => 'İptal';
+
+  @override
+  String get edit => 'Düzenle';
 
   @override
   String get ask => 'Sor';
@@ -207,9 +207,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get notificationsAlert => 'Uyarı Sesi';
 
   @override
-  String get scheduledNotificationsDesc => 'Günlük hatırlatıcı bildirimleri';
-
-  @override
   String get update => 'Güncelleme';
 
   @override
@@ -295,6 +292,72 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
+  String get hunger => 'Açlık';
+
+  @override
+  String get veterinaryProcedures => 'Veteriner İşlemleri';
+
+  @override
+  String get veterinaryAppointment => 'Veteriner Randevusu';
+
+  @override
+  String get vaccineInformation => 'Aşı Bilgileri';
+
+  @override
+  String get vaccinesToBeTaken => 'Yapılacak Aşılar';
+
+  @override
+  String get completedVaccines => 'Yapılan Aşılar';
+
+  @override
+  String get coOwnerManagement => 'Eş Sahip Yönetimi';
+
+  @override
+  String get diaryChat => 'Günlük Sohbet';
+
+  @override
+  String get noMessages => 'Henüz mesaj yok.';
+
+  @override
+  String get writeMessage => 'Mesaj yazın...';
+
+  @override
+  String get deleteNote => 'Notu Sil';
+
+  @override
+  String get deleteNoteConfirm => 'Bu notu silmek istediğinize emin misiniz?';
+
+  @override
+  String get noteDeleted => 'Not başarıyla silindi!';
+
+  @override
+  String noteDeleteError(Object error) {
+    return 'Not silinirken hata oluştu: $error';
+  }
+
+  @override
+  String get deletePet => 'Hayvanı Sil';
+
+  @override
+  String get deletePetConfirm => 'Bu hayvanı silmek istediğinize emin misiniz? Bu işlem geri alınamaz.';
+
+  @override
+  String get petDeleted => 'Hayvan başarıyla silindi!';
+
+  @override
+  String petDeleteError(Object error) {
+    return 'Hayvan silinirken hata oluştu: $error';
+  }
+
+  @override
+  String get chatHistory => 'Sohbet Geçmişi';
+
+  @override
+  String errorOccurred(Object error) {
+    return 'Hata oluştu: $error';
+  }
+
+  @override
   String get type => 'Tür';
 
   @override
@@ -334,28 +397,28 @@ class AppLocalizationsTr extends AppLocalizations {
   String get onboardingWelcome => 'PatiTakip\'e Hoş Geldin!';
 
   @override
-  String get onboardingDescription => 'Evcil hayvanlarını, aşılarını ve daha fazlasını takip et.';
+  String get onboardingDescription => 'Kapsamlı evcil hayvan bakım asistanınız. Sağlık, aşı, günlük aktiviteleri takip edin ve yapay zeka destekli tavsiyeler alın.';
 
   @override
   String get next => 'İleri';
 
   @override
-  String get addPet => 'Evcil Hayvan Ekle';
+  String get addPet => 'Hayvan Ekle';
 
   @override
-  String get addPetDescription => 'Takip için evcil hayvanını ekle.';
+  String get addPetDescription => 'Fotoğraf, cins bilgisi ve kişiselleştirilmiş bakım programları ile detaylı evcil hayvan profilleri oluşturun. Birden fazla hayvanı kolayca takip edin.';
 
   @override
-  String get vaccinationAndCare => 'Aşı & Bakım';
+  String get vaccinationAndCare => 'Sağlık & Aşı Takibi';
 
   @override
-  String get vaccinationAndCareDescription => 'Sağlıklı kalmak için hatırlatıcılar al.';
+  String get vaccinationAndCareDescription => 'Artık önemli aşıları asla kaçırmayın. Hatırlatıcılar ayarlayın, tıbbi geçmişi takip edin ve eksiksiz sağlık kayıtları tutun.';
 
   @override
-  String get profileAndHistory => 'Profil & Geçmiş';
+  String get profileAndHistory => 'AI Asistan & Analiz';
 
   @override
-  String get profileAndHistoryDescription => 'Profilini ve hayvan geçmişini görüntüle.';
+  String get profileAndHistoryDescription => 'Evcil hayvan bakım tavsiyeleri için AI ile sohbet edin, günlük aktiviteleri takip edin ve hayvanınızın sağlık kalıplarını zaman içinde analiz edin.';
 
   @override
   String get start => 'Başla';
@@ -490,13 +553,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get addPetHint => 'İlk hayvanını eklemek için + butonuna tıkla.';
 
   @override
-  String get hunger => 'Açlık';
-
-  @override
   String get feedingTimeSaved => 'Beslenme zamanı kaydedildi!';
-
-  @override
-  String get vaccinesToBeTaken => 'Yapılacak Aşılar';
 
   @override
   String get vaccinesTaken => 'Yapılan Aşılar';
@@ -508,25 +565,36 @@ class AppLocalizationsTr extends AppLocalizations {
   String get owners => 'Sahipler';
 
   @override
-  String get diaryChat => 'Günlük Sohbet';
-
-  @override
-  String get errorOccurred => 'Bir hata oluştu.';
-
-  @override
-  String get noMessages => 'Henüz mesaj yok.';
-
-  @override
-  String get writeMessage => 'Mesaj yaz...';
-
-  @override
-  String get chatHistory => 'Sohbet Geçmişi';
-
-  @override
   String get aiChat => 'AI Sohbet';
 
   @override
   String get newChat => 'Yeni Sohbet';
+
+  @override
+  String get noChatYet => 'Henüz sohbet yok';
+
+  @override
+  String get newChatStarted => 'Yeni sohbet başlatıldı';
+
+  @override
+  String messageCount(Object count) {
+    return '$count mesaj';
+  }
+
+  @override
+  String get newChatConfirmTitle => 'Yeni Sohbet';
+
+  @override
+  String get newChatConfirmMessage => 'Mevcut sohbet geçmişi kaydedilecek ve yeni bir sohbet başlatılacak. Devam etmek istiyor musunuz?';
+
+  @override
+  String get clearChatConfirmMessage => 'Mevcut sohbet geçmişi kalıcı olarak silinecek. Bu işlem geri alınamaz. Devam etmek istiyor musunuz?';
+
+  @override
+  String get imageSent => 'Görsel gönderildi';
+
+  @override
+  String get voiceMessageSent => 'Ses mesajı gönderildi!';
 
   @override
   String get speakQuestion => 'Sorunu sesli sor';
@@ -550,7 +618,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get send => 'Gönder';
 
   @override
-  String get doneVaccineAdd => 'Yapıldı Olarak İşaretle';
+  String get doneVaccineAdd => 'Yapılan Aşı Ekle';
 
   @override
   String get vaccineAdd => 'Aşı Ekle';
@@ -559,7 +627,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get vaccineName => 'Aşı Adı';
 
   @override
-  String get selectDate => 'Tarih Seç';
+  String get selectDate => 'Tarih Seçin';
 
   @override
   String get doneVaccines => 'Tamamlanan Aşılar';
@@ -568,8 +636,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get vaccines => 'Aşılar';
 
   @override
-  String noVaccines(Object showDone) {
-    return 'Aşı bulunamadı.';
+  String noVaccines(Object showDone, Object type) {
+    return 'Henüz $type aşı yok';
   }
 
   @override
@@ -580,34 +648,6 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String deletePetError(Object error) {
     return 'Hayvan silinemedi: $error';
-  }
-
-  @override
-  String get deleteNote => 'Notu Sil';
-
-  @override
-  String get deleteNoteConfirm => 'Bu notu silmek istediğinize emin misiniz?';
-
-  @override
-  String get noteDeleted => 'Not başarıyla silindi!';
-
-  @override
-  String noteDeleteError(Object error) {
-    return 'Not silinirken hata oluştu: $error';
-  }
-
-  @override
-  String get deletePet => 'Hayvanı Sil';
-
-  @override
-  String get deletePetConfirm => 'Bu hayvanı silmek istediğinize emin misiniz? Bu işlem geri alınamaz.';
-
-  @override
-  String get petDeleted => 'Hayvan başarıyla silindi!';
-
-  @override
-  String petDeleteError(Object error) {
-    return 'Hayvan silinirken hata oluştu: $error';
   }
 
   @override
@@ -633,13 +673,16 @@ class AppLocalizationsTr extends AppLocalizations {
   String get copyright => '© 2024 PatiTakip';
 
   @override
-  String get nameLabel => 'İsim';
+  String get nameLabel => 'Ad Soyad';
 
   @override
   String get emailLabel => 'E-posta';
 
   @override
   String get logout => 'Çıkış Yap';
+
+  @override
+  String get logoutConfirm => 'Hesabınızdan çıkmak istediğinizden emin misiniz?';
 
   @override
   String get deleteProfile => 'Profili Sil';
@@ -654,13 +697,59 @@ class AppLocalizationsTr extends AppLocalizations {
   String get editProfile => 'Profili Düzenle';
 
   @override
+  String get emailVerificationRequired => 'E-posta Doğrulama Gerekli';
+
+  @override
+  String get emailVerificationDescription => 'E-posta adresinizi doğrulamanız gerekiyor';
+
+  @override
+  String get redirectingToLogin => 'Giriş ekranına yönlendiriliyorsunuz...';
+
+  @override
+  String get emailNotFound => 'Email bulunamadı';
+
+  @override
+  String get profileEditTitle => 'Profili Düzenle';
+
+  @override
+  String get nameRequired => 'Ad gerekli';
+
+  @override
   String get nameMinLengthError => 'İsim en az 2 karakter olmalı.';
+
+  @override
+  String get profileUpdatedSuccessfully => 'Profil başarıyla güncellendi!';
+
+  @override
+  String profileUpdateError(Object error) {
+    return 'Profil güncellenirken hata oluştu: $error';
+  }
+
+  @override
+  String get profileUpdateErrorPlaceholder => 'error';
+
+  @override
+  String get profileDeletedSuccessfully => 'Profil başarıyla silindi';
+
+  @override
+  String profileDeleteError(Object error) {
+    return 'Profil silinirken hata oluştu: $error';
+  }
+
+  @override
+  String get profileDeleteErrorPlaceholder => 'error';
+
+  @override
+  String get selectFromGallery => 'Galeriden Seç';
+
+  @override
+  String get takePhoto => 'Fotoğraf Çek';
 
   @override
   String get minutes => 'dakika';
 
   @override
-  String get vaccineTime => 'Aşı Zamanı';
+  String get vaccineTime => 'aşı zamanı';
 
   @override
   String get statusInfoTitle => 'Durum Bilgileri';
@@ -688,12 +777,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get other => 'Diğer';
-
-  @override
-  String get selectFromGallery => 'Galeriden Seç';
-
-  @override
-  String get takePhoto => 'Fotoğraf Çek';
 
   @override
   String get useRecognizedText => 'Bu Metni Kullan';
@@ -753,7 +836,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get faqWhatIsPatiTakip => 'PatiTakip nedir?';
 
   @override
-  String get faqWhatIsPatiTakipAnswer => 'PatiTakip, evcil hayvanlarınızın bakımını kolaylaştırmak için geliştirilmiş kapsamlı bir mobil uygulamadır. Aşı takibi, günlük notlar, yapay zeka destekli sohbet ve sesli komut özellikleri sunar.';
+  String get faqWhatIsPatiTakipAnswer => 'PatiTakip, evcil hayvanlarınızın bakımını kolaylaştırmak için geliştirilmiş kapsamlı bir mobil uygulamadır. Aşı takibi, günlük notlar ve yapay zeka destekli sohbet özellikleri sunar.';
 
   @override
   String get faqHowToAddPet => 'Evcil hayvan nasıl eklenir?';
@@ -771,7 +854,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get faqHowToUseAI => 'AI sohbet özelliği nasıl kullanılır?';
 
   @override
-  String get faqHowToUseAIAnswer => 'Ana sayfada sağ alt köşedeki AI butonuna tıklayarak yapay zeka ile sohbet edebilirsiniz. Hem yazılı hem de sesli soru sorabilirsiniz.';
+  String get faqHowToUseAIAnswer => 'Ana sayfada sağ alt köşedeki AI butonuna tıklayarak yapay zeka ile sohbet edebilirsiniz. Yazılı olarak soru sorabilirsiniz.';
 
   @override
   String get faqVoiceCommands => 'Sesli komutlar nasıl çalışır?';
@@ -783,7 +866,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get faqNotifications => 'Bildirimler nasıl ayarlanır?';
 
   @override
-  String get faqNotificationsAnswer => 'Ayarlar > Bildirimler bölümünden bildirim tercihlerinizi yönetebilirsiniz. Evcil hayvan bakım hatırlatıcıları ve aşı zamanları için bildirim alabilirsiniz.';
+  String get faqNotificationsAnswer => 'Ayarlar > Bildirimler bölümünden bildirim tercihlerinizi yönetebilirsiniz. Aşı zamanları için bildirim alabilirsiniz.';
 
   @override
   String get faqDataBackup => 'Verilerim güvenli mi?';
@@ -819,143 +902,817 @@ class AppLocalizationsTr extends AppLocalizations {
   String get faqPrivacyPolicy => 'Gizlilik politikası nedir?';
 
   @override
-  String get faqPrivacyPolicyAnswer => 'Kişisel verileriniz güvenle korunur ve üçüncü taraflarla paylaşılmaz. Detaylı gizlilik politikamızı uygulama içinde bulabilirsiniz.';
+  String get faqPrivacyPolicyAnswer => 'Kişisel verileriniz güvenle korunur ve üçüncü taraflarla paylaşılmaz. Gizlilik politikamız web sitemizde bulunmaktadır.';
 
   @override
   String get faqTermsOfService => 'Kullanım şartları nelerdir?';
 
   @override
-  String get faqTermsOfServiceAnswer => 'Uygulamayı kullanarak kullanım şartlarımızı kabul etmiş olursunuz. Tam metni uygulama içinde bulabilirsiniz.';
+  String get faqTermsOfServiceAnswer => 'Uygulamayı kullanarak kullanım şartlarımızı kabul etmiş olursunuz. Tam metni web sitemizde bulabilirsiniz.';
+
+  @override
+  String get faqAppFree => 'Uygulama ücretsiz mi?';
+
+  @override
+  String get faqAppFreeAnswer => 'Evet, PatiTakip tamamen ücretsizdir. Tüm temel özellikler herkes tarafından kullanılabilir.';
+
+  @override
+  String get faqDeviceSupport => 'Hangi cihazlarda çalışır?';
+
+  @override
+  String get faqDeviceSupportAnswer => 'PatiTakip şu anda sadece Android cihazlarda çalışmaktadır.';
+
+  @override
+  String get faqMultiUserSupport => 'Çoklu kullanıcı desteği nasıl çalışır?';
+
+  @override
+  String get faqMultiUserSupportAnswer => 'Evcil hayvan detay sayfasında \'Eşsahip Yönetimi\' bölümünden diğer kullanıcıları ekleyebilirsiniz. Bu sayede aile üyeleri de hayvan bakımına katılabilir ve aynı bilgilere erişebilir.';
+
+  @override
+  String get faqDataSecurity => 'Verilerim güvenli mi?';
+
+  @override
+  String get faqDataSecurityAnswer => 'Evet, tüm verileriniz Firebase güvenli bulut sunucularında şifrelenmiş olarak saklanır. Hesabınıza giriş yaptığınızda verileriniz her zaman erişilebilir.';
+
+  @override
+  String get faqPetWeight => 'Evcil hayvanımın ağırlığını takip edebilir miyim?';
+
+  @override
+  String get faqPetWeightAnswer => 'Evet, evcil hayvanınızın ağırlığını notlarda kaydedebilirsiniz. Bu sayede kilo değişimlerini takip edebilir ve sağlık durumunu izleyebilirsiniz.';
+
+  @override
+  String get faqVetAppointments => 'Veteriner randevularını takip edebilir miyim?';
+
+  @override
+  String get faqVetAppointmentsAnswer => 'Evet, veteriner randevularını notlarda kaydedebilirsiniz.';
+
+  @override
+  String get faqPetSleep => 'Evcil hayvanımın uyku düzenini takip edebilir miyim?';
+
+  @override
+  String get faqPetSleepAnswer => 'Evet, evcil hayvanınızın uyku düzenini notlarda kaydedebilirsiniz. Uyku süresi ve kalitesi hakkında notlar alabilirsiniz.';
+
+  @override
+  String get faqPetSocial => 'Sosyal aktiviteleri nasıl kaydedebilirim?';
+
+  @override
+  String get faqPetSocialAnswer => 'Evcil hayvanınızın diğer hayvanlarla oyun zamanlarını, park ziyaretlerini ve sosyal aktivitelerini notlarda kaydedebilirsiniz.';
+
+  @override
+  String get faqVaccineRequirements => 'Farklı ülkelerde aşı gereksinimleri hakkında bilgi alabilir miyim?';
+
+  @override
+  String get faqVaccineRequirementsAnswer => 'AI sohbet özelliğini kullanarak genel bilgi alabilirsiniz, ancak her zaman resmi veteriner kaynaklarını kontrol etmenizi öneririz.';
+
+  @override
+  String get faqOfflineUse => 'İnternet bağlantısı olmadan uygulamayı kullanabilir miyim?';
+
+  @override
+  String get faqOfflineUseAnswer => 'Temel özellikler sınırlı olarak offline çalışır, ancak veri senkronizasyonu ve AI sohbet için internet bağlantısı gereklidir.';
+
+  @override
+  String get faqDataExport => 'Verilerimi dışa aktarabilir miyim?';
+
+  @override
+  String get faqDataExportAnswer => 'Hayır, veri dışa aktarma özelliği şu anda mevcut değildir.';
+
+  @override
+  String get faqAppSize => 'Uygulama ne kadar yer kaplar?';
+
+  @override
+  String get faqAppSizeAnswer => 'PatiTakip yaklaşık 50-100 MB yer kaplar. Fotoğraflar bulutta saklandığı için cihazınızda çok yer kaplamaz.';
+
+  @override
+  String get faqBugReport => 'Hata raporu nasıl gönderirim?';
+
+  @override
+  String get faqBugReportAnswer => 'Uygulama içindeki \'Geri Bildirim\' bölümünü kullanarak hata raporu gönderebilirsiniz. Detaylı açıklama yaparsanız daha hızlı yardım edebiliriz.';
+
+  @override
+  String get faqFeatureRequest => 'Özellik önerisi nasıl yapabilirim?';
+
+  @override
+  String get faqFeatureRequestAnswer => 'Yeni özellik önerilerinizi \'Geri Bildirim\' bölümünden gönderebilirsiniz. Tüm öneriler değerlendirilir ve en popüler olanlar geliştirilir.';
+
+  @override
+  String get faqCommunityForum => 'Topluluk forumu var mı?';
+
+  @override
+  String get faqCommunityForumAnswer => 'Evet, yakında PatiTakip kullanıcıları için bir topluluk forumu açılacaktır. Burada deneyimlerinizi paylaşabilir ve diğer kullanıcılardan tavsiye alabilirsiniz.';
 
   @override
   String get faqPetHealth => 'Evcil hayvanımın sağlığını nasıl takip edebilirim?';
 
   @override
-  String get faqPetHealthAnswer => 'Uygulama evcil hayvanınızın tokluk, mutluluk, enerji ve bakım seviyelerini takip eder. Bu durumları evcil hayvan detay sayfasında görüntüleyebilir ve dikkat gerektirdiğinde bildirim alabilirsiniz.';
+  String get faqPetHealthAnswer => 'Evcil hayvanınızın sağlığını günlük aktivitelerini izleyerek, aşı hatırlatıcıları ayarlayarak ve veteriner ziyaretlerini kaydederek takip edebilirsiniz.';
 
   @override
   String get faqPetPhotos => 'Evcil hayvanımın profiline fotoğraf ekleyebilir miyim?';
 
   @override
-  String get faqPetPhotosAnswer => 'Evet, evcil hayvanınızın profiline fotoğraf ekleyebilirsiniz. Yeni fotoğraf çekebilir veya galerinizden seçebilirsiniz. Fotoğraflar bulutta güvenle saklanır.';
+  String get faqPetPhotosAnswer => 'Evet, evcil hayvanınızın profiline birden fazla fotoğraf ekleyebilir ve büyümelerini ve değişimlerini takip etmek için istediğiniz zaman güncelleyebilirsiniz.';
 
   @override
-  String get faqPetNotes => 'Evcil hayvanım hakkında günlük notlar nasıl eklerim?';
+  String get faqPetNotes => 'Evcil hayvanım hakkında nasıl not ekleyebilirim?';
 
   @override
-  String get faqPetNotesAnswer => 'Evcil hayvanınızın davranışı, sağlığı veya aktiviteleri hakkında günlük notlar ekleyebilirsiniz. Bu notlar zaman damgası ile kaydedilir ve hayvanın geçmişinde görüntülenebilir.';
+  String get faqPetNotesAnswer => 'Uygulamadaki not özelliklerini kullanarak evcil hayvanınızın davranışı, sağlığı veya özel anları hakkında metin, ses ve görsel notlar ekleyebilirsiniz.';
 
   @override
-  String get faqPetReminders => 'Uygulama ne tür hatırlatıcılar sağlar?';
+  String get faqPetReminders => 'Evcil hayvan bakımı için hatırlatıcı ayarlayabilir miyim?';
 
   @override
-  String get faqPetRemindersAnswer => 'Uygulama beslenme zamanları, bakım programları, aşı tarihleri ve diğer önemli evcil hayvan bakım aktiviteleri için hatırlatıcılar sağlar. Bu hatırlatıcıları ayarlardan özelleştirebilirsiniz.';
+  String get faqPetRemindersAnswer => 'Evet, aşılar, veteriner randevuları, tıraş, besleme ve diğer önemli evcil hayvan bakım aktiviteleri için hatırlatıcılar ayarlayabilirsiniz.';
 
   @override
-  String get faqPetTraining => 'Uygulama evcil hayvan eğitiminde yardımcı olabilir mi?';
+  String get faqPetTraining => 'Uygulama evcil hayvan eğitiminde yardımcı olur mu?';
 
   @override
-  String get faqPetTrainingAnswer => 'Uygulama doğrudan eğitim programları sağlamaz, ancak evcil hayvanınızın ilerlemesini takip edebilir, eğitim hedefleri belirleyebilir ve eğitim tavsiyeleri ve ipuçları için AI sohbeti kullanabilirsiniz.';
-
-  @override
-  String get faqPetSocial => 'Evcil hayvanımın başarılarını başkalarıyla paylaşabilir miyim?';
-
-  @override
-  String get faqPetSocialAnswer => 'Şu anda uygulama bireysel evcil hayvan takibine odaklanır. Ancak evcil hayvanınızın fotoğraflarını ve başarılarını cihazınızın paylaşım özellikleri aracılığıyla paylaşabilirsiniz.';
+  String get faqPetTrainingAnswer => 'AI asistan eğitim ipuçları ve tavsiyeleri verebilir, ancak karmaşık eğitim sorunları için profesyonel bir eğitmenle görüşmenizi öneririz.';
 
   @override
   String get faqPetEmergency => 'Evcil hayvan acil durumunda ne yapmalıyım?';
 
   @override
-  String get faqPetEmergencyAnswer => 'Uygulama veteriner bakımının yerini tutmaz. Acil durumda veterinerinizle hemen iletişime geçin. Uygulama belirtileri takip etmenize ve veterinerinizle bilgi paylaşmanıza yardımcı olabilir.';
+  String get faqPetEmergencyAnswer => 'Acil durumda veterinerinizle hemen iletişime geçin. Uygulama acil durum iletişim bilgilerini kolayca erişilebilir tutmanıza yardımcı olabilir.';
 
   @override
-  String get faqPetTravel => 'Evcil hayvanımla seyahat ederken uygulamayı nasıl kullanabilirim?';
+  String get faqPetTravel => 'Evcil hayvanımı seyahate nasıl hazırlayabilirim?';
 
   @override
-  String get faqPetTravelAnswer => 'Uygulama internet bağlantısı olan her yerde çalışır. Evcil hayvanınızın bakım programını takip etmeye devam edebilir, seyahat notları ekleyebilir ve yoldayken tüm özelliklere erişebilirsiniz.';
+  String get faqPetTravelAnswer => 'Uygulama seyahat kontrol listeleri hazırlamanıza, aşıların güncel olduğundan emin olmanıza ve önemli belgeleri organize etmenize yardımcı olabilir.';
 
   @override
-  String get faqPetGrooming => 'Tıraş randevularını takip edebilir miyim?';
+  String get faqPetGrooming => 'Evcil hayvanımı ne sıklıkla tıraş ettirmeliyim?';
 
   @override
-  String get faqPetGroomingAnswer => 'Evet, tıraş randevularını özel bakım aktiviteleri olarak ekleyebilirsiniz. Tıraş seansları için hatırlatıcılar ayarlayın ve evcil hayvanınızın tıraş geçmişini takip edin.';
+  String get faqPetGroomingAnswer => 'Tıraş sıklığı evcil hayvanınızın cinsine, tüy tipine ve yaşam tarzına bağlıdır. AI asistan evcil hayvanınız için özel öneriler sağlayabilir.';
 
   @override
-  String get faqPetExercise => 'Evcil hayvanımın egzersiz rutinini nasıl takip edebilirim?';
+  String get faqPetExercise => 'Evcil hayvanım ne kadar egzersize ihtiyaç duyar?';
 
   @override
-  String get faqPetExerciseAnswer => 'Evcil hayvanınızın günlük notlarına egzersiz aktiviteleri ekleyebilirsiniz. Egzersiz süresini, türünü ve evcil hayvanınızın egzersiz öncesi ve sonrası enerji seviyelerini takip edin.';
+  String get faqPetExerciseAnswer => 'Egzersiz ihtiyaçları cinse, yaşa ve sağlığa göre değişir. Uygulama kişiselleştirilmiş egzersiz planları oluşturmanıza ve aktivite seviyelerini takip etmenize yardımcı olabilir.';
 
   @override
-  String get faqPetDiet => 'Evcil hayvanımın diyetini ve beslenme programını takip edebilir miyim?';
+  String get faqPetDiet => 'Evcil hayvanıma ne yedirmeliyim?';
 
   @override
-  String get faqPetDietAnswer => 'Evet, uygulama beslenme zamanlarını ve tokluk seviyelerini takip eder. Diyet değişiklikleri, yemek tercihleri ve beslenme miktarları hakkında günlük notlarda not ekleyebilirsiniz.';
+  String get faqPetDietAnswer => 'Beslenme önerileri evcil hayvanınızın yaşına, cinsine, sağlığına ve aktivite seviyesine bağlıdır. Kişiselleştirilmiş beslenme tavsiyesi için veterinerinizle görüşün.';
 
   @override
-  String get aboutAppVersion => 'Uygulama Sürümü';
+  String get aiChatInstructions => 'Merhaba! Evcil hayvanınız hakkında sorularınızı sorabilirsiniz. Size nasıl yardımcı olabilirim?';
 
   @override
-  String get aboutAppVersionValue => '1.0.0';
+  String aiChatInstructionsWithPet(Object petName) {
+    return 'Merhaba! $petName hakkında size yardımcı olmaya geldim! 🐾\n\nEvcil hayvanınızın sağlığı, davranışı, beslenmesi ve bakımı hakkında kişiselleştirilmiş tavsiyeler verebilirim. Size nasıl yardımcı olabilirim?';
+  }
 
   @override
-  String get aboutDeveloper => 'Geliştirici';
+  String get aiChatInstructionsWithPetPlaceholder => 'petName';
 
   @override
-  String get aboutDeveloperValue => 'PatiTakip Ekibi';
+  String voiceMessage(Object duration) {
+    return '🎤 Ses mesajı ($duration)';
+  }
 
   @override
-  String get aboutContact => 'İletişim';
+  String voiceMessageError(Object error) {
+    return 'Ses mesajı gönderilemedi: $error';
+  }
 
   @override
-  String get aboutContactValue => 'info@patitakip.com';
+  String get imageNoteAdded => 'Görsel not eklendi!';
 
   @override
-  String get aboutWebsite => 'Web Sitesi';
+  String imageNoteError(Object error) {
+    return 'Görsel not eklenemedi: $error';
+  }
 
   @override
-  String get aboutWebsiteValue => 'www.patitakip.com';
+  String imageNoteWithText(Object note) {
+    return '📷 Görsel not: $note';
+  }
 
   @override
-  String get aboutFeatures => 'Özellikler';
+  String get imageNoteAddedMessage => '📷 Görsel not eklendi';
 
   @override
-  String get aboutFeaturesList => '• Evcil hayvan profili yönetimi\n• Aşı takip sistemi\n• Yapay zeka destekli sohbet\n• Sesli komut özelliği\n• Bildirim sistemi\n• Çoklu kullanıcı desteği\n• Bulut yedekleme';
+  String get unknownTime => 'Bilinmeyen zaman';
 
   @override
-  String get aboutTechnology => 'Teknolojiler';
+  String get noVaccinesPlaceholder => 'type';
 
   @override
-  String get aboutTechnologyList => '• Flutter & Dart\n• Firebase\n• OpenAI API\n• Speech Recognition\n• Text-to-Speech';
+  String get datePlaceholder => 'date';
 
   @override
-  String get aboutPrivacy => 'Gizlilik';
+  String get markAsDone => 'Tamamlandı Olarak İşaretle';
 
   @override
-  String get aboutPrivacyText => 'Verileriniz güvenle saklanır ve üçüncü taraflarla paylaşılmaz. Detaylı gizlilik politikamızı web sitemizde bulabilirsiniz.';
+  String get messaging => 'Mesajlaşma';
 
   @override
-  String get aboutSupport => 'Destek';
+  String get emailAddress => 'E-posta Adresi';
 
   @override
-  String get aboutSupportText => 'Sorularınız için destek ekibimizle iletişime geçebilirsiniz. Geri bildirimleriniz bizim için değerlidir.';
+  String get emailHint => 'eşsahip@email.com';
+
+  @override
+  String get addNoteOptional => 'Not ekleyin (opsiyonel)';
+
+  @override
+  String get birthdayCongratulations => 'Doğum Günün Kutlu Olsun!';
+
+  @override
+  String birthdayCongratulationsMessage(Object name) {
+    return 'Doğum günün kutlu olsun $name!';
+  }
+
+  @override
+  String get birthdayCongratulationsMessagePlaceholder => 'name';
+
+  @override
+  String get youAreOwner => 'Sahipsiniz';
+
+  @override
+  String get youAreNotOwner => 'Sahip Değilsiniz';
+
+  @override
+  String get statusInformation => 'Durum Bilgileri';
+
+  @override
+  String get onlineCoOwner => '1 eş sahip çevrimiçi';
+
+  @override
+  String get petTrackingApp => 'Evcil Hayvan Takip Uygulaması';
+
+  @override
+  String appSharingMessage(Object appTitle) {
+    return '🐾 $appTitle - Evcil hayvanlarınız için en iyi bakım deneyimi! Uygulamayı arkadaşlarınızla paylaşın.';
+  }
+
+  @override
+  String get appSharingMessagePlaceholder => 'appTitle';
+
+  @override
+  String get onboardingFeature1 => 'Evcil Hayvan Yönetimi';
+
+  @override
+  String get onboardingFeature2 => 'Sağlık Takibi';
+
+  @override
+  String get onboardingFeature3 => 'Aşı Hatırlatıcıları';
+
+  @override
+  String get onboardingFeature4 => 'Veteriner Randevuları';
+
+  @override
+  String get onboardingFeature5 => 'AI Destekli Sohbet';
+
+  @override
+  String get onboardingFeature9 => 'Çoklu Kullanıcı Desteği';
+
+  @override
+  String get onboardingFeature10 => 'Sesli Mesajlaşma';
+
+  @override
+  String get onboardingFeature11 => 'Bildirim Sistemi';
+
+  @override
+  String get onboardingFeature12 => 'Bulut Yedekleme';
+
+  @override
+  String get onboardingFeature13 => 'Çoklu Platform';
+
+  @override
+  String get onboardingFeature14 => 'Türkçe/İngilizce Dil';
+
+  @override
+  String get onboardingFeature15 => 'Açık/Koyu Tema';
+
+  @override
+  String get petManagement => 'Evcil Hayvan Yönetimi';
+
+  @override
+  String get petManagementDescription => 'Evcil hayvanlarınızın tüm bilgilerini tek yerden yönetin';
+
+  @override
+  String get healthTrackingDescription => 'Sağlık durumlarını ve aşı takiplerini kolayca takip edin';
+
+  @override
+  String get welcomeBack => 'Tekrar Hoş Geldiniz';
+
+  @override
+  String get loginToYourAccount => 'Hesabınıza giriş yapın';
+
+  @override
+  String get emailRequired => 'E-posta gerekli';
+
+  @override
+  String get emailInvalid => 'Geçersiz e-posta adresi';
+
+  @override
+  String get passwordRequired => 'Şifre gerekli';
+
+  @override
+  String get passwordTooShort => 'Şifre çok kısa (en az 6 karakter)';
+
+  @override
+  String get resetPasswordTitle => 'Şifre Sıfırlama';
+
+  @override
+  String get resetPasswordDescription => 'E-posta adresinize şifre sıfırlama bağlantısı gönderilecek';
+
+  @override
+  String get coOwnerRequestsLoadingError => 'Eş sahip istekleri yüklenirken hata oluştu';
+
+  @override
+  String get requestAccepted => 'İstek kabul edildi';
+
+  @override
+  String get requestAcceptError => 'İstek kabul edilirken hata oluştu';
+
+  @override
+  String get rejectRequest => 'İsteği Reddet';
+
+  @override
+  String get rejectRequestConfirm => 'Bu isteği reddetmek istediğinizden emin misiniz?';
+
+  @override
+  String get reject => 'Reddet';
+
+  @override
+  String get coOwnersLoadingError => 'Eş sahipler yüklenirken hata';
+
+  @override
+  String get petNotFound => 'Hayvan bulunamadı. Lütfen sayfayı yenileyin.';
+
+  @override
+  String get startChattingWithCoOwners => 'Eş sahiplerle mesajlaşmaya başlayın';
+
+  @override
+  String get editAppointment => 'Randevuyu Düzenle';
+
+  @override
+  String get coOwnerManagementDescription => 'Hayvanınızın eş sahiplerini yönetin, yeni eş sahip ekleyin ve mesaj gönderin.';
+
+  @override
+  String get addImageNote => 'Resim Notu Ekle';
+
+  @override
+  String get camera => 'Kamera';
+
+  @override
+  String get gallery => 'Galeri';
+
+  @override
+  String get vaccineTimeMessage => 'Aşı zamanı geldi!';
+
+  @override
+  String get selectDateAndTime => 'Lütfen tarih ve saat seçin';
+
+  @override
+  String get clearCurrentChat => 'Mevcut Sohbeti Temizle';
+
+  @override
+  String get noChatHistoryYet => 'Henüz sohbet geçmişi yok';
+
+  @override
+  String get startNewChat => 'Yeni Sohbet Başlat';
+
+  @override
+  String get shareApp => 'Uygulamayı Paylaş';
+
+  @override
+  String get appVersion => 'Uygulama Sürümü';
+
+  @override
+  String copyrightText(Object appTitle) {
+    return '© 2025 $appTitle - Tüm hakları saklıdır';
+  }
+
+  @override
+  String get copyrightTextPlaceholder => 'appTitle';
+
+  @override
+  String appAboutSubject(Object appTitle) {
+    return '$appTitle Uygulaması Hakkında';
+  }
+
+  @override
+  String get appAboutSubjectPlaceholder => 'appTitle';
+
+  @override
+  String whatsappMessage(Object appTitle) {
+    return 'Merhaba, $appTitle uygulaması hakkında bilgi almak istiyorum.';
+  }
+
+  @override
+  String get whatsappMessagePlaceholder => 'appTitle';
+
+  @override
+  String get languageSupport => '🌐 Türkçe/İngilizce dil desteği';
+
+  @override
+  String get appInfoAndFeatures => 'Uygulama Bilgileri ve Özellikleri';
+
+  @override
+  String get features => 'Özellikler';
+
+  @override
+  String get coOwnerRequestSent => 'Eş sahip isteği gönderildi';
+
+  @override
+  String get messageSendingError => 'Mesaj gönderilirken hata';
+
+  @override
+  String get voiceRecordingCompleted => 'Ses kaydı tamamlandı';
+
+  @override
+  String get addCoOwner => 'Eş Sahip Ekle';
+
+  @override
+  String get coOwners => 'Eş Sahipler';
+
+  @override
+  String get noCoOwnersYet => 'Henüz eş sahip eklenmemiş';
+
+  @override
+  String get useFormAboveToAddCoOwner => 'Eş sahip eklemek için yukarıdaki formu kullanın';
+
+  @override
+  String get sendCoOwnerRequest => 'Eş Sahip İsteği Gönder';
+
+  @override
+  String get sending => 'Gönderiliyor...';
+
+  @override
+  String get mainOwner => 'Ana Sahip';
+
+  @override
+  String get anonymousUser => 'İsimsiz Kullanıcı';
+
+  @override
+  String get removeCoOwner => 'Eş Sahibi Kaldır';
+
+  @override
+  String get removeCoOwnerConfirmation => 'Bu eş sahibi kaldırmak istediğinizden emin misiniz?';
+
+  @override
+  String get remove => 'Kaldır';
+
+  @override
+  String get coOwnerRemoved => 'Eş sahip kaldırıldı';
+
+  @override
+  String get errorRemovingCoOwner => 'Eş sahip kaldırılırken hata';
+
+  @override
+  String get noMessagesYet => 'Henüz mesaj yok';
+
+  @override
+  String get coOwner => 'Eş Sahip';
+
+  @override
+  String get seconds => 'saniye';
+
+  @override
+  String get daysAgo => 'gün önce';
+
+  @override
+  String get hoursAgo => 'saat önce';
+
+  @override
+  String get minutesAgo => 'dakika önce';
+
+  @override
+  String get justNow => 'Az önce';
+
+  @override
+  String get aboutPageTitle => 'Uygulama Hakkında';
+
+  @override
+  String get aboutPageSubtitle => 'Uygulama Bilgileri ve Özellikleri';
+
+  @override
+  String get aboutFeaturesTitle => 'Özellikler';
+
+  @override
+  String get aboutFeaturesSubtitle => 'Uygulama Bilgileri ve Özellikleri';
+
+  @override
+  String get aboutTechnologyTitle => 'Teknoloji Altyapısı';
+
+  @override
+  String get aboutTechnologySubtitle => 'Modern teknolojilerle geliştirildi';
+
+  @override
+  String get aboutPrivacyTitle => 'Gizlilik & Güvenlik';
+
+  @override
+  String get aboutPrivacySubtitle => 'Verileriniz bizimle güvende';
+
+  @override
+  String get aboutSocialTitle => 'Bizi Takip Edin';
+
+  @override
+  String get aboutSocialSubtitle => 'Sosyal medyada bağlantıda kalın';
+
+  @override
+  String get aboutContactTitle => 'İletişim & Destek';
+
+  @override
+  String get aboutContactSubtitle => 'Bizimle iletişime geçin';
+
+  @override
+  String get aboutActionsTitle => 'Uygulama İşlemleri';
+
+  @override
+  String get aboutActionsSubtitle => 'Hızlı işlemler ve ayarlar';
+
+  @override
+  String get aboutPrivacyPolicy => '🔒 Gizlilik Politikası';
+
+  @override
+  String get aboutPrivacyPolicyDesc => 'Kişisel bilgilerinizi koruyoruz';
+
+  @override
+  String get aboutDataSecurity => '🛡️ Veri Güvenliği';
+
+  @override
+  String get aboutDataSecurityDesc => 'Verileriniz şifrelenmiş ve güvenli';
+
+  @override
+  String get aboutCustomerSupport => '📞 Müşteri Desteği';
+
+  @override
+  String get aboutCustomerSupportDesc => '7/24 destek mevcut';
+
+  @override
+  String get aboutSendEmail => 'E-posta Gönder';
+
+  @override
+  String get aboutWhatsAppChat => 'WhatsApp Sohbeti';
+
+  @override
+  String get aboutVisitWebsite => 'Web Sitesini Ziyaret Et';
 
   @override
   String get aboutRateApp => 'Uygulamayı Değerlendir';
 
   @override
-  String get aboutRateAppText => 'Deneyiminizi değerlendirin ve geliştirmemize yardımcı olun.';
+  String get aboutRateAppDesc => 'Uygulamamızı beğendiyseniz, lütfen uygulama mağazasında değerlendirmek için biraz zaman ayırın.';
+
+  @override
+  String get aboutRateNow => 'Şimdi Değerlendir';
 
   @override
   String get aboutShareApp => 'Uygulamayı Paylaş';
 
   @override
-  String get aboutShareAppText => 'Arkadaşlarınızla PatiTakip\'i paylaşın.';
-
-  @override
   String get aboutFollowUs => 'Bizi Takip Edin';
 
   @override
-  String get aboutFollowUsText => 'Güncellemeler ve haberler için sosyal medyada bizi takip edin.';
+  String get aboutFollowUsDesc => 'Sosyal medyada bizi takip ederek en son haberler ve güncellemeler hakkında bilgi sahibi olun.';
+
+  @override
+  String get aboutFollow => 'Takip Et';
+
+  @override
+  String get aboutDeleteAccount => 'Hesabı Sil';
+
+  @override
+  String get aboutDeleteAccountDesc => 'Hesabınızı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.';
+
+  @override
+  String get aboutDelete => 'Sil';
+
+  @override
+  String get aboutDeleteAccountFinal => 'Son Onay';
+
+  @override
+  String get aboutDeleteAccountFinalDesc => 'Bu son uyarınızdır. Onayladığınızda, hesabınız ve tüm verileriniz kalıcı olarak silinecektir.';
+
+  @override
+  String get aboutConfirm => 'Onayla';
+
+  @override
+  String get aboutAccountDeleted => 'Hesap Silindi';
+
+  @override
+  String get aboutAccountDeletedDesc => 'Hesabınız başarıyla silindi. Uygulamayı kullanmaya devam etmek istiyorsanız, tekrar kayıt olabilirsiniz.';
+
+  @override
+  String get aboutSocialMediaAccounts => 'Sosyal Medya Hesaplarımız';
+
+  @override
+  String get aboutClose => 'Kapat';
+
+  @override
+  String get aboutError => 'Hata';
+
+  @override
+  String get aboutOk => 'Tamam';
+
+  @override
+  String get aboutCancel => 'İptal';
+
+  @override
+  String get aboutEmailAppNotFound => 'E-posta uygulaması bulunamadı';
+
+  @override
+  String get aboutWebsiteNotOpened => 'Web sitesi açılamadı';
+
+  @override
+  String get aboutWhatsAppNotOpened => 'WhatsApp açılamadı';
+
+  @override
+  String aboutSocialMediaNotOpened(Object platform) {
+    return '$platform açılamadı';
+  }
+
+  @override
+  String get aboutSocialMediaNotOpenedPlaceholder => 'platform';
+
+  @override
+  String get aboutAppStoreNotOpened => 'Uygulama mağazası açılamadı';
+
+  @override
+  String get aboutFlutterTech => 'Flutter 3.8+ & Dart';
+
+  @override
+  String get aboutFirebaseTech => 'Firebase (Auth, Firestore)';
+
+  @override
+  String get aboutProviderTech => 'Provider State Management';
+
+  @override
+  String get aboutTTSTech => 'Flutter TTS & Sound';
+
+  @override
+  String get aboutNotificationsTech => 'Yerel Bildirimler';
+
+  @override
+  String get aboutMediaTech => 'Resim Seçici & Medya';
+
+  @override
+  String get aboutCrossPlatformTech => 'Çoklu Platform Desteği';
+
+  @override
+  String get aboutFacebook => 'Facebook';
+
+  @override
+  String get aboutInstagram => 'Instagram';
+
+  @override
+  String get aboutTwitter => 'Twitter';
+
+  @override
+  String get aboutYouTube => 'YouTube';
+
+  @override
+  String get vetAppointmentTitle => 'Veteriner Randevusu';
+
+  @override
+  String get appointmentDate => 'Randevu tarihi';
+
+  @override
+  String get selectTime => 'Saat Seçin';
+
+  @override
+  String get appointmentTime => 'Randevu saati';
+
+  @override
+  String get notes => 'Notlar';
+
+  @override
+  String get appointmentNotesHint => 'Randevu ile ilgili notlar...';
+
+  @override
+  String get existingAppointment => 'Mevcut Randevu';
+
+  @override
+  String get cancelAppointment => 'Randevuyu İptal Et';
+
+  @override
+  String get updateAppointment => 'Randevuyu Güncelle';
+
+  @override
+  String get saveAppointment => 'Randevu Kaydet';
+
+  @override
+  String appointmentSaved(Object petName) {
+    return '$petName için veteriner randevusu kaydedildi';
+  }
+
+  @override
+  String appointmentCancelled(Object petName) {
+    return '$petName için veteriner randevusu iptal edildi';
+  }
+
+  @override
+  String get vetAppointmentReminderTitle => '🏥 Veteriner Randevu Hatırlatması';
+
+  @override
+  String vetAppointmentReminderBody(Object petName) {
+    return '$petName için veteriner randevusu 3 gün sonra! Hazırlıkları yapmayı unutmayın.';
+  }
+
+  @override
+  String get vetAppointmentTodayTitle => '🏥 Veteriner Randevusu Bugün!';
+
+  @override
+  String vetAppointmentTodayBody(Object petName) {
+    return '$petName için veteriner randevusu bugün! Randevu saatini kontrol edin.';
+  }
+
+  @override
+  String get vetAppointmentChannelName => 'Veteriner Randevu Bildirimleri';
+
+  @override
+  String get vetAppointmentChannelDescription => 'Veteriner randevu hatırlatma bildirimleri';
+
+  @override
+  String get coOwnerRequestsTitle => 'Eş Sahip İstekleri';
+
+  @override
+  String get noPendingRequests => 'Bekleyen istek yok';
+
+  @override
+  String get noPendingRequestsDescription => 'Gelen eş sahip istekleri burada görünecek';
+
+  @override
+  String get coOwnerRequest => 'Eş Sahip İsteği';
+
+  @override
+  String byUser(Object userName) {
+    return '$userName tarafından';
+  }
+
+  @override
+  String get byUserPlaceholder => 'userName';
+
+  @override
+  String get accept => 'Kabul Et';
+
+  @override
+  String get cancelRequest => 'İsteği İptal Et';
+
+  @override
+  String get cancelRequestConfirm => 'Bu isteği iptal etmek istediğinizden emin misiniz?';
+
+  @override
+  String get no => 'Hayır';
+
+  @override
+  String get cancelRequestButton => 'İptal Et';
+
+  @override
+  String get requestCancelled => '🔄 İstek iptal edildi';
+
+  @override
+  String get requestRejected => '❌ İstek reddedildi. İstek atan kişiye bildirim gitti.';
+
+  @override
+  String errorAcceptingRequest(Object error) {
+    return 'İstek kabul edilirken hata: $error';
+  }
+
+  @override
+  String errorRejectingRequest(Object error) {
+    return 'İstek reddedilirken hata: $error';
+  }
+
+  @override
+  String errorCancellingRequest(Object error) {
+    return 'İstek iptal edilirken hata: $error';
+  }
+
+  @override
+  String get statusPending => 'Bekliyor';
+
+  @override
+  String get statusAccepted => 'Kabul Edildi';
+
+  @override
+  String get statusRejected => 'Reddedildi';
+
+  @override
+  String get statusUnknown => 'Bilinmiyor';
+
+  @override
+  String get owner => 'Sahipsiniz';
+
+  @override
+  String get notOwner => 'Sahip Değilsiniz';
+
+  @override
+  String get cow => 'İnek';
+
+  @override
+  String get horse => 'At';
+
+  @override
+  String get unknown => 'Belirsiz';
 }

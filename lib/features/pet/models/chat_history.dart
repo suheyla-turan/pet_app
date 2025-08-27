@@ -20,16 +20,29 @@ class ChatHistory {
   });
 
   factory ChatHistory.fromMap(Map<String, dynamic> map, String id) {
-    return ChatHistory(
-      id: id,
-      title: map['title'] ?? 'Yeni Sohbet',
-      createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] ?? 0),
-      lastModified: DateTime.fromMillisecondsSinceEpoch(map['lastModified'] ?? 0),
-      messageCount: map['messageCount'] ?? 0,
-      petId: map['petId'],
-      petName: map['petName'],
-      lastMessage: map['lastMessage'],
-    );
+    try {
+      print('🔍 ChatHistory.fromMap çağrıldı: $map');
+      print('🔑 ID: $id');
+      
+      final result = ChatHistory(
+        id: id,
+        title: map['title'] ?? 'New Chat',
+        createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] ?? 0),
+        lastModified: DateTime.fromMillisecondsSinceEpoch(map['lastModified'] ?? 0),
+        messageCount: map['messageCount'] ?? 0,
+        petId: map['petId'],
+        petName: map['petName'],
+        lastMessage: map['lastMessage'],
+      );
+      
+      print('✅ ChatHistory başarıyla oluşturuldu: ${result.title}');
+      return result;
+    } catch (e) {
+      print('❌ ChatHistory.fromMap hatası: $e');
+      print('❌ Map verisi: $map');
+      print('❌ ID: $id');
+      rethrow;
+    }
   }
 
   Map<String, dynamic> toMap() {

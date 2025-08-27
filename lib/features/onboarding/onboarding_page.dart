@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:lottie/lottie.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/theme_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:pati_takip/l10n/app_localizations.dart';
 
 class OnboardingPage extends StatefulWidget {
   final int initialPage;
-  const OnboardingPage({super.key, this.initialPage = 0});
+  final VoidCallback? onComplete;
+  const OnboardingPage({super.key, this.initialPage = 0, this.onComplete});
 
   @override
   State<OnboardingPage> createState() => _OnboardingPageState();
@@ -36,19 +37,13 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+    
     return Scaffold(
-      
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF0F1419),
-              Color(0xFF1A202C), 
-              Color(0xFF2D3748),
-            ],
-          ),
+        decoration: BoxDecoration(
+          gradient: themeProvider.getBackgroundGradient(isDark),
         ),
         child: SafeArea(
           child: Column(
@@ -64,36 +59,36 @@ class _OnboardingPageState extends State<OnboardingPage> {
                       description: AppLocalizations.of(context)!.onboardingDescription,
                       icon: Icons.pets,
                       features: [
-                        "🐾 Comprehensive pet care tracking",
-                        "💉 Vaccination reminders",
-                        "🤖 AI-powered advice",
-                        "📱 Multi-pet management"
+                        AppLocalizations.of(context)!.onboardingFeature1,
+                        AppLocalizations.of(context)!.onboardingFeature2,
+                        AppLocalizations.of(context)!.onboardingFeature3,
+                        AppLocalizations.of(context)!.onboardingFeature4
                       ],
                       buttonText: AppLocalizations.of(context)!.next,
                       onButton: () => _pageController.animateToPage(1, duration: Duration(milliseconds: 400), curve: Curves.ease),
                     ),
                     _OnboardingInfo(
-                      title: AppLocalizations.of(context)!.addPet,
-                      description: AppLocalizations.of(context)!.addPetDescription,
-                      icon: Icons.pets,
+                      title: AppLocalizations.of(context)!.petManagement,
+                      description: AppLocalizations.of(context)!.petManagementDescription,
+                      icon: Icons.manage_accounts,
                       features: [
-                        "📸 Photo management",
-                        "🏷️ Detailed breed information",
-                        "📅 Personalized care schedules",
-                        "👥 Multiple pet support"
+                        AppLocalizations.of(context)!.onboardingFeature5,
+                        '• Fotoğraf ve bilgi yönetimi',
+                        '• Çoklu evcil hayvan desteği',
+                        '• Bulut yedekleme ve senkronizasyon'
                       ],
                       buttonText: AppLocalizations.of(context)!.next,
                       onButton: () => _pageController.animateToPage(2, duration: Duration(milliseconds: 400), curve: Curves.ease),
                     ),
                     _OnboardingInfo(
-                      title: AppLocalizations.of(context)!.vaccinationAndCare,
-                      description: AppLocalizations.of(context)!.vaccinationAndCareDescription,
+                      title: 'Sağlık Takibi',
+                      description: AppLocalizations.of(context)!.healthTrackingDescription,
                       icon: Icons.health_and_safety,
                       features: [
-                        "⏰ Smart reminders",
-                        "📋 Medical history tracking",
-                        "🔔 Custom notifications",
-                        "📊 Health analytics"
+                        AppLocalizations.of(context)!.onboardingFeature9,
+                        AppLocalizations.of(context)!.onboardingFeature10,
+                        AppLocalizations.of(context)!.onboardingFeature11,
+                        AppLocalizations.of(context)!.onboardingFeature12
                       ],
                       buttonText: AppLocalizations.of(context)!.next,
                       onButton: () => _pageController.animateToPage(3, duration: Duration(milliseconds: 400), curve: Curves.ease),
@@ -103,39 +98,62 @@ class _OnboardingPageState extends State<OnboardingPage> {
                       description: AppLocalizations.of(context)!.profileAndHistoryDescription,
                       icon: Icons.psychology,
                       features: [
-                        "💬 AI chat assistant",
-                        "📝 Daily activity logs",
-                        "📈 Health pattern analysis",
-                        "🎯 Personalized recommendations"
+                        AppLocalizations.of(context)!.onboardingFeature13,
+                        AppLocalizations.of(context)!.onboardingFeature14,
+                        AppLocalizations.of(context)!.onboardingFeature15,
+                        '• Kapsamlı evcil hayvan bakım geçmişi'
                       ],
                       buttonText: AppLocalizations.of(context)!.start,
                       onButton: _goToAuth,
+                      onComplete: widget.onComplete,
                     ),
                     // Auth ekranları
                     LoginScreen(
                       onRegisterTap: () => _pageController.animateToPage(5, duration: Duration(milliseconds: 400), curve: Curves.ease),
+                      onComplete: widget.onComplete,
                     ),
                     RegisterScreen(
                       onLoginTap: () => _pageController.animateToPage(4, duration: Duration(milliseconds: 400), curve: Curves.ease),
+                      onComplete: widget.onComplete,
                     ),
                   ],
                 ),
               ),
               if (_pageIndex < 4)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 16.0),
-                  child: SmoothPageIndicator(
-                    controller: _pageController,
-                    count: 4,
-                    effect: WormEffect(
-                      dotHeight: 10,
-                      dotWidth: 10,
-                      activeDotColor: Theme.of(context).colorScheme.primary,
-                      dotColor: Colors.grey[600]!,
-                    ),
-                    onDotClicked: (index) {
-                      _pageController.animateToPage(index, duration: Duration(milliseconds: 400), curve: Curves.ease);
-                    },
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Skip button
+                      TextButton(
+                        onPressed: _goToAuth,
+                        style: TextButton.styleFrom(
+                          foregroundColor: themeProvider.getSecondaryTextColor(isDark),
+                        ),
+                        child: Text(
+                          'Atla',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      // Page indicator
+                      SmoothPageIndicator(
+                        controller: _pageController,
+                        count: 4,
+                        effect: WormEffect(
+                          dotHeight: 8,
+                          dotWidth: 8,
+                          spacing: 8,
+                          dotColor: themeProvider.getSecondaryTextColor(isDark).withOpacity(0.3),
+                          activeDotColor: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                      // Empty space for balance
+                      const SizedBox(width: 80),
+                    ],
                   ),
                 ),
             ],
@@ -153,7 +171,8 @@ class _OnboardingInfo extends StatelessWidget {
   final List<String> features;
   final String buttonText;
   final VoidCallback onButton;
-  
+  final VoidCallback? onComplete;
+
   const _OnboardingInfo({
     required this.title,
     required this.description,
@@ -161,135 +180,140 @@ class _OnboardingInfo extends StatelessWidget {
     required this.features,
     required this.buttonText,
     required this.onButton,
+    this.onComplete,
   });
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+    
     return Padding(
       padding: const EdgeInsets.all(24.0),
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Icon container with gradient background
-            Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Theme.of(context).colorScheme.primary.withOpacity(0.2),
-                    Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(60),
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-                  width: 2,
-                ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Icon with theme-aware background
+          Container(
+            width: 120,
+            height: 120,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                  Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                ],
               ),
-              child: Icon(
-                icon,
-                size: 60,
-                color: Theme.of(context).colorScheme.primary,
+              borderRadius: BorderRadius.circular(60),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                width: 2,
               ),
             ),
-            SizedBox(height: 32),
-            
-            // Title with better typography
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-                letterSpacing: 0.5,
-              ),
-              textAlign: TextAlign.center,
+            child: Icon(
+              icon,
+              size: 60,
+              color: Theme.of(context).colorScheme.primary,
             ),
-            SizedBox(height: 20),
-            
-            // Description with better styling
-            Text(
-              description,
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey[300],
-                height: 1.5,
-                letterSpacing: 0.3,
-              ),
-              textAlign: TextAlign.center,
+          ),
+          
+          SizedBox(height: 32),
+          
+          // Title with theme-aware color
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: themeProvider.getHighContrastTextColor(isDark),
+              letterSpacing: 0.5,
             ),
-            SizedBox(height: 32),
-            
-            // Features list
-            Container(
-              padding: EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.05),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.1),
-                  width: 1,
-                ),
-              ),
-              child: Column(
-                children: features.map((feature) => Padding(
-                  padding: EdgeInsets.symmetric(vertical: 4),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.check_circle,
-                        color: Theme.of(context).colorScheme.primary,
-                        size: 20,
-                      ),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          feature,
-                          style: TextStyle(
-                            color: Colors.grey[200],
-                            fontSize: 14,
-                            height: 1.4,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                )).toList(),
-              ),
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          
+          SizedBox(height: 16),
+          
+          // Description with theme-aware color
+          Text(
+            description,
+            style: TextStyle(
+              fontSize: 16,
+              color: themeProvider.getSecondaryTextColor(isDark),
+              height: 1.5,
             ),
-            SizedBox(height: 32),
-            
-            // Button with improved design
-            Container(
-              width: double.infinity,
-              height: 56,
-              child: ElevatedButton(
-                onPressed: onButton,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  elevation: 8,
-                  shadowColor: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-                ),
-                child: Text(
-                  buttonText,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.5,
+            textAlign: TextAlign.center,
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+          ),
+          
+          SizedBox(height: 32),
+          
+          // Features list with theme-aware colors
+          ...features.map((feature) => Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: Row(
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary,
+                    shape: BoxShape.circle,
                   ),
                 ),
+                SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    feature,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: themeProvider.getHighContrastSecondaryTextColor(isDark),
+                      height: 1.4,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          )).toList(),
+          
+          SizedBox(height: 40),
+          
+          // Button with improved design
+          Container(
+            width: double.infinity,
+            height: 56,
+            child: ElevatedButton(
+              onPressed: () {
+                onButton();
+                // Onboarding tamamlandı olarak işaretle
+                onComplete?.call();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                elevation: 8,
+                shadowColor: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+              ),
+              child: Text(
+                buttonText,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.5,
+                ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -297,7 +321,8 @@ class _OnboardingInfo extends StatelessWidget {
 
 class LoginScreen extends StatefulWidget {
   final VoidCallback onRegisterTap;
-  const LoginScreen({super.key, required this.onRegisterTap});
+  final VoidCallback? onComplete;
+  const LoginScreen({super.key, required this.onRegisterTap, this.onComplete});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -312,6 +337,9 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+    
     return Padding(
       padding: const EdgeInsets.all(24.0),
       child: Center(
@@ -354,121 +382,105 @@ class _LoginScreenState extends State<LoginScreen> {
                 SizedBox(height: 24),
                 
                 Text(
-                  AppLocalizations.of(context)!.login, 
-                  style: const TextStyle(
-                    fontSize: 32, 
+                  AppLocalizations.of(context)!.welcomeBack,
+                  style: TextStyle(
+                    fontSize: 28,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: themeProvider.getHighContrastTextColor(isDark),
                     letterSpacing: 0.5,
                   ),
                   textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
+                
                 SizedBox(height: 8),
+                
                 Text(
-                  "Welcome back! Please sign in to continue",
+                  AppLocalizations.of(context)!.loginToYourAccount,
                   style: TextStyle(
                     fontSize: 16,
-                    color: Colors.grey[400],
-                    letterSpacing: 0.3,
+                    color: themeProvider.getSecondaryTextColor(isDark),
+                    height: 1.5,
                   ),
                   textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
+                
                 SizedBox(height: 32),
                 
-                // Email field with improved design
-                Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 10,
-                        offset: Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: TextFormField(
-                    decoration: InputDecoration(
-                      labelText: AppLocalizations.of(context)!.email,
-                      labelStyle: TextStyle(color: Colors.grey[400]),
-                      prefixIcon: Icon(Icons.email_outlined, color: Colors.grey[400]),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: Colors.grey[600]!),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: Colors.grey[600]!),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
-                      ),
-                      filled: true,
-                      fillColor: Colors.white.withOpacity(0.05),
+                // Email field
+                TextFormField(
+                  initialValue: email,
+                  onChanged: (value) => email = value,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return AppLocalizations.of(context)!.emailRequired;
+                    }
+                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                      return AppLocalizations.of(context)!.emailInvalid;
+                    }
+                    return null;
+                  },
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context)!.email,
+                    prefixIcon: Icon(Icons.email_outlined),
+                    labelStyle: TextStyle(
+                      color: themeProvider.getSecondaryTextColor(isDark),
                     ),
-                    style: TextStyle(color: Colors.white),
-                    keyboardType: TextInputType.emailAddress,
-                    onChanged: (v) => email = v,
-                    validator: (v) => v != null && v.contains('@') ? null : AppLocalizations.of(context)!.validEmail,
+                  ),
+                  style: TextStyle(
+                    color: themeProvider.getHighContrastTextColor(isDark),
                   ),
                 ),
+                
                 SizedBox(height: 20),
                 
-                // Password field with improved design
-                Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 10,
-                        offset: Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: TextFormField(
-                    decoration: InputDecoration(
-                      labelText: AppLocalizations.of(context)!.password,
-                      labelStyle: TextStyle(color: Colors.grey[400]),
-                      prefixIcon: Icon(Icons.lock_outline, color: Colors.grey[400]),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscure ? Icons.visibility_off : Icons.visibility,
-                          color: Colors.grey[400],
-                        ),
-                        onPressed: () => setState(() => _obscure = !_obscure),
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: Colors.grey[600]!),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: Colors.grey[600]!),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
-                      ),
-                      filled: true,
-                      fillColor: Colors.white.withOpacity(0.05),
+                // Password field
+                TextFormField(
+                  initialValue: password,
+                  onChanged: (value) => password = value,
+                  obscureText: _obscure,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return AppLocalizations.of(context)!.passwordRequired;
+                    }
+                    if (value.length < 6) {
+                      return AppLocalizations.of(context)!.passwordTooShort;
+                    }
+                    return null;
+                  },
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context)!.password,
+                    prefixIcon: Icon(Icons.lock_outlined),
+                    suffixIcon: IconButton(
+                      icon: Icon(_obscure ? Icons.visibility : Icons.visibility_off),
+                      onPressed: () => setState(() => _obscure = !_obscure),
                     ),
-                    style: TextStyle(color: Colors.white),
-                    obscureText: _obscure,
-                    onChanged: (v) => password = v,
-                    validator: (v) => v != null && v.length >= 6 ? null : AppLocalizations.of(context)!.min6Chars,
+                    labelStyle: TextStyle(
+                      color: themeProvider.getSecondaryTextColor(isDark),
+                    ),
+                  ),
+                  style: TextStyle(
+                    color: themeProvider.getHighContrastTextColor(isDark),
                   ),
                 ),
-                SizedBox(height: 16),
+                
+                SizedBox(height: 24),
                 
                 // Forgot password link
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
                     onPressed: () {
+                      // Şifre sıfırlama ekranına git
                       Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const ResetPasswordScreen()),
+                        MaterialPageRoute(
+                          builder: (context) => ResetPasswordScreen(
+                            onBack: () => Navigator.of(context).pop(),
+                          ),
+                        ),
                       );
                     },
                     style: TextButton.styleFrom(
@@ -484,36 +496,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 
-                if (_resetLoading)
-                 Center(child: Padding(
-                   padding: EdgeInsets.only(bottom: 8),
-                   child: SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2)),
-                 )),
-                
-                if (authProvider.errorMessage != null)
-                  Container(
-                    margin: EdgeInsets.only(bottom: 16),
-                    padding: EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.red[900]!.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.red[700]!),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.error_outline, color: Colors.red[400]),
-                        SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            authProvider.errorMessage!,
-                            style: TextStyle(color: Colors.red[200]),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                
-                SizedBox(height: 24),
+                SizedBox(height: 32),
                 
                 // Login button with improved design
                 Container(
@@ -526,6 +509,8 @@ class _LoginScreenState extends State<LoginScreen> {
                               final success = await authProvider.signIn(email: email, password: password);
                               if (success && context.mounted) {
                                 FocusScope.of(context).unfocus();
+                                // Onboarding tamamlandı olarak işaretle
+                                widget.onComplete?.call();
                               }
                             }
                           },
@@ -559,8 +544,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: OutlinedButton(
                     onPressed: authProvider.isLoading ? null : widget.onRegisterTap,
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.white,
-                      side: BorderSide(color: Colors.white.withOpacity(0.3)),
+                      foregroundColor: themeProvider.getHighContrastTextColor(isDark),
+                      side: BorderSide(color: themeProvider.getSecondaryTextColor(isDark).withOpacity(0.3)),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
@@ -585,7 +570,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
 class RegisterScreen extends StatefulWidget {
   final VoidCallback onLoginTap;
-  const RegisterScreen({super.key, required this.onLoginTap});
+  final VoidCallback? onComplete;
+  const RegisterScreen({super.key, required this.onLoginTap, this.onComplete});
 
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();
@@ -599,6 +585,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+    
     return Padding(
       padding: const EdgeInsets.all(24.0),
       child: Center(
@@ -641,176 +630,115 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 SizedBox(height: 24),
                 
                 Text(
-                  AppLocalizations.of(context)!.register,
+                  'Hesap Oluştur',
                   style: TextStyle(
-                    fontSize: 32,
+                    fontSize: 28,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: themeProvider.getHighContrastTextColor(isDark),
                     letterSpacing: 0.5,
                   ),
                   textAlign: TextAlign.center,
                 ),
+                
                 SizedBox(height: 8),
+                
                 Text(
-                  "Join PatiTakip and start caring for your pets",
+                  'Evcil hayvan severler topluluğumuza katılın',
                   style: TextStyle(
                     fontSize: 16,
-                    color: Colors.grey[400],
-                    letterSpacing: 0.3,
+                    color: themeProvider.getSecondaryTextColor(isDark),
+                    height: 1.5,
                   ),
                   textAlign: TextAlign.center,
                 ),
+                
                 SizedBox(height: 32),
                 
-                // Name field with improved design
-                Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 10,
-                        offset: Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: TextFormField(
-                    decoration: InputDecoration(
-                      labelText: AppLocalizations.of(context)!.name,
-                      labelStyle: TextStyle(color: Colors.grey[400]),
-                      prefixIcon: Icon(Icons.person_outline, color: Colors.grey[400]),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: Colors.grey[600]!),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: Colors.grey[600]!),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
-                      ),
-                      filled: true,
-                      fillColor: Colors.white.withOpacity(0.05),
+                // Name field
+                TextFormField(
+                  initialValue: name,
+                  onChanged: (value) => name = value,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'İsim gerekli';
+                    }
+                    if (value.length < 2) {
+                      return 'İsim en az 2 karakter olmalı';
+                    }
+                    return null;
+                  },
+                  decoration: InputDecoration(
+                    labelText: 'Ad Soyad',
+                    prefixIcon: Icon(Icons.person_outlined),
+                    labelStyle: TextStyle(
+                      color: themeProvider.getSecondaryTextColor(isDark),
                     ),
-                    style: TextStyle(color: Colors.white),
-                    onChanged: (v) => name = v,
-                    validator: (v) => v != null && v.length >= 2 ? null : AppLocalizations.of(context)!.enterName,
+                  ),
+                  style: TextStyle(
+                    color: themeProvider.getHighContrastTextColor(isDark),
                   ),
                 ),
+                
                 SizedBox(height: 20),
                 
-                // Email field with improved design
-                Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 10,
-                        offset: Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: TextFormField(
-                    decoration: InputDecoration(
-                      labelText: AppLocalizations.of(context)!.email,
-                      labelStyle: TextStyle(color: Colors.grey[400]),
-                      prefixIcon: Icon(Icons.email_outlined, color: Colors.grey[400]),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: Colors.grey[600]!),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: Colors.grey[600]!),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
-                      ),
-                      filled: true,
-                      fillColor: Colors.white.withOpacity(0.05),
+                // Email field
+                TextFormField(
+                  initialValue: email,
+                  onChanged: (value) => email = value,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return AppLocalizations.of(context)!.emailRequired;
+                    }
+                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                      return AppLocalizations.of(context)!.emailInvalid;
+                    }
+                    return null;
+                  },
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context)!.email,
+                    prefixIcon: Icon(Icons.email_outlined),
+                    labelStyle: TextStyle(
+                      color: themeProvider.getSecondaryTextColor(isDark),
                     ),
-                    style: TextStyle(color: Colors.white),
-                    keyboardType: TextInputType.emailAddress,
-                    onChanged: (v) => email = v,
-                    validator: (v) => v != null && v.contains('@') ? null : AppLocalizations.of(context)!.validEmail,
+                  ),
+                  style: TextStyle(
+                    color: themeProvider.getHighContrastTextColor(isDark),
                   ),
                 ),
+                
                 SizedBox(height: 20),
                 
-                // Password field with improved design
-                Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 10,
-                        offset: Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: TextFormField(
-                    decoration: InputDecoration(
-                      labelText: AppLocalizations.of(context)!.password,
-                      labelStyle: TextStyle(color: Colors.grey[400]),
-                      prefixIcon: Icon(Icons.lock_outline, color: Colors.grey[400]),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscure ? Icons.visibility_off : Icons.visibility,
-                          color: Colors.grey[400],
-                        ),
-                        onPressed: () => setState(() => _obscure = !_obscure),
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: Colors.grey[600]!),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: Colors.grey[600]!),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
-                      ),
-                      filled: true,
-                      fillColor: Colors.white.withOpacity(0.05),
+                // Password field
+                TextFormField(
+                  initialValue: password,
+                  onChanged: (value) => password = value,
+                  obscureText: _obscure,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return AppLocalizations.of(context)!.passwordRequired;
+                    }
+                    if (value.length < 6) {
+                      return AppLocalizations.of(context)!.passwordTooShort;
+                    }
+                    return null;
+                  },
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context)!.password,
+                    prefixIcon: Icon(Icons.lock_outlined),
+                    suffixIcon: IconButton(
+                      icon: Icon(_obscure ? Icons.visibility : Icons.visibility_off),
+                      onPressed: () => setState(() => _obscure = !_obscure),
                     ),
-                    style: TextStyle(color: Colors.white),
-                    obscureText: _obscure,
-                    onChanged: (v) => password = v,
-                    validator: (v) => v != null && v.length >= 6 ? null : AppLocalizations.of(context)!.min6Chars,
+                    labelStyle: TextStyle(
+                      color: themeProvider.getSecondaryTextColor(isDark),
+                    ),
+                  ),
+                  style: TextStyle(
+                    color: themeProvider.getHighContrastTextColor(isDark),
                   ),
                 ),
                 
-                if (authProvider.errorMessage != null)
-                  Container(
-                    margin: EdgeInsets.only(top: 16, bottom: 16),
-                    padding: EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.red[900]!.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.red[700]!),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.error_outline, color: Colors.red[400]),
-                        SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            authProvider.errorMessage!,
-                            style: TextStyle(color: Colors.red[200]),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                
-                SizedBox(height: 24),
+                SizedBox(height: 32),
                 
                 // Register button with improved design
                 Container(
@@ -823,14 +751,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               final success = await authProvider.register(email: email, password: password, name: name);
                               if (success && context.mounted) {
                                 FocusScope.of(context).unfocus();
+                                // Onboarding tamamlandı olarak işaretle
+                                widget.onComplete?.call();
+                                
                                 // Başarı mesajı göster ve e-posta doğrulama gerekliliğini belirt
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: Text('✅ Kayıt başarılı! E-posta doğrulama bağlantısı gönderildi. Lütfen e-postanızı kontrol edin ve doğrulama yapın.'),
+                                    content: Text('Hesap başarıyla oluşturuldu! Lütfen e-posta doğrulaması için e-postanızı kontrol edin.'),
                                     backgroundColor: Colors.green[600],
                                     duration: Duration(seconds: 8),
                                     action: SnackBarAction(
-                                      label: 'Tamam',
+                                      label: AppLocalizations.of(context)!.ok,
                                       textColor: Colors.white,
                                       onPressed: () {
                                         ScaffoldMessenger.of(context).removeCurrentSnackBar();
@@ -878,14 +809,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   child: OutlinedButton(
                     onPressed: authProvider.isLoading ? null : widget.onLoginTap,
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.white,
-                      side: BorderSide(color: Colors.white.withOpacity(0.3)),
+                      foregroundColor: themeProvider.getHighContrastTextColor(isDark),
+                      side: BorderSide(color: themeProvider.getSecondaryTextColor(isDark).withOpacity(0.3)),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
                     ),
                     child: Text(
-                      AppLocalizations.of(context)!.alreadyAccountLogin,
+                      'Zaten hesabınız var mı? Giriş yapın',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
@@ -902,8 +833,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 }
 
+// Reset password screen - tema desteği ile
 class ResetPasswordScreen extends StatefulWidget {
-  const ResetPasswordScreen({super.key});
+  final VoidCallback onBack;
+  const ResetPasswordScreen({super.key, required this.onBack});
 
   @override
   State<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
@@ -912,219 +845,224 @@ class ResetPasswordScreen extends StatefulWidget {
 class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   String email = '';
-  bool _loading = false;
-  bool _showSuccess = false;
-  
+  bool _isLoading = false;
+
   @override
   Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context);
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+    
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('PatiTakip'),
-        centerTitle: true,
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        foregroundColor: Colors.white,
-      ),
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF0F1419),
-              Color(0xFF1A202C), 
-              Color(0xFF2D3748),
-            ],
-          ),
+        decoration: BoxDecoration(
+          gradient: themeProvider.getBackgroundGradient(isDark),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Center(
-            child: SingleChildScrollView(
-              physics: const ClampingScrollPhysics(),
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom,
-              ),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Header with back button
+              Container(
+                padding: const EdgeInsets.all(16),
+                child: Row(
                   children: [
-                    // Reset password icon
-                    Container(
-                      width: 100,
-                      height: 100,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            Theme.of(context).colorScheme.primary.withOpacity(0.2),
-                            Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(50),
-                        border: Border.all(
-                          color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-                          width: 2,
-                        ),
-                      ),
-                      child: Icon(
-                        Icons.lock_reset,
-                        size: 50,
-                        color: Theme.of(context).colorScheme.primary,
+                    IconButton(
+                      onPressed: widget.onBack,
+                      icon: Icon(
+                        Icons.arrow_back,
+                        color: themeProvider.getHighContrastTextColor(isDark),
                       ),
                     ),
-                    SizedBox(height: 24),
-                    
-                    Text(
-                      AppLocalizations.of(context)!.resetPassword,
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        letterSpacing: 0.5,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: 16),
-                    Text(
-                      "Enter your email address and we'll send you a link to reset your password",
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey[400],
-                        letterSpacing: 0.3,
-                        height: 1.5,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: 32),
-                    
-                    if (_showSuccess)
-                      Container(
-                        margin: const EdgeInsets.only(bottom: 24),
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: Colors.green[900]!.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.green[700]!),
+                    Expanded(
+                      child: Text(
+                        AppLocalizations.of(context)!.resetPassword,
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                          color: themeProvider.getHighContrastTextColor(isDark),
                         ),
-                        child: Row(
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    SizedBox(width: 48), // Balance the header
+                  ],
+                ),
+              ),
+              
+              // Content
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Center(
+                    child: SingleChildScrollView(
+                      physics: const ClampingScrollPhysics(),
+                      padding: EdgeInsets.only(
+                        bottom: MediaQuery.of(context).viewInsets.bottom,
+                      ),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            Icon(Icons.check_circle, color: Colors.green[400], size: 28),
-                            SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    "Reset email sent!",
-                                    style: TextStyle(
-                                      color: Colors.green[200],
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w600,
-                                    ),
+                            // Reset password icon
+                            Container(
+                              width: 100,
+                              height: 100,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                                    Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(50),
+                                border: Border.all(
+                                  color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                                  width: 2,
+                                ),
+                              ),
+                              child: Icon(
+                                Icons.lock_reset,
+                                size: 50,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                            ),
+                            SizedBox(height: 24),
+                            
+                            Text(
+                              AppLocalizations.of(context)!.resetPasswordTitle,
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: themeProvider.getHighContrastTextColor(isDark),
+                                letterSpacing: 0.5,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            
+                            SizedBox(height: 16),
+                            
+                            Text(
+                              AppLocalizations.of(context)!.resetPasswordDescription,
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: themeProvider.getSecondaryTextColor(isDark),
+                                height: 1.5,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            
+                            SizedBox(height: 32),
+                            
+                            // Email field
+                            TextFormField(
+                              initialValue: email,
+                              onChanged: (value) => email = value,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return AppLocalizations.of(context)!.emailRequired;
+                                }
+                                if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                                  return AppLocalizations.of(context)!.emailInvalid;
+                                }
+                                return null;
+                              },
+                              decoration: InputDecoration(
+                                labelText: AppLocalizations.of(context)!.email,
+                                prefixIcon: Icon(Icons.email_outlined),
+                                labelStyle: TextStyle(
+                                  color: themeProvider.getSecondaryTextColor(isDark),
+                                ),
+                              ),
+                              style: TextStyle(
+                                color: themeProvider.getHighContrastTextColor(isDark),
+                              ),
+                            ),
+                            
+                            SizedBox(height: 32),
+                            
+                            // Reset button
+                            Container(
+                              height: 56,
+                              child: ElevatedButton(
+                                onPressed: _isLoading
+                                    ? null
+                                    : () async {
+                                        if (_formKey.currentState!.validate()) {
+                                          setState(() => _isLoading = true);
+                                          
+                                          try {
+                                            // Gerçek Firebase şifre sıfırlama işlemi
+                                            final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                                            final success = await authProvider.resetPassword(email);
+                                            
+                                            if (mounted) {
+                                              setState(() => _isLoading = false);
+                                              
+                                              if (success) {
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  SnackBar(
+                                                    content: Text(AppLocalizations.of(context)!.resetMailSent),
+                                                    backgroundColor: Colors.green[600],
+                                                    duration: Duration(seconds: 4),
+                                                  ),
+                                                );
+                                                widget.onBack();
+                                              } else {
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  SnackBar(
+                                                    content: Text(authProvider.errorMessage ?? 'Şifre sıfırlama hatası oluştu'),
+                                                    backgroundColor: Colors.red[600],
+                                                    duration: Duration(seconds: 4),
+                                                  ),
+                                                );
+                                              }
+                                            }
+                                          } catch (e) {
+                                            if (mounted) {
+                                              setState(() => _isLoading = false);
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                SnackBar(
+                                                  content: Text('${AppLocalizations.of(context)!.errorOccurred} $e'),
+                                                  backgroundColor: Colors.red[600],
+                                                  duration: Duration(seconds: 4),
+                                                ),
+                                              );
+                                            }
+                                          }
+                                        }
+                                      },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Theme.of(context).colorScheme.primary,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
                                   ),
-                                  SizedBox(height: 4),
-                                  Text(
-                                    AppLocalizations.of(context)!.resetMailSent,
-                                    style: TextStyle(
-                                      color: Colors.green[300],
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ],
+                                  elevation: 8,
+                                  shadowColor: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                                ),
+                                child: _isLoading
+                                    ? SizedBox(height: 24, width: 24, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                                    : Text(
+                                        AppLocalizations.of(context)!.resetPasswordButton,
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w600,
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
                               ),
                             ),
                           ],
                         ),
                       ),
-                    
-                    // Email field with improved design
-                    Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 10,
-                            offset: Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: TextFormField(
-                        decoration: InputDecoration(
-                          labelText: AppLocalizations.of(context)!.email,
-                          labelStyle: TextStyle(color: Colors.grey[400]),
-                          prefixIcon: Icon(Icons.email_outlined, color: Colors.grey[400]),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            borderSide: BorderSide(color: Colors.grey[600]!),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            borderSide: BorderSide(color: Colors.grey[600]!),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
-                          ),
-                          filled: true,
-                          fillColor: Colors.white.withOpacity(0.05),
-                        ),
-                        style: TextStyle(color: Colors.white),
-                        keyboardType: TextInputType.emailAddress,
-                        onChanged: (v) => email = v,
-                        validator: (v) => v != null && v.contains('@') ? null : AppLocalizations.of(context)!.validEmail,
-                      ),
                     ),
-                    SizedBox(height: 32),
-                    
-                    // Reset button with improved design
-                    Container(
-                      height: 56,
-                      child: ElevatedButton(
-                        onPressed: _loading
-                            ? null
-                            : () async {
-                                if (_formKey.currentState!.validate()) {
-                                  setState(() => _loading = true);
-                                  await authProvider.resetPassword(email);
-                                  setState(() {
-                                    _loading = false;
-                                    _showSuccess = true;
-                                  });
-                                  await Future.delayed(const Duration(seconds: 10));
-                                  if (context.mounted) Navigator.pop(context);
-                                }
-                              },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Theme.of(context).colorScheme.primary,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          elevation: 8,
-                          shadowColor: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-                        ),
-                        child: _loading
-                            ? SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                            : Text(
-                                AppLocalizations.of(context)!.resetPasswordButton,
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
-            ),
+            ],
           ),
         ),
       ),

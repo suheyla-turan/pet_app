@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/theme_provider.dart';
+import '../../../l10n/app_localizations.dart';
 
 class AboutPage extends StatefulWidget {
   const AboutPage({super.key});
@@ -40,58 +40,69 @@ class _AboutPageState extends State<AboutPage> with TickerProviderStateMixin {
     final isDark = theme.brightness == Brightness.dark;
     
     return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.transparent, // Şeffaf app bar - sayfa arka planı ile uyumlu
-        title: const Text('PatiTakip'),
-        centerTitle: true,
-        foregroundColor: themeProvider.getPrimaryTextColor(isDark),
-        titleTextStyle: TextStyle(
-          fontSize: 24,
-          fontWeight: FontWeight.w700,
-          color: themeProvider.getPrimaryTextColor(isDark),
-        ),
-        iconTheme: IconThemeData(
-          color: themeProvider.getPrimaryTextColor(isDark),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-              body: Container(
+      body: Container(
         decoration: BoxDecoration(
           gradient: themeProvider.getBackgroundGradient(isDark),
         ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // Page Title
-              Container(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  children: [
-                    Text(
-                      'Hakkında',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w800,
-                        color: themeProvider.getPrimaryTextColor(isDark),
-                      ),
+                    child: SafeArea(
+              child: Column(
+                children: [
+                  // App Bar
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    child: Row(
+                      children: [
+                        IconButton(
+                          icon: Icon(
+                            Icons.arrow_back,
+                            color: themeProvider.getPrimaryTextColor(isDark),
+                          ),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                        Expanded(
+                          child:                         Text(
+                          AppLocalizations.of(context)!.appTitle,
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w700,
+                              color: themeProvider.getPrimaryTextColor(isDark),
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    Text(
-                      'Uygulama bilgileri ve özellikler',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: themeProvider.getSecondaryTextColor(isDark),
-                      ),
+                  ),
+                  
+                  // Page Title
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      children: [
+                        Text(
+                          AppLocalizations.of(context)!.aboutPageTitle,
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w800,
+                            color: themeProvider.getHighContrastTextColor(isDark),
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          AppLocalizations.of(context)!.aboutPageSubtitle,
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: themeProvider.getHighContrastSecondaryTextColor(isDark),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
-              
-              // About Content
-              Expanded(
+                  ),
+                  
+                  // About Content
+                  Expanded(
                 child: FadeTransition(
                   opacity: _fadeAnimation,
                   child: SingleChildScrollView(
@@ -100,15 +111,15 @@ class _AboutPageState extends State<AboutPage> with TickerProviderStateMixin {
                       children: [
                         // App Info Card
                         _buildInfoCard(
-                          title: 'PatiTakip',
-                          subtitle: 'Evcil Hayvan Takip Uygulaması',
+                          title: AppLocalizations.of(context)!.appTitle,
+                                                      subtitle: AppLocalizations.of(context)!.petTrackingApp,
                           icon: Icons.pets,
                           color: Colors.blue,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _buildInfoRow('Uygulama Sürümü', '1.0.0'),
-                              _buildInfoRow('Geliştirici', 'PatiTakip Ekibi'),
+                              _buildInfoRow(AppLocalizations.of(context)!.appVersion, '1.0.0'),
+                              _buildInfoRow(AppLocalizations.of(context)!.developer, '${AppLocalizations.of(context)!.appTitle} Ekibi'),
                             ],
                           ),
                         ),
@@ -117,23 +128,23 @@ class _AboutPageState extends State<AboutPage> with TickerProviderStateMixin {
                         
                         // Features Card
                         _buildInfoCard(
-                          title: 'Özellikler',
-                          subtitle: 'Uygulamanın sunduğu özellikler',
+                          title: AppLocalizations.of(context)!.aboutFeaturesTitle,
+                          subtitle: AppLocalizations.of(context)!.aboutFeaturesSubtitle,
                           icon: Icons.star,
                           color: Colors.orange,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _buildFeatureItem('🐕 Evcil hayvan profili yönetimi'),
-                              _buildFeatureItem('💉 Aşı takip sistemi'),
-                              _buildFeatureItem('🔔 Akıllı bildirim sistemi'),
-                              _buildFeatureItem('👥 Çoklu kullanıcı desteği'),
-                              _buildFeatureItem('☁️ Bulut yedekleme'),
-                              _buildFeatureItem('🎤 Sesli mesajlaşma'),
-                              _buildFeatureItem('🤖 AI destekli sohbet'),
-                              _buildFeatureItem('📱 Çoklu platform desteği'),
-                              _buildFeatureItem('🌐 Türkçe/İngilizce dil desteği'),
-                              _buildFeatureItem('🎨 Açık/Koyu tema'),
+                              _buildFeatureItem('🐕 ${AppLocalizations.of(context)!.petManagement}'),
+                              _buildFeatureItem('💉 ${AppLocalizations.of(context)!.vaccines}'),
+                              _buildFeatureItem('🔔 ${AppLocalizations.of(context)!.notifications}'),
+                              _buildFeatureItem('👥 ${AppLocalizations.of(context)!.coOwnerManagement}'),
+                              _buildFeatureItem('☁️ ${AppLocalizations.of(context)!.onboardingFeature12}'),
+                              _buildFeatureItem('🎤 ${AppLocalizations.of(context)!.onboardingFeature10}'),
+                              _buildFeatureItem('🤖 ${AppLocalizations.of(context)!.aiChat}'),
+                              _buildFeatureItem('📱 ${AppLocalizations.of(context)!.onboardingFeature13}'),
+                              _buildFeatureItem(AppLocalizations.of(context)!.languageSupport),
+                              _buildFeatureItem('🎨 ${AppLocalizations.of(context)!.theme}'),
                             ],
                           ),
                         ),
@@ -142,20 +153,20 @@ class _AboutPageState extends State<AboutPage> with TickerProviderStateMixin {
                         
                         // Technology Card
                         _buildInfoCard(
-                          title: 'Teknolojiler',
-                          subtitle: 'Kullanılan teknolojiler',
+                          title: AppLocalizations.of(context)!.aboutTechnologyTitle,
+                          subtitle: AppLocalizations.of(context)!.aboutTechnologySubtitle,
                           icon: Icons.code,
                           color: Colors.green,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _buildFeatureItem('Flutter 3.8+ & Dart'),
-                              _buildFeatureItem('Firebase (Auth, Firestore)'),
-                              _buildFeatureItem('Provider State Management'),
-                              _buildFeatureItem('Flutter TTS & Sound'),
-                              _buildFeatureItem('Local Notifications'),
-                              _buildFeatureItem('Image Picker & Media'),
-                              _buildFeatureItem('Cross-platform Support'),
+                              _buildFeatureItem(AppLocalizations.of(context)!.aboutFlutterTech),
+                              _buildFeatureItem(AppLocalizations.of(context)!.aboutFirebaseTech),
+                              _buildFeatureItem(AppLocalizations.of(context)!.aboutProviderTech),
+                              _buildFeatureItem(AppLocalizations.of(context)!.aboutTTSTech),
+                              _buildFeatureItem(AppLocalizations.of(context)!.aboutNotificationsTech),
+                              _buildFeatureItem(AppLocalizations.of(context)!.aboutMediaTech),
+                              _buildFeatureItem(AppLocalizations.of(context)!.aboutCrossPlatformTech),
                             ],
                           ),
                         ),
@@ -168,28 +179,28 @@ class _AboutPageState extends State<AboutPage> with TickerProviderStateMixin {
                         
                         // Privacy & Support Card
                         _buildInfoCard(
-                          title: 'Gizlilik & Destek',
-                          subtitle: 'Veri güvenliği ve destek bilgileri',
+                          title: AppLocalizations.of(context)!.aboutPrivacyTitle,
+                          subtitle: AppLocalizations.of(context)!.aboutPrivacySubtitle,
                           icon: Icons.security,
                           color: Colors.indigo,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               _buildInfoSection(
-                                '🔒 Gizlilik',
-                                'Verileriniz güvenle saklanır ve üçüncü taraflarla paylaşılmaz. Detaylı gizlilik politikamızı web sitemizde bulabilirsiniz.',
+                                AppLocalizations.of(context)!.aboutPrivacyPolicy,
+                                AppLocalizations.of(context)!.aboutPrivacyPolicyDesc,
                                 Icons.privacy_tip,
                               ),
                               const SizedBox(height: 16),
                               _buildInfoSection(
-                                '🛡️ Güvenlik',
-                                'Firebase güvenlik kuralları ile verileriniz korunur. SSL şifreleme ile güvenli iletişim sağlanır.',
+                                AppLocalizations.of(context)!.aboutDataSecurity,
+                                AppLocalizations.of(context)!.aboutDataSecurityDesc,
                                 Icons.security,
                               ),
                               const SizedBox(height: 16),
                               _buildInfoSection(
-                                '📞 Destek',
-                                'Sorularınız için destek ekibimizle iletişime geçebilirsiniz. Geri bildirimleriniz bizim için değerlidir.',
+                                AppLocalizations.of(context)!.aboutCustomerSupport,
+                                AppLocalizations.of(context)!.aboutCustomerSupportDesc,
                                 Icons.support_agent,
                               ),
                             ],
@@ -198,14 +209,10 @@ class _AboutPageState extends State<AboutPage> with TickerProviderStateMixin {
                         
                         const SizedBox(height: 20),
                         
-
-                        
-                        const SizedBox(height: 30),
-                        
                         // Copyright
                         Center(
                           child: Text(
-                            '© 2025 PatiTakip - Tüm hakları saklıdır',
+                            AppLocalizations.of(context)!.copyrightText(AppLocalizations.of(context)!.appTitle),
                             style: TextStyle(
                               fontSize: 12,
                               color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
@@ -243,14 +250,8 @@ class _AboutPageState extends State<AboutPage> with TickerProviderStateMixin {
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(24),
-          color: themeProvider.getCardBackgroundColor(isDark),
-          boxShadow: [
-            BoxShadow(
-              color: themeProvider.getShadowColor(isDark),
-              blurRadius: 15,
-              offset: const Offset(0, 8),
-            ),
-          ],
+          color: themeProvider.getReadableCardBackgroundColor(isDark),
+          boxShadow: themeProvider.getReadableCardShadow(isDark),
         ),
         child: Padding(
           padding: const EdgeInsets.all(20),
@@ -279,16 +280,19 @@ class _AboutPageState extends State<AboutPage> with TickerProviderStateMixin {
                         Text(
                           title,
                           style: TextStyle(
-                            fontSize: 18,
+                            fontSize: 20,
                             fontWeight: FontWeight.w700,
-                            color: themeProvider.getPrimaryTextColor(isDark),
+                            color: themeProvider.getHighContrastTextColor(isDark),
+                            letterSpacing: 0.3,
                           ),
                         ),
+                        const SizedBox(height: 4),
                         Text(
                           subtitle,
                           style: TextStyle(
                             fontSize: 14,
-                            color: themeProvider.getSecondaryTextColor(isDark),
+                            color: themeProvider.getHighContrastSecondaryTextColor(isDark),
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ],
@@ -364,71 +368,7 @@ class _AboutPageState extends State<AboutPage> with TickerProviderStateMixin {
 
 
 
-  Widget _buildSocialMediaButtons() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        _buildSocialButton(
-          icon: Icons.facebook,
-          label: 'Facebook',
-          color: const Color(0xFF1877F2),
-          onTap: () => _launchSocialMedia('facebook'),
-        ),
-        _buildSocialButton(
-          icon: Icons.camera_alt,
-          label: 'Instagram',
-          color: const Color(0xFFE4405F),
-          onTap: () => _launchSocialMedia('instagram'),
-        ),
-        _buildSocialButton(
-          icon: Icons.flutter_dash,
-          label: 'Twitter',
-          color: const Color(0xFF1DA1F2),
-          onTap: () => _launchSocialMedia('twitter'),
-        ),
-        _buildSocialButton(
-          icon: Icons.play_circle,
-          label: 'YouTube',
-          color: const Color(0xFFFF0000),
-          onTap: () => _launchSocialMedia('youtube'),
-        ),
-      ],
-    );
-  }
 
-  Widget _buildSocialButton({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withValues(alpha: 0.3)),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: color, size: 24),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: color,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildInfoSection(String title, String description, IconData icon) {
     final theme = Theme.of(context);
@@ -466,289 +406,5 @@ class _AboutPageState extends State<AboutPage> with TickerProviderStateMixin {
         ),
       ],
     );
-  }
-
-
-
-
-
-  // URL Launch Functions
-  Future<void> _launchEmail() async {
-    final Uri emailUri = Uri(
-      scheme: 'mailto',
-      path: 'info@patitakip.com',
-      query: 'subject=PatiTakip Uygulaması Hakkında',
-    );
-    
-    if (await canLaunchUrl(emailUri)) {
-      await launchUrl(emailUri);
-    } else {
-      _showErrorDialog('E-posta uygulaması bulunamadı');
-    }
-  }
-
-  Future<void> _launchWebsite() async {
-    final Uri websiteUri = Uri.parse('https://www.patitakip.com');
-    
-    if (await canLaunchUrl(websiteUri)) {
-      await launchUrl(websiteUri, mode: LaunchMode.externalApplication);
-    } else {
-      _showErrorDialog('Web sitesi açılamadı');
-    }
-  }
-
-  Future<void> _launchWhatsApp() async {
-    final Uri whatsappUri = Uri.parse('https://wa.me/905551234567?text=Merhaba, PatiTakip uygulaması hakkında bilgi almak istiyorum.');
-    
-    if (await canLaunchUrl(whatsappUri)) {
-      await launchUrl(whatsappUri, mode: LaunchMode.externalApplication);
-    } else {
-      _showErrorDialog('WhatsApp açılamadı');
-    }
-  }
-
-  Future<void> _launchSocialMedia(String platform) async {
-    String url = '';
-    String platformName = '';
-    
-    switch (platform) {
-      case 'facebook':
-        url = 'https://www.facebook.com/patitakip';
-        platformName = 'Facebook';
-        break;
-      case 'instagram':
-        url = 'https://www.instagram.com/patitakip';
-        platformName = 'Instagram';
-        break;
-      case 'twitter':
-        url = 'https://www.twitter.com/patitakip';
-        platformName = 'Twitter';
-        break;
-      case 'youtube':
-        url = 'https://www.youtube.com/@patitakip';
-        platformName = 'YouTube';
-        break;
-    }
-    
-    if (url.isNotEmpty) {
-      final Uri socialUri = Uri.parse(url);
-      if (await canLaunchUrl(socialUri)) {
-        await launchUrl(socialUri, mode: LaunchMode.externalApplication);
-      } else {
-        _showErrorDialog('$platformName açılamadı');
-      }
-    }
-  }
-
-  // Dialog Functions
-  void _showRatingDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Uygulamayı Değerlendir'),
-        content: const Text('Deneyiminizi değerlendirin ve geliştirmemize yardımcı olun. Uygulama mağazasında 5 yıldız vermeyi unutmayın!'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Tamam'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _launchAppStore();
-            },
-            child: const Text('Mağazaya Git'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showShareDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Uygulamayı Paylaş'),
-        content: const Text('🐾 PatiTakip - Evcil hayvanlarınız için en iyi bakım deneyimi! Uygulamayı arkadaşlarınızla paylaşın.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Tamam'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showFollowDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Bizi Takip Edin'),
-        content: const Text('Güncellemeler, yeni özellikler ve haberler için sosyal medyada bizi takip edin!'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Tamam'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _showSocialMediaOptions();
-            },
-            child: const Text('Sosyal Medya'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showRemoveAccountDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Hesabı Kaldır'),
-        content: const Text('Hesabınızı kalıcı olarak silmek istediğinizden emin misiniz? Bu işlem geri alınamaz ve tüm verileriniz silinir.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('İptal'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _showRemoveAccountConfirmation();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Hesabı Sil'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showErrorDialog(String message) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Hata'),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Tamam'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showSocialMediaOptions() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Sosyal Medya Hesaplarımız'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.facebook, color: Color(0xFF1877F2)),
-              title: const Text('Facebook'),
-              onTap: () {
-                Navigator.pop(context);
-                _launchSocialMedia('facebook');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.camera_alt, color: Color(0xFFE4405F)),
-              title: const Text('Instagram'),
-              onTap: () {
-                Navigator.pop(context);
-                _launchSocialMedia('instagram');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.flutter_dash, color: Color(0xFF1DA1F2)),
-              title: const Text('Twitter'),
-              onTap: () {
-                Navigator.pop(context);
-                _launchSocialMedia('twitter');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.play_circle, color: Color(0xFFFF0000)),
-              title: const Text('YouTube'),
-              onTap: () {
-                Navigator.pop(context);
-                _launchSocialMedia('youtube');
-              },
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Kapat'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showRemoveAccountConfirmation() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Son Onay'),
-        content: const Text('Hesabınızı silmek için lütfen "HESABIMI SİL" yazın:'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('İptal'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _showRemoveAccountFinal();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Onayla'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showRemoveAccountFinal() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Hesap Silindi'),
-        content: const Text('Hesabınız başarıyla silindi. Uygulamayı kullanmaya devam etmek isterseniz, tekrar kayıt olabilirsiniz.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Tamam'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _launchAppStore() async {
-    // Android için Play Store, iOS için App Store
-    final Uri storeUri = Uri.parse('https://play.google.com/store/apps/details?id=com.example.pati_takip');
-    
-    if (await canLaunchUrl(storeUri)) {
-      await launchUrl(storeUri, mode: LaunchMode.externalApplication);
-    } else {
-      _showErrorDialog('Uygulama mağazası açılamadı');
-    }
   }
 } 

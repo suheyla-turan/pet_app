@@ -58,18 +58,13 @@ class SettingsProvider with ChangeNotifier {
       
       _notificationSound = prefs.getString('notification_sound');
       
-      // Locale yükle
+      // Load locale
       final localeCode = prefs.getString('locale');
       if (localeCode != null) {
         _locale = Locale(localeCode);
       } else {
-        // İlk açılışta cihaz dili Türkçe ise otomatik Türkçe yap
-        final deviceLocale = window.locale.languageCode;
-        if (deviceLocale == 'tr') {
-          _locale = const Locale('tr');
-        } else {
-          _locale = null;
-        }
+        // Default to Turkish on first launch
+        _locale = const Locale('tr');
       }
       notifyListeners();
     } catch (e) {
@@ -179,6 +174,7 @@ class SettingsProvider with ChangeNotifier {
     _ttsRate = 0.3;
     _ttsPitch = 1.0;
     _notificationSound = null;
+    _locale = const Locale('tr');
     
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('notifications_enabled', true);
@@ -191,6 +187,7 @@ class SettingsProvider with ChangeNotifier {
     await prefs.setDouble('tts_rate', 0.3);
     await prefs.setDouble('tts_pitch', 1.0);
     await prefs.remove('notification_sound');
+    await prefs.setString('locale', 'tr');
     
     notifyListeners();
   }

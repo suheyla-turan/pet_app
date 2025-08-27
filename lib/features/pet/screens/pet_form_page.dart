@@ -208,58 +208,66 @@ class _PetFormPageState extends State<PetFormPage> with TickerProviderStateMixin
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
     return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.transparent, // Şeffaf app bar - sayfa arka planı ile uyumlu
-        title: Text(widget.pet == null ? 'Evcil Hayvan Ekle' : 'Evcil Hayvan Düzenle'),
-        centerTitle: true,
-        foregroundColor: themeProvider.getPrimaryTextColor(isDark),
-        titleTextStyle: TextStyle(
-          fontSize: 24,
-          fontWeight: FontWeight.w700,
-          color: themeProvider.getPrimaryTextColor(isDark),
-        ),
-        iconTheme: IconThemeData(
-          color: themeProvider.getPrimaryTextColor(isDark),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-              body: Container(
+      body: Container(
         decoration: BoxDecoration(
           gradient: themeProvider.getBackgroundGradient(isDark),
         ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // Page Title
-              Container(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  children: [
-                    Text(
-                      widget.pet == null ? AppLocalizations.of(context)!.addPet : AppLocalizations.of(context)!.editPet,
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w800,
-                        color: isDark ? Colors.white : const Color(0xFF2D3748),
-                      ),
+                    child: SafeArea(
+              child: Column(
+                children: [
+                  // App Bar
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    child: Row(
+                      children: [
+                        IconButton(
+                          icon: Icon(
+                            Icons.arrow_back,
+                            color: themeProvider.getPrimaryTextColor(isDark),
+                          ),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                        Expanded(
+                          child: Text(
+                            widget.pet == null ? 'Evcil Hayvan Ekle' : 'Evcil Hayvan Düzenle',
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w700,
+                              color: themeProvider.getPrimaryTextColor(isDark),
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    Text(
-                      AppLocalizations.of(context)!.enterPetInfo,
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: isDark ? Colors.grey.shade300 : Colors.grey.shade600,
-                      ),
+                  ),
+                  
+                  // Page Title
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      children: [
+                        Text(
+                          widget.pet == null ? AppLocalizations.of(context)!.addPet : AppLocalizations.of(context)!.editPet,
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w800,
+                            color: isDark ? Colors.white : const Color(0xFF2D3748),
+                          ),
+                        ),
+                        Text(
+                          AppLocalizations.of(context)!.enterPetInfo,
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: isDark ? Colors.grey.shade300 : Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
-              
-              // Form Content
-              Expanded(
+                  ),
+                  
+                  // Form Content
+                  Expanded(
                 child: FadeTransition(
                   opacity: _fadeAnimation,
                   child: SingleChildScrollView(

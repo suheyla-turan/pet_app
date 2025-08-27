@@ -109,6 +109,39 @@ class FirestoreService {
     }
   }
 
+  // Kullanıcı adını almak için yardımcı metod
+  static String _getUserDisplayName(Map<String, dynamic> userData) {
+    return userData['displayName'] ?? 
+           userData['name'] ?? 
+           (userData['email'] != null ? userData['email'].split('@')[0] : 'İsimsiz Kullanıcı');
+  }
+
+  // UID ile kullanıcı profil bilgilerini getir
+  static Future<Map<String, dynamic>?> getUserProfileByUid(String uid) async {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('profiller')
+          .doc(uid)
+          .get();
+      
+      if (doc.exists) {
+        final userData = doc.data()!;
+        return {
+          'uid': doc.id,
+          'email': userData['email'] ?? '',
+          'displayName': _getUserDisplayName(userData),
+          'photoURL': userData['photoURL'],
+          'createdAt': userData['createdAt'],
+          'updatedAt': userData['updatedAt'],
+        };
+      }
+      return null;
+    } catch (e) {
+      print('❌ HATA - Kullanıcı profili getirilemedi: $e');
+      return null;
+    }
+  }
+
   // Eş sahip yönetimi metodları
   static Future<List<Map<String, dynamic>>> getCoOwners(String petId) async {
     try {
@@ -131,7 +164,7 @@ class FirestoreService {
         return {
           'uid': doc.id,
           'email': userData['email'] ?? '',
-          'displayName': userData['displayName'] ?? 'İsimsiz Kullanıcı',
+          'displayName': _getUserDisplayName(userData),
         };
       }).toList();
     } catch (e) {
@@ -571,18 +604,24 @@ class FirestoreService {
 
   /// Eş sahiplerden gelen mesajları getir
   static Future<List<Map<String, dynamic>>> getCoOwnerMessages(String petId) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) throw Exception('Kullanıcı oturumu yok');
+    
     try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) throw Exception('Kullanıcı oturumu yok');
+      
+      print('🔍 Mesajlar getiriliyor - Pet ID: $petId, User ID: ${user.uid}');
       
       final messagesSnapshot = await FirebaseFirestore.instance
           .collection('pet_messages')
           .where('petId', isEqualTo: petId)
-          .orderBy('timestamp', descending: true)
+          .orderBy('createdAt', descending: false) // Client timestamp ile sırala
           .get();
       
-      return messagesSnapshot.docs.map((doc) {
+      print('📊 Firestore\'dan ${messagesSnapshot.docs.length} mesaj alındı');
+      
+      final messages = messagesSnapshot.docs.map((doc) {
         final data = doc.data();
+        print('📝 Mesaj verisi: ${doc.id} - ${data['message']} - ${data['timestamp']}');
         return {
           'messageId': doc.id,
           'petId': data['petId'],
@@ -602,15 +641,62 @@ class FirestoreService {
           'editedAt': data['editedAt'],
         };
       }).toList();
+      
+      print('✅ ${messages.length} mesaj işlendi ve döndürülüyor');
+      return messages;
+      
     } catch (e) {
       print('❌ HATA - Mesajlar getirilemedi: $e');
-      if (e.toString().contains('not-found')) {
-        print('⚠️ Hayvan bulunamadı, boş liste döndürülüyor');
-        return [];
-      } else {
-        print('⚠️ Diğer hata, boş liste döndürülüyor');
-        return [];
+      
+      // Index hatası varsa, sadece petId ile getir (timestamp olmadan)
+      if (e.toString().contains('failed-precondition') || e.toString().contains('requires an index')) {
+        print('⚠️ Index hatası, timestamp olmadan getiriliyor...');
+        try {
+          final messagesSnapshot = await FirebaseFirestore.instance
+              .collection('pet_messages')
+              .where('petId', isEqualTo: petId)
+              .get();
+          
+          final messages = messagesSnapshot.docs.map((doc) {
+            final data = doc.data();
+            return {
+              'messageId': doc.id,
+              'petId': data['petId'],
+              'petName': data['petName'],
+              'senderId': data['senderId'],
+              'senderName': data['senderName'],
+              'senderEmail': data['senderEmail'],
+              'message': data['message'],
+              'timestamp': data['timestamp'],
+              'createdAt': data['createdAt'], // Client timestamp ekle
+              'isOwnMessage': data['senderId'] == user.uid,
+              'messageType': data['messageType'] ?? 'text',
+              'imageUrl': data['imageUrl'],
+              'caption': data['caption'],
+              'audioUrl': data['audioUrl'],
+              'durationSeconds': data['durationSeconds'],
+              'isEdited': data['isEdited'] ?? false,
+              'editedAt': data['editedAt'],
+            };
+          }).toList();
+          
+          // Client timestamp'e göre manuel sıralama
+          messages.sort((a, b) {
+            final aTime = a['createdAt'] as dynamic;
+            final bTime = b['createdAt'] as dynamic;
+            if (aTime == null || bTime == null) return 0;
+            return aTime.compareTo(bTime); // Ascending (eski mesajlar üstte)
+          });
+          
+          print('✅ Index hatası sonrası ${messages.length} mesaj getirildi');
+          return messages;
+        } catch (fallbackError) {
+          print('❌ Fallback de başarısız: $fallbackError');
+          return [];
+        }
       }
+      
+      return [];
     }
   }
 
@@ -623,7 +709,7 @@ class FirestoreService {
       final messagesSnapshot = await FirebaseFirestore.instance
           .collection('pet_messages')
           .where('recipients', arrayContains: user.uid)
-          .orderBy('timestamp', descending: true)
+          .orderBy('createdAt', descending: false) // Client timestamp ile sırala
           .limit(50) // Son 50 mesaj
           .get();
       
@@ -638,6 +724,7 @@ class FirestoreService {
           'senderEmail': data['senderEmail'],
           'message': data['message'],
           'timestamp': data['timestamp'],
+          'createdAt': data['createdAt'], // Client timestamp ekle
           'isOwnMessage': data['senderId'] == user.uid,
         };
       }).toList();
@@ -1027,13 +1114,19 @@ class FirestoreService {
         throw Exception('Kullanıcı giriş yapmamış');
       }
 
+      print('🔍 Pet bilgileri alınıyor - Pet ID: $petId');
+      
       // Önce pet bilgilerini al
       final petDoc = await FirebaseFirestore.instance.collection('hayvanlar').doc(petId).get();
       if (!petDoc.exists) throw Exception('Hayvan bulunamadı');
       
       final petData = petDoc.data()!;
       final petName = petData['name'] ?? 'İsimsiz Hayvan';
+      final ownerIds = List<String>.from(petData['owners'] ?? [currentUser.uid]);
       
+      print('📋 Pet bilgileri: $petName, Sahipler: $ownerIds');
+      
+      final now = DateTime.now();
       final messageData = {
         'petId': petId,
         'petName': petName,
@@ -1042,12 +1135,35 @@ class FirestoreService {
         'senderEmail': currentUser.email ?? '',
         'message': message,
         'messageType': messageType,
-        'timestamp': FieldValue.serverTimestamp(),
+        'timestamp': FieldValue.serverTimestamp(), // Server timestamp kullan
         'caption': caption,
         'durationSeconds': durationSeconds,
-        'recipients': List<String>.from(petData['owners'] ?? [currentUser.uid]),
+        'recipients': ownerIds, // Tüm sahipleri recipients olarak ekle
         'type': 'co_owner_message',
+        'createdAt': now.millisecondsSinceEpoch, // Client timestamp ekle
+        'clientTimestamp': now.toIso8601String(), // ISO string olarak da ekle
+        'isOptimistic': true, // Optimistic update için flag
+        'status': 'sent', // Mesaj durumu
+        'localId': 'temp_${now.millisecondsSinceEpoch}', // Local ID ekle
+        'isLocal': true, // Local mesaj flag'i
+        'isPending': false, // Pending durumu
+        'isDelivered': false, // Delivery durumu
+        'isRead': false, // Read durumu
+        'isArchived': false, // Archive durumu
+        'isDeleted': false, // Delete durumu
+        'isFlagged': false, // Flag durumu
+        'isSpam': false, // Spam durumu
+        'isBlocked': false, // Block durumu
+        'isMuted': false, // Mute durumu
+        'isHidden': false, // Hide durumu
+        'isPinned': false, // Pin durumu
+        'isForwarded': false, // Forward durumu
+        'isReplied': false, // Reply durumu
+        'isEdited': false, // Edit durumu
+        'isStarred': false, // Star durumu
       };
+
+      print('📝 Mesaj verisi hazırlandı: $messageData');
 
       // Eğer resim dosyası varsa, önce yükle
       if (imageFile != null) {
@@ -1063,9 +1179,13 @@ class FirestoreService {
         messageData['message'] = 'Sesli mesaj';
       }
 
-      await FirebaseFirestore.instance
+      print('💾 Mesaj Firestore\'a kaydediliyor...');
+      
+      final docRef = await FirebaseFirestore.instance
           .collection('pet_messages')
           .add(messageData);
+          
+      print('✅ Mesaj başarıyla kaydedildi - Doc ID: ${docRef.id}');
 
       // Pet dokümanına son mesaj bilgisini güncelle
       await FirebaseFirestore.instance
@@ -1075,6 +1195,8 @@ class FirestoreService {
         'lastMessage': message,
         'lastMessageTime': FieldValue.serverTimestamp(),
       });
+      
+      print('✅ Pet dokümanı güncellendi');
 
     } catch (e) {
       print('❌ HATA - Eş sahip mesajı gönderilemedi: $e');
@@ -1092,12 +1214,15 @@ class FirestoreService {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) throw Exception('Kullanıcı oturumu yok');
       
+      print('🔄 Stream başlatılıyor - Pet ID: $petId, User ID: ${user.uid}');
+      
       return FirebaseFirestore.instance
           .collection('pet_messages')
           .where('petId', isEqualTo: petId)
-          .orderBy('timestamp', descending: true)
-          .snapshots()
+          .orderBy('createdAt', descending: false) // Client timestamp ile sırala
+          .snapshots(includeMetadataChanges: false) // Sadece document değişikliklerini dinle
           .map((snapshot) {
+        print('📨 Stream\'den ${snapshot.docs.length} mesaj alındı');
         return snapshot.docs.map((doc) {
           final data = doc.data();
           return {
@@ -1109,6 +1234,7 @@ class FirestoreService {
             'senderEmail': data['senderEmail'],
             'message': data['message'],
             'timestamp': data['timestamp'],
+            'createdAt': data['createdAt'], // Client timestamp ekle
             'isOwnMessage': data['senderId'] == user.uid,
             'messageType': data['messageType'] ?? 'text',
             'imageUrl': data['imageUrl'],
@@ -1119,16 +1245,15 @@ class FirestoreService {
             'editedAt': data['editedAt'],
           };
         }).toList();
+      }).handleError((error) {
+        print('❌ Stream hatası: $error');
+        // Hata durumunda manuel olarak mesajları getir
+        return getCoOwnerMessages(petId);
       });
     } catch (e) {
       print('❌ HATA - Mesaj stream\'i oluşturulamadı: $e');
-      if (e.toString().contains('not-found')) {
-        print('⚠️ Hayvan bulunamadı, boş stream döndürülüyor');
-        return Stream.value([]);
-      } else {
-        print('⚠️ Diğer hata, boş stream döndürülüyor');
-        return Stream.value([]);
-      }
+      // Hata durumunda manuel olarak mesajları getir
+      return Stream.fromFuture(getCoOwnerMessages(petId));
     }
   }
 

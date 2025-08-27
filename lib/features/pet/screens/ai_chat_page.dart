@@ -1,7 +1,12 @@
 import 'dart:io';
+import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
+import 'package:http/http.dart' as http;
 import 'package:pati_takip/services/media_service.dart';
 import 'package:pati_takip/services/voice_service.dart';
 import 'package:pati_takip/services/chat_history_service.dart';
@@ -10,6 +15,8 @@ import 'package:pati_takip/features/pet/models/chat_history.dart';
 import 'package:pati_takip/features/pet/widgets/chat_history_overlay.dart';
 import 'package:pati_takip/providers/auth_provider.dart';
 import 'package:pati_takip/providers/theme_provider.dart';
+import 'package:pati_takip/l10n/app_localizations.dart';
+import 'package:pati_takip/secrets.dart';
 
 class AIChatPage extends StatefulWidget {
   final Pet? pet;
@@ -22,8 +29,14 @@ class AIChatPage extends StatefulWidget {
 
 class _AIChatPageState extends State<AIChatPage> {
   final TextEditingController _messageController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   final List<ChatMessage> _messages = [];
   bool _isTyping = false;
+  
+  // Firebase referansları
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final firebase_auth.FirebaseAuth _auth = firebase_auth.FirebaseAuth.instance;
+  StreamSubscription<QuerySnapshot>? _messageSubscription;
   
   // Servisler
   final MediaService _mediaService = MediaService();
@@ -38,6 +51,13 @@ class _AIChatPageState extends State<AIChatPage> {
   bool _showChatHistoryOverlay = false;
   ChatHistory? _currentChatHistory;
 
+  // AI Configuration
+  static const String _aiServiceUrl = 'https://api.openai.com/v1/chat/completions';
+  static const String _fallbackAiUrl = 'https://api.anthropic.com/v1/messages';
+  bool _useFallbackAI = false;
+  bool _isAIServiceAvailable = true;
+  String _aiServiceStatus = 'AI Servisi Aktif';
+
   @override
   void initState() {
     super.initState();
@@ -51,10 +71,22 @@ class _AIChatPageState extends State<AIChatPage> {
     
     // Add personalized welcome message
     _messages.add(ChatMessage(
-      text: _getPersonalizedWelcomeMessage(),
+      text: widget.pet != null 
+          ? 'Merhaba! ${widget.pet!.name} hakkında size yardımcı olmaya geldim! 🐾\n\nEvcil hayvanınızın sağlığı, davranışı, beslenmesi ve bakımı hakkında kişiselleştirilmiş tavsiyeler verebilirim. Ne öğrenmek istiyorsunuz?'
+          : 'Merhaba! Ben sizin AI evcil hayvan bakım asistanınızım. Size nasıl yardımcı olabilirim?',
       isUser: false,
       timestamp: DateTime.now(),
     ));
+    
+    // ScrollController'ı başlat
+    _scrollController.addListener(() {
+      // Scroll pozisyonunu takip et
+    });
+    
+    // Firebase mesaj stream'ini başlat
+    if (widget.pet != null) {
+      _startFirebaseMessageStream();
+    }
   }
 
   void _showChatHistory() {
@@ -69,13 +101,28 @@ class _AIChatPageState extends State<AIChatPage> {
     });
   }
 
-  void _onChatSelected(ChatHistory chat) {
-    // TODO: Load the selected chat
+  void _onChatSelected(ChatHistory chat) async {
+    // Firebase stream'i durdur ve temizle
+    await _stopFirebaseMessageStream();
+    
+    // Seçilen sohbeti yükle
+    _currentChatHistory = chat;
+    
+    // Mesajları temizle ve hoş geldin mesajını ekle
+    setState(() {
+      _messages.clear();
+      _messages.add(ChatMessage(
+        text: _getPersonalizedWelcomeMessage(),
+        isUser: false,
+        timestamp: DateTime.now(),
+      ));
+    });
+    
     _hideChatHistoryOverlay();
     
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('${chat.title} yükleniyor...'),
+        content: Text('${chat.title} mesajlar yükleniyor...'),
         backgroundColor: Colors.blue,
         duration: const Duration(seconds: 2),
       ),
@@ -88,33 +135,11 @@ class _AIChatPageState extends State<AIChatPage> {
 
   String _getPersonalizedWelcomeMessage() {
     if (widget.pet == null) {
-      return "Merhaba! Evcil hayvanınız hakkında sorularınızı sorabilirsiniz. Size nasıl yardımcı olabilirim?";
+      return AppLocalizations.of(context)!.aiChatInstructions;
     }
 
     final pet = widget.pet!;
-    final age = pet.age;
-    final type = _getLocalizedPetType(pet.type);
-    final gender = pet.gender.toLowerCase() == 'male' || pet.gender.toLowerCase() == 'erkek' ? 'erkek' : 'dişi';
-    
-    String ageDescription;
-    if (age < 1) {
-      ageDescription = 'yavru';
-    } else if (age < 3) {
-      ageDescription = 'genç';
-    } else if (age < 7) {
-      ageDescription = 'yetişkin';
-    } else {
-      ageDescription = 'yaşlı';
-    }
-
-    return "Merhaba! ${pet.name} hakkında size yardımcı olmaya geldim! 🐾\n\n"
-           "${pet.name} ${age} yaşında ${ageDescription} bir ${gender} ${type}. "
-           "Sağlık, beslenme, egzersiz, bakım veya davranış konularında sorularınızı yanıtlayabilirim.\n\n"
-           "Örnek sorular:\n"
-           "• ${pet.name} için hangi mama türü uygun?\n"
-           "• ${age < 1 ? 'Yavru' : age > 7 ? 'Yaşlı' : 'Yetişkin'} ${type} bakımında nelere dikkat etmeliyim?\n"
-           "• ${pet.name} için egzersiz programı nasıl olmalı?\n\n"
-           "Nasıl yardımcı olabilirim?";
+    return AppLocalizations.of(context)!.aiChatInstructionsWithPet(pet.name);
   }
 
   Future<void> _initializeServices() async {
@@ -136,7 +161,7 @@ class _AIChatPageState extends State<AIChatPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Servisler başlatılamadı: $e'),
+            content: Text('${AppLocalizations.of(context)!.errorOccurred}: $e'),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 3),
           ),
@@ -263,6 +288,8 @@ class _AIChatPageState extends State<AIChatPage> {
   @override
   void dispose() {
     _messageController.dispose();
+    _scrollController.dispose();
+    _stopFirebaseMessageStream();
     super.dispose();
   }
 
@@ -270,43 +297,139 @@ class _AIChatPageState extends State<AIChatPage> {
     final text = _messageController.text.trim();
     if (text.isEmpty) return;
 
-    setState(() {
-      _messages.add(ChatMessage(
+    try {
+      // Kullanıcı mesajını Firebase'e gönder
+      if (widget.pet?.id != null && _auth.currentUser != null) {
+        await _firestore
+            .collection('hayvanlar')
+            .doc(widget.pet!.id)
+            .collection('messages')
+            .add({
+          'text': text,
+          'userId': _auth.currentUser!.uid,
+          'userName': _auth.currentUser!.displayName ?? 'Anonim',
+          'timestamp': Timestamp.now(),
+          'type': 'text',
+        });
+        
+        print('✅ Mesaj Firebase\'e gönderildi');
+      }
+      
+      // Kullanıcı mesajını ekle (Firebase stream aktif olsa da olmasa da)
+      final userMessage = ChatMessage(
         text: text,
         isUser: true,
         timestamp: DateTime.now(),
-      ));
-      _isTyping = true;
-    });
+      );
 
-    _messageController.clear();
+      setState(() {
+        _messages.add(userMessage);
+        _isTyping = true;
+      });
 
-    // Simulate AI response
-    Future.delayed(const Duration(seconds: 2), () async {
+      _messageController.clear();
+
+      // Chat history'yi kaydet
+      await _saveChatHistory();
+
+      // AI yanıtını simüle et
+      Future.delayed(const Duration(seconds: 2), () async {
+        if (mounted) {
+          try {
+            final aiResponse = await _generateAIResponse(text);
+            final aiMessage = ChatMessage(
+              text: aiResponse,
+              isUser: false,
+              timestamp: DateTime.now(),
+            );
+            
+            // AI yanıtını Firebase'e gönder
+            if (widget.pet?.id != null) {
+              await _firestore
+                  .collection('hayvanlar')
+                  .doc(widget.pet!.id)
+                  .collection('messages')
+                  .add({
+                'text': aiResponse,
+                'userId': 'ai_assistant',
+                'userName': 'AI Asistan',
+                'timestamp': Timestamp.now(),
+                'type': 'ai_response',
+              });
+              
+              print('✅ AI yanıtı Firebase\'e gönderildi');
+            }
+            
+            setState(() {
+              _isTyping = false;
+              // AI mesajını ekle (Firebase stream aktif olsa da olmasa da)
+              _messages.add(aiMessage);
+            });
+            
+            // AI yanıtından sonra chat history'yi güncelle
+            await _saveChatHistory();
+            
+            // Otomatik scroll
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (_scrollController.hasClients) {
+                _scrollController.animateTo(
+                  _scrollController.position.maxScrollExtent,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOut,
+                );
+              }
+            });
+          } catch (e) {
+            print('❌ AI yanıtı oluşturulamadı: $e');
+            setState(() {
+              _isTyping = false;
+            });
+            
+            // Hata mesajını göster
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('${AppLocalizations.of(context)!.errorOccurred}: $e'),
+                  backgroundColor: Colors.red,
+                  duration: const Duration(seconds: 3),
+                ),
+              );
+            }
+          }
+        }
+      });
+    } catch (e) {
+      print('❌ Mesaj gönderme hatası: $e');
+      setState(() {
+        _isTyping = false;
+      });
+      
+      // Hata mesajını göster
       if (mounted) {
-        final aiResponse = _generateAIResponse(text);
-        setState(() {
-          _isTyping = false;
-          _messages.add(ChatMessage(
-            text: aiResponse,
-            isUser: false,
-            timestamp: DateTime.now(),
-          ));
-        });
-        
-        // Save chat history after AI response
-        _saveChatHistory();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${AppLocalizations.of(context)!.errorOccurred}: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
       }
-    });
+    }
   }
 
-  void _saveChatHistory() async {
+  Future<void> _saveChatHistory() async {
     try {
+      print('💾 _saveChatHistory çağrıldı');
+      print('📱 Mevcut mesaj sayısı: ${_messages.length}');
+      print('🔑 Current chat history: ${_currentChatHistory?.title}');
+      
       if (_currentChatHistory == null) {
+        print('⚠️ _currentChatHistory null, yeni chat oluşturuluyor');
         _currentChatHistory = ChatHistoryService.createNewChat(
           petId: widget.pet?.id,
           petName: widget.pet?.name,
         );
+        print('✅ Yeni chat oluşturuldu: ${_currentChatHistory!.title}');
       }
       
       final messages = _messages.map((msg) => {
@@ -317,25 +440,215 @@ class _AIChatPageState extends State<AIChatPage> {
         'audioPath': msg.audioPath,
       }).toList();
       
+      print('📝 Mesajlar map\'e dönüştürüldü: ${messages.length} mesaj');
+      
       final updatedHistory = _currentChatHistory!.copyWith(
         messageCount: messages.length,
         lastMessage: messages.isNotEmpty ? messages.last['text'] as String? : null,
         lastModified: DateTime.now(),
       );
       
+      print('🔄 Chat history güncellendi: ${updatedHistory.title} - ${updatedHistory.messageCount} mesaj');
+      
       await ChatHistoryService.saveChatHistory(updatedHistory);
       _currentChatHistory = updatedHistory;
+      
+      print('✅ Chat history başarıyla kaydedildi');
     } catch (e) {
       print('❌ Chat geçmişi kaydedilemedi: $e');
+      print('❌ Hata detayı: ${e.runtimeType}');
     }
   }
 
-  String _generateAIResponse(String userMessage) {
+  Future<String> _generateAIResponse(String userMessage) async {
     if (widget.pet == null) {
-      // Pet bilgisi yoksa genel yanıt
       return "Evcil hayvanınız hakkında daha detaylı bilgi verebilmem için lütfen önce bir evcil hayvan ekleyin.";
     }
 
+    try {
+      // Gerçek AI servisi ile yanıt al
+      final aiResponse = await _callAIService(userMessage);
+      if (aiResponse.isNotEmpty) {
+        return aiResponse;
+      }
+    } catch (e) {
+      print('❌ AI servisi hatası: $e');
+      // AI servisi çalışmazsa fallback yanıtları kullan
+    }
+
+    // Fallback: Basit keyword matching
+    return _generateFallbackResponse(userMessage);
+  }
+
+  Future<String> _callAIService(String userMessage) async {
+    try {
+      final pet = widget.pet!;
+      
+      // Pet bilgilerini context olarak hazırla
+      final petContext = _buildPetContext(pet);
+      
+      // AI prompt'unu hazırla
+      final prompt = _buildAIPrompt(userMessage, petContext);
+      
+      // OpenAI API'yi çağır
+      final response = await _callOpenAI(prompt);
+      if (response.isNotEmpty) {
+        _updateAIServiceStatus('OpenAI Aktif', true);
+        return response;
+      }
+      
+      // OpenAI çalışmazsa Anthropic'i dene
+      final anthropicResponse = await _callAnthropic(prompt);
+      if (anthropicResponse.isNotEmpty) {
+        _updateAIServiceStatus('Claude Aktif', true);
+        return anthropicResponse;
+      }
+      
+      // Her iki servis de çalışmıyorsa
+      _updateAIServiceStatus('AI Servisi Yok', false);
+      
+    } catch (e) {
+      print('❌ AI servisi çağrısı hatası: $e');
+      _updateAIServiceStatus('AI Servisi Hatası', false);
+    }
+    
+    return '';
+  }
+
+  void _updateAIServiceStatus(String status, bool isAvailable) {
+    if (mounted) {
+      setState(() {
+        _aiServiceStatus = status;
+        _isAIServiceAvailable = isAvailable;
+      });
+    }
+  }
+
+  String _buildPetContext(Pet pet) {
+    final age = pet.age;
+    final type = _getLocalizedPetType(pet.type);
+    final gender = pet.gender.toLowerCase() == 'male' || pet.gender.toLowerCase() == 'erkek' ? 'erkek' : 'dişi';
+    final breed = pet.breed != null && pet.breed!.isNotEmpty ? pet.breed! : 'bilinmiyor';
+    
+    return '''
+Evcil Hayvan Bilgileri:
+- İsim: ${pet.name}
+- Yaş: $age
+- Tür: $type
+- Cinsiyet: $gender
+- Cins: $breed
+- Doygunluk: ${pet.satiety}/10
+- Mutluluk: ${pet.happiness}/10
+- Enerji: ${pet.energy}/10
+- Bakım: ${pet.care}/10
+''';
+  }
+
+  String _buildAIPrompt(String userMessage, String petContext) {
+    return '''
+Sen bir evcil hayvan bakım uzmanısın. Aşağıdaki evcil hayvan bilgileri ve kullanıcının sorusu verilmiştir.
+
+$petContext
+
+Kullanıcı Sorusu: $userMessage
+
+Lütfen evcil hayvanın özel durumunu göz önünde bulundurarak, kişiselleştirilmiş, detaylı ve faydalı bir yanıt ver. Yanıtın:
+1. Evcil hayvanın adını kullan
+2. Yaş ve türe özel öneriler içersin
+3. Mevcut durumunu (doygunluk, mutluluk, enerji, bakım) dikkate alsın
+4. Pratik ve uygulanabilir tavsiyeler versin
+5. Türkçe olarak yazılsın
+6. 200-400 kelime arasında olsun (daha detaylı ve kapsamlı)
+
+Yanıt:
+''';
+  }
+
+  Future<String> _callOpenAI(String prompt) async {
+    try {
+      if (Secrets.openaiApiKey.isEmpty) {
+        print('⚠️ OpenAI API anahtarı bulunamadı');
+        return '';
+      }
+
+      final response = await http.post(
+        Uri.parse(_aiServiceUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${Secrets.openaiApiKey}',
+        },
+        body: jsonEncode({
+          'model': 'gpt-3.5-turbo',
+          'messages': [
+            {
+              'role': 'system',
+              'content': 'Sen bir evcil hayvan bakım uzmanısın. Türkçe yanıt ver ve pratik tavsiyeler sun.',
+            },
+            {
+              'role': 'user',
+              'content': prompt,
+            },
+          ],
+          'max_tokens': 1000,
+          'temperature': 0.7,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final content = data['choices'][0]['message']['content'];
+        return content.trim();
+      } else {
+        print('❌ OpenAI API hatası: ${response.statusCode} - ${response.body}');
+        return '';
+      }
+    } catch (e) {
+      print('❌ OpenAI API çağrısı hatası: $e');
+      return '';
+    }
+  }
+
+  Future<String> _callAnthropic(String prompt) async {
+    try {
+      if (Secrets.anthropicApiKey.isEmpty) {
+        print('⚠️ Anthropic API anahtarı bulunamadı');
+        return '';
+      }
+
+      final response = await http.post(
+        Uri.parse(_fallbackAiUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': Secrets.anthropicApiKey,
+          'anthropic-version': '2023-06-01',
+        },
+        body: jsonEncode({
+          'model': 'claude-3-haiku-20240307',
+          'max_tokens': 1000,
+          'messages': [
+            {
+              'role': 'user',
+              'content': prompt,
+            },
+          ],
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final content = data['content'][0]['text'];
+        return content.trim();
+      } else {
+        print('❌ Anthropic API hatası: ${response.statusCode} - ${response.body}');
+        return '';
+      }
+    } catch (e) {
+      print('❌ Anthropic API çağrısı hatası: $e');
+      return '';
+    }
+  }
+
+  String _generateFallbackResponse(String userMessage) {
     final pet = widget.pet!;
     final lowerMessage = userMessage.toLowerCase();
     
@@ -826,15 +1139,18 @@ class _AIChatPageState extends State<AIChatPage> {
 
   String _getChatStatusText() {
     if (_messages.isEmpty) {
-      return "Henüz sohbet yok";
+      return AppLocalizations.of(context)!.noChatYet;
     } else if (_messages.length == 1) {
-      return "Yeni sohbet başlatıldı";
+      return AppLocalizations.of(context)!.newChatStarted;
     } else {
-      return "${_messages.length - 1} mesaj";
+      return AppLocalizations.of(context)!.messageCount(_messages.length - 1);
     }
   }
 
   void _startNewChat() async {
+    // Firebase stream'i durdur ve temizle
+    await _stopFirebaseMessageStream();
+    
     if (_messages.length <= 1) {
       // If there's only the welcome message or no messages, just start fresh
       setState(() {
@@ -853,17 +1169,20 @@ class _AIChatPageState extends State<AIChatPage> {
       );
       
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Yeni sohbet başlatıldı!'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.startNewChat),
           backgroundColor: Colors.green,
-          duration: Duration(seconds: 2),
+          duration: const Duration(seconds: 2),
         ),
       );
     } else {
       // If there are actual conversation messages, ask for confirmation
+      // Store the original context to avoid shadowing issues
+      final originalContext = context;
+      
       showDialog(
         context: context,
-        builder: (BuildContext context) {
+        builder: (BuildContext dialogContext) {
           return AlertDialog(
             backgroundColor: Colors.transparent,
             shape: RoundedRectangleBorder(
@@ -877,8 +1196,8 @@ class _AIChatPageState extends State<AIChatPage> {
                   size: 28,
                 ),
                 const SizedBox(width: 12),
-                const Text(
-                  'Yeni Sohbet',
+                Text(
+                  AppLocalizations.of(context)!.newChatConfirmTitle,
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 20,
@@ -887,8 +1206,8 @@ class _AIChatPageState extends State<AIChatPage> {
                 ),
               ],
             ),
-            content: const Text(
-              'Mevcut sohbet geçmişi kaydedilecek ve yeni bir sohbet başlatılacak. Devam etmek istiyor musunuz?',
+            content: Text(
+              AppLocalizations.of(context)!.newChatConfirmMessage,
               style: TextStyle(
                 color: Colors.white70,
                 fontSize: 16,
@@ -896,9 +1215,9 @@ class _AIChatPageState extends State<AIChatPage> {
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text(
-                  'İptal',
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: Text(
+                  AppLocalizations.of(originalContext)!.cancel,
                   style: TextStyle(
                     color: Colors.grey,
                     fontSize: 16,
@@ -908,7 +1227,7 @@ class _AIChatPageState extends State<AIChatPage> {
               ),
               ElevatedButton(
                 onPressed: () async {
-                  Navigator.of(context).pop();
+                  Navigator.of(dialogContext).pop();
                   
                   // Save current chat to history
                   if (_currentChatHistory != null) {
@@ -947,11 +1266,11 @@ class _AIChatPageState extends State<AIChatPage> {
                   // Close the overlay
                   _hideChatHistoryOverlay();
                   
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Yeni sohbet başlatıldı!'),
+                  ScaffoldMessenger.of(originalContext).showSnackBar(
+                    SnackBar(
+                      content: Text(AppLocalizations.of(originalContext)!.startNewChat),
                       backgroundColor: Colors.green,
-                      duration: Duration(seconds: 2),
+                      duration: const Duration(seconds: 2),
                     ),
                   );
                 },
@@ -961,8 +1280,8 @@ class _AIChatPageState extends State<AIChatPage> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text(
-                  'Başlat',
+                child: Text(
+                  AppLocalizations.of(originalContext)!.start,
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 16,
@@ -978,9 +1297,12 @@ class _AIChatPageState extends State<AIChatPage> {
   }
 
   void _clearCurrentChat() {
+    // Store the original context to avoid shadowing issues
+    final originalContext = context;
+    
     showDialog(
       context: context,
-      builder: (BuildContext context) {
+      builder: (BuildContext dialogContext) {
         return AlertDialog(
           backgroundColor: Colors.transparent,
           shape: RoundedRectangleBorder(
@@ -994,8 +1316,8 @@ class _AIChatPageState extends State<AIChatPage> {
                 size: 28,
               ),
               const SizedBox(width: 12),
-              const Text(
-                'Sohbeti Temizle',
+              Text(
+                AppLocalizations.of(originalContext)!.clearCurrentChat,
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 20,
@@ -1004,7 +1326,7 @@ class _AIChatPageState extends State<AIChatPage> {
               ),
             ],
           ),
-          content: const Text(
+          content: Text(
             'Mevcut sohbet geçmişi kalıcı olarak silinecek. Bu işlem geri alınamaz. Devam etmek istiyor musunuz?',
             style: TextStyle(
               color: Colors.white70,
@@ -1013,9 +1335,9 @@ class _AIChatPageState extends State<AIChatPage> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text(
-                'İptal',
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(
+                AppLocalizations.of(originalContext)!.cancel,
                 style: TextStyle(
                   color: Colors.grey,
                   fontSize: 16,
@@ -1023,44 +1345,47 @@ class _AIChatPageState extends State<AIChatPage> {
                 ),
               ),
             ),
-                          ElevatedButton(
-                onPressed: () async {
-                  Navigator.of(context).pop();
-                  
-                  // Create new chat history
-                  _currentChatHistory = ChatHistoryService.createNewChat(
-                    petId: widget.pet?.id,
-                    petName: widget.pet?.name,
-                  );
-                  
-                  setState(() {
-                    _messages.clear();
-                    _messages.add(ChatMessage(
-                      text: _getPersonalizedWelcomeMessage(),
-                      isUser: false,
-                      timestamp: DateTime.now(),
-                    ));
-                  });
-                  
-                  // Close the overlay
-                  _hideChatHistoryOverlay();
-                  
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Mevcut sohbet temizlendi!'),
-                      backgroundColor: Colors.orange,
-                      duration: Duration(seconds: 2),
-                    ),
-                  );
-                },
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.of(dialogContext).pop();
+                
+                // Firebase stream'i durdur ve temizle
+                await _stopFirebaseMessageStream();
+                
+                // Create new chat history
+                _currentChatHistory = ChatHistoryService.createNewChat(
+                  petId: widget.pet?.id,
+                  petName: widget.pet?.name,
+                );
+                
+                setState(() {
+                  _messages.clear();
+                  _messages.add(ChatMessage(
+                    text: _getPersonalizedWelcomeMessage(),
+                    isUser: false,
+                    timestamp: DateTime.now(),
+                  ));
+                });
+                
+                // Close the overlay
+                _hideChatHistoryOverlay();
+                
+                ScaffoldMessenger.of(originalContext).showSnackBar(
+                  SnackBar(
+                    content: Text(AppLocalizations.of(originalContext)!.clearCurrentChat),
+                    backgroundColor: Colors.orange,
+                    duration: const Duration(seconds: 2),
+                  ),
+                );
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.orange,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text(
-                'Temizle',
+              child: Text(
+                AppLocalizations.of(originalContext)!.clearCurrentChat,
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 16,
@@ -1074,9 +1399,141 @@ class _AIChatPageState extends State<AIChatPage> {
     );
   }
 
+  // Sohbet silme fonksiyonu
+  Future<void> _deleteChat(ChatHistory chat) async {
+    try {
+      print('🗑️ Sohbet silme işlemi başlatıldı: ${chat.title}');
+      
+      // Onay dialog'u göster
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (BuildContext dialogContext) {
+          return AlertDialog(
+            backgroundColor: Colors.transparent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: Row(
+              children: [
+                Icon(
+                  Icons.delete_forever,
+                  color: Colors.red,
+                  size: 28,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'Sohbeti Sil',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            content: Text(
+              '"${chat.title}" sohbetini kalıcı olarak silmek istediğinizden emin misiniz?\n\nBu işlem geri alınamaz.',
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 16,
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+                child: Text(
+                  'İptal',
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: Text(
+                  'Sil',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      );
 
-
-
+      if (confirm == true) {
+        print('✅ Kullanıcı onayladı, sohbet siliniyor...');
+        
+        // Sohbeti sil
+        await ChatHistoryService.deleteChat(chat.id);
+        print('✅ ChatHistoryService.deleteChat tamamlandı');
+        
+        // Eğer silinen sohbet mevcut sohbet ise, yeni sohbet başlat
+        if (_currentChatHistory?.id == chat.id) {
+          print('🔄 Mevcut sohbet silindi, yeni sohbet başlatılıyor...');
+          
+          // Firebase stream'i durdur ve temizle
+          await _stopFirebaseMessageStream();
+          
+          _currentChatHistory = ChatHistoryService.createNewChat(
+            petId: widget.pet?.id,
+            petName: widget.pet?.name,
+          );
+          
+          setState(() {
+            _messages.clear();
+            _messages.add(ChatMessage(
+              text: _getPersonalizedWelcomeMessage(),
+              isUser: false,
+              timestamp: DateTime.now(),
+            ));
+          });
+          print('✅ Yeni sohbet başlatıldı');
+        }
+        
+        // Overlay'i kapat
+        _hideChatHistoryOverlay();
+        
+        // Başarı mesajı göster
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('"${chat.title}" sohbeti başarıyla silindi'),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+        
+        print('✅ Sohbet silme işlemi başarıyla tamamlandı');
+      } else {
+        print('❌ Kullanıcı iptal etti');
+      }
+    } catch (e) {
+      print('❌ Sohbet silinirken hata oluştu: $e');
+      print('❌ Hata detayı: ${e.runtimeType}');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Sohbet silinirken hata oluştu: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1101,7 +1558,7 @@ class _AIChatPageState extends State<AIChatPage> {
                   Icon(Icons.pets, size: 80, color: Colors.white.withOpacity(0.5)),
                   const SizedBox(height: 20),
                   Text(
-                    "Bu evcil hayvanın sahibi değilsiniz.",
+                    AppLocalizations.of(context)!.youAreNotOwner,
                     style: TextStyle(
                       color: Colors.white.withOpacity(0.7),
                       fontSize: 18,
@@ -1109,7 +1566,7 @@ class _AIChatPageState extends State<AIChatPage> {
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    "Bu sayfayı görüntülemek için evcil hayvanınızın sahibi olmalısınız.",
+                    AppLocalizations.of(context)!.youAreNotOwner,
                     style: TextStyle(
                       color: Colors.white.withOpacity(0.7),
                       fontSize: 14,
@@ -1168,6 +1625,7 @@ class _AIChatPageState extends State<AIChatPage> {
               onChatSelected: _onChatSelected,
               onClose: _hideChatHistoryOverlay,
               onClearCurrentChat: _clearCurrentChat,
+              onDeleteChat: _deleteChat,
             ),
           ),
       ],
@@ -1185,29 +1643,28 @@ class _AIChatPageState extends State<AIChatPage> {
     // Tema rengine göre metin rengini belirle
     final textColor = isDark ? Colors.white : const Color(0xFF1F2937);
     final subtitleColor = isDark ? const Color(0xFFE2E8F0) : const Color(0xFF6B7280);
-    final statusColor = isDark ? const Color(0xFF60A5FA) : const Color(0xFF3B82F6);
-    final statusColorAlt = isDark ? const Color(0xFF10B981) : const Color(0xFF059669);
     
     return AppBar(
       elevation: 0,
       backgroundColor: Colors.transparent,
       foregroundColor: textColor,
       titleTextStyle: TextStyle(
-        fontSize: 24,
-        fontWeight: FontWeight.w700,
+        fontSize: 20,
+        fontWeight: FontWeight.w600,
         color: textColor,
-        letterSpacing: 0.3,
+        letterSpacing: 0.2,
       ),
       iconTheme: IconThemeData(
         color: textColor,
+        size: 24,
       ),
       leading: Container(
         margin: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: const Color(0xFF8B5CF6).withOpacity(isDark ? 0.2 : 0.1),
+          color: const Color(0xFF8B5CF6).withOpacity(isDark ? 0.15 : 0.1),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: const Color(0xFF8B5CF6).withOpacity(isDark ? 0.4 : 0.3),
+            color: const Color(0xFF8B5CF6).withOpacity(isDark ? 0.3 : 0.2),
             width: 1,
           ),
         ),
@@ -1216,71 +1673,62 @@ class _AIChatPageState extends State<AIChatPage> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      title: Column(
+      title: Row(
         children: [
-          Text(
-            'PatiTakip',
-            style: TextStyle(
-              color: subtitleColor,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              letterSpacing: 0.2,
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF8B5CF6), Color(0xFFEC4899)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF8B5CF6).withOpacity(isDark ? 0.3 : 0.2),
+                  blurRadius: 8,
+                  spreadRadius: 1,
+                ),
+              ],
+            ),
+            child: const Icon(
+              Icons.smart_toy,
+              color: Colors.white,
+              size: 20,
             ),
           ),
-          Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF8B5CF6), Color(0xFFEC4899)],
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  widget.pet != null ? "${widget.pet!.name} için AI Asistan" : "AI Asistan",
+                  style: TextStyle(
+                    color: textColor,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.2,
                   ),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: const Color(0xFF8B5CF6).withOpacity(isDark ? 0.6 : 0.5),
-                    width: 2,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF8B5CF6).withOpacity(isDark ? 0.3 : 0.2),
-                      blurRadius: 8,
-                      spreadRadius: 2,
-                    ),
-                  ],
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                child: const Icon(
-                  Icons.smart_toy,
-                  color: Colors.white,
-                  size: 24,
+                Text(
+                  _getChatStatusText(),
+                  style: TextStyle(
+                    color: subtitleColor,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 0.1,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    widget.pet != null ? "${widget.pet!.name} için AI Asistan" : "AI Asistan",
-                    style: TextStyle(
-                      color: textColor,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.3,
-                    ),
-                  ),
-                  Text(
-                    _getChatStatusText(),
-                    style: TextStyle(
-                      color: _hasMeaningfulChat() ? statusColor : statusColorAlt,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.2,
-                    ),
-                  ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
@@ -1288,16 +1736,17 @@ class _AIChatPageState extends State<AIChatPage> {
         Container(
           margin: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: const Color(0xFF8B5CF6).withOpacity(isDark ? 0.2 : 0.1),
+            color: const Color(0xFF8B5CF6).withOpacity(isDark ? 0.15 : 0.1),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: const Color(0xFF8B5CF6).withOpacity(isDark ? 0.4 : 0.3),
+              color: const Color(0xFF8B5CF6).withOpacity(isDark ? 0.3 : 0.2),
               width: 1,
             ),
           ),
           child: IconButton(
-            icon: Icon(Icons.more_vert, color: textColor),
+            icon: Icon(Icons.history, color: textColor, size: 22),
             onPressed: _showChatHistory,
+            tooltip: 'Sohbet Geçmişi',
           ),
         ),
       ],
@@ -1464,8 +1913,8 @@ class _AIChatPageState extends State<AIChatPage> {
           TextButton.icon(
             onPressed: () => _showHelpDialog(),
             icon: const Icon(Icons.help_outline, color: Color(0xFF60A5FA)),
-            label: const Text(
-              'Yardım al',
+                        label: Text(
+              AppLocalizations.of(context)!.support,
               style: TextStyle(
                 color: Color(0xFF60A5FA),
                 fontWeight: FontWeight.w500,
@@ -1473,54 +1922,19 @@ class _AIChatPageState extends State<AIChatPage> {
             ),
           ),
           
-          // Firebase bağlantı durumu
-          const SizedBox(height: 20),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFEF3C7).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFF59E0B).withOpacity(0.4)),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.warning_amber, color: Color(0xFFF59E0B), size: 20),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Firebase Bağlantı Uyarısı',
-                        style: const TextStyle(
-                          color: Color(0xFFF59E0B),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Veritabanı erişim izinleri kontrol ediliyor. Lütfen Firebase Console\'da güvenlik kurallarını güncelleyin.',
-                        style: const TextStyle(
-                          color: Color(0xFFFCD34D),
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
+          
         ],
       ),
     );
   }
 
   void _showHelpDialog() {
+    // Store the original context to avoid shadowing issues
+    final originalContext = context;
+    
     showDialog(
       context: context,
-      builder: (BuildContext context) {
+      builder: (BuildContext dialogContext) {
         return AlertDialog(
           backgroundColor: const Color(0xFF1E293B),
           shape: RoundedRectangleBorder(
@@ -1537,15 +1951,15 @@ class _AIChatPageState extends State<AIChatPage> {
                 child: const Icon(Icons.help, color: Color(0xFF3B82F6), size: 28),
               ),
               const SizedBox(width: 12),
-              const Text(
-                'AI Chat Yardım',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.3,
+                              Text(
+                  '${AppLocalizations.of(context)!.aiChat} ${AppLocalizations.of(context)!.support}',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.3,
+                  ),
                 ),
-              ),
             ],
           ),
           content: SingleChildScrollView(
@@ -1553,8 +1967,8 @@ class _AIChatPageState extends State<AIChatPage> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'AI Chat özelliğini kullanırken karşılaşabileceğiniz sorunlar:',
+                Text(
+                  '${AppLocalizations.of(context)!.aiChat} ${AppLocalizations.of(context)!.support}',
                   style: TextStyle(
                     color: Color(0xFFE2E8F0),
                     fontSize: 16,
@@ -1563,23 +1977,23 @@ class _AIChatPageState extends State<AIChatPage> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                _buildHelpItem(
-                  icon: Icons.error_outline,
-                  title: 'Erişim Hatası',
-                  description: 'Evcil hayvanınızın sahibi olduğunuzdan emin olun',
-                ),
+                                  _buildHelpItem(
+                    icon: Icons.error_outline,
+                    title: '${AppLocalizations.of(context)!.errorOccurred}',
+                    description: AppLocalizations.of(context)!.youAreNotOwner,
+                  ),
                 const SizedBox(height: 8),
-                _buildHelpItem(
-                  icon: Icons.wifi_off,
-                  title: 'Bağlantı Sorunu',
-                  description: 'İnternet bağlantınızı kontrol edin',
-                ),
+                                  _buildHelpItem(
+                    icon: Icons.wifi_off,
+                    title: '${AppLocalizations.of(context)!.errorOccurred}',
+                    description: '${AppLocalizations.of(context)!.errorOccurred}',
+                  ),
                 const SizedBox(height: 8),
-                _buildHelpItem(
-                  icon: Icons.refresh,
-                  title: 'Yeniden Deneme',
-                  description: 'Sayfayı yeniden yükleyin veya uygulamayı kapatıp açın',
-                ),
+                                  _buildHelpItem(
+                    icon: Icons.refresh,
+                    title: '${AppLocalizations.of(context)!.errorOccurred}',
+                    description: '${AppLocalizations.of(context)!.errorOccurred}',
+                  ),
                 const SizedBox(height: 16),
                 Container(
                   padding: const EdgeInsets.all(16),
@@ -1603,8 +2017,8 @@ class _AIChatPageState extends State<AIChatPage> {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            'Firebase Güvenlik Kuralları',
-                            style: const TextStyle(
+                            '${AppLocalizations.of(context)!.errorOccurred}',
+                            style: TextStyle(
                               color: Color(0xFFEF4444),
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
@@ -1614,8 +2028,8 @@ class _AIChatPageState extends State<AIChatPage> {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        'Eğer "Permission denied" hatası alıyorsanız, Firebase Console\'da güvenlik kurallarını güncellemeniz gerekiyor.',
-                        style: const TextStyle(
+                        '${AppLocalizations.of(context)!.errorOccurred}',
+                        style: TextStyle(
                           color: Color(0xFFFCA5A5),
                           fontSize: 12,
                           height: 1.4,
@@ -1633,7 +2047,7 @@ class _AIChatPageState extends State<AIChatPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Çözüm Adımları:',
+                              '${AppLocalizations.of(context)!.errorOccurred}',
                               style: const TextStyle(
                                 color: Color(0xFFFCA5A5),
                                 fontSize: 12,
@@ -1642,7 +2056,7 @@ class _AIChatPageState extends State<AIChatPage> {
                             ),
                             const SizedBox(height: 6),
                             Text(
-                              '1. Firebase Console\'a gidin\n2. Realtime Database → Rules\n3. Geçici olarak tüm erişime izin verin',
+                              '${AppLocalizations.of(context)!.errorOccurred}',
                               style: const TextStyle(
                                 color: Color(0xFF9CA3AF),
                                 fontSize: 11,
@@ -1667,14 +2081,14 @@ class _AIChatPageState extends State<AIChatPage> {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text(
-                'Kapat',
-                style: TextStyle(
-                  color: Color(0xFF9CA3AF),
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
+                              child: Text(
+                  AppLocalizations.of(context)!.cancel,
+                  style: TextStyle(
+                    color: Color(0xFF9CA3AF),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
-              ),
             ),
             ElevatedButton(
               onPressed: () {
@@ -1689,15 +2103,15 @@ class _AIChatPageState extends State<AIChatPage> {
                 elevation: 2,
                 shadowColor: const Color(0xFF3B82F6).withOpacity(0.3),
               ),
-              child: const Text(
-                'Yeniden Dene',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.2,
+                              child: Text(
+                  '${AppLocalizations.of(context)!.errorOccurred}',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.2,
+                  ),
                 ),
-              ),
             ),
           ],
         );
@@ -1866,7 +2280,7 @@ class _AIChatPageState extends State<AIChatPage> {
       // AI yanıtını simüle et
       Future.delayed(const Duration(seconds: 2), () async {
         if (mounted) {
-          final aiResponse = _generateAIResponse(question);
+          final aiResponse = await _generateAIResponse(question);
           setState(() {
             _isTyping = false;
             _messages.add(ChatMessage(
@@ -1908,27 +2322,28 @@ class _AIChatPageState extends State<AIChatPage> {
       _isTyping = true;
     });
     
-    // AI yanıtını simüle et
-    Future.delayed(const Duration(seconds: 2), () async {
-      if (mounted) {
-        final aiResponse = _generateAIResponse(question);
-        setState(() {
-          _isTyping = false;
-          _messages.add(ChatMessage(
-            text: aiResponse,
-            isUser: false,
-            timestamp: DateTime.now(),
-          ));
-        });
-        
-        // Save chat history after AI response
-        _saveChatHistory();
-      }
-    });
+          // AI yanıtını simüle et
+      Future.delayed(const Duration(seconds: 2), () async {
+        if (mounted) {
+          final aiResponse = await _generateAIResponse(question);
+          setState(() {
+            _isTyping = false;
+            _messages.add(ChatMessage(
+              text: aiResponse,
+              isUser: false,
+              timestamp: DateTime.now(),
+            ));
+          });
+          
+          // Save chat history after AI response
+          _saveChatHistory();
+        }
+      });
   }
 
   Widget _buildChatSection() {
     return ListView.builder(
+      controller: _scrollController,
       padding: const EdgeInsets.only(
         left: 16,
         right: 16,
@@ -2061,6 +2476,8 @@ class _AIChatPageState extends State<AIChatPage> {
                             height: 1.5,
                             letterSpacing: 0.2,
                           ),
+                          softWrap: true,
+                          overflow: TextOverflow.visible,
                         ),
                       ),
                       // AI yanıtları için sesli okuma butonu
@@ -2176,11 +2593,21 @@ class _AIChatPageState extends State<AIChatPage> {
     final mediaQuery = MediaQuery.of(context);
     final bottomPadding = mediaQuery.padding.bottom;
     final viewInsets = mediaQuery.viewInsets.bottom;
+    final screenWidth = mediaQuery.size.width;
+    final screenHeight = mediaQuery.size.height;
+    
+    // Telefon boyutuna göre padding ve boyutları ayarla
+    final isSmallScreen = screenWidth < 400;
+    final isMediumScreen = screenWidth >= 400 && screenWidth < 600;
+    
+    final horizontalPadding = isSmallScreen ? 12.0 : 16.0;
+    final buttonSize = isSmallScreen ? 45.0 : 50.0;
+    final inputHeight = isSmallScreen ? 45.0 : 50.0;
     
     return Container(
       padding: EdgeInsets.only(
-        left: 16,
-        right: 16,
+        left: horizontalPadding,
+        right: horizontalPadding,
         top: 16,
         bottom: 16 + bottomPadding + viewInsets, // Alt padding + güvenli alan + klavye yüksekliği
       ),
@@ -2195,50 +2622,58 @@ class _AIChatPageState extends State<AIChatPage> {
       ),
       child: Row(
         children: [
-          Expanded(
-            child: Container(
+          // Kamera butonu - küçük ekranlarda gizle
+          if (!isSmallScreen) ...[
+            Container(
+              width: buttonSize,
+              height: buttonSize,
               decoration: BoxDecoration(
-                color: const Color(0xFF1E293B),
-                borderRadius: BorderRadius.circular(25),
+                color: const Color(0xFF8B5CF6).withOpacity(0.2),
+                borderRadius: BorderRadius.circular(buttonSize / 2),
                 border: Border.all(
                   color: const Color(0xFF8B5CF6).withOpacity(0.4),
-                  width: 1.5,
+                  width: 1,
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF8B5CF6).withOpacity(0.1),
-                    blurRadius: 8,
-                    spreadRadius: 0,
+              ),
+              child: PopupMenuButton<ImageSource>(
+                icon: const Icon(Icons.camera_alt, color: Color(0xFF8B5CF6), size: 20),
+                onSelected: (ImageSource source) => _pickImage(source: source),
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    value: ImageSource.camera,
+                    child: Row(
+                      children: [
+                        Icon(Icons.camera_alt, color: Color(0xFF8B5CF6)),
+                        SizedBox(width: 8),
+                        Text(AppLocalizations.of(context)!.camera),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: ImageSource.gallery,
+                    child: Row(
+                      children: [
+                        Icon(Icons.photo_library, color: Color(0xFF8B5CF6)),
+                        SizedBox(width: 8),
+                        Text(AppLocalizations.of(context)!.gallery),
+                      ],
+                    ),
                   ),
                 ],
               ),
-              child: TextField(
-                controller: _messageController,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  letterSpacing: 0.2,
-                ),
-                decoration: const InputDecoration(
-                  hintText: "Mesajınızı yazın...",
-                  hintStyle: TextStyle(
-                    color: Color(0xFF94A3B8),
-                    fontSize: 16,
-                  ),
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-                ),
-                onSubmitted: (_) => _sendMessage(),
-              ),
             ),
-          ),
-          const SizedBox(width: 12),
+            SizedBox(width: isSmallScreen ? 6 : 8),
+          ],
+          
+          // Mikrofon butonu
           Container(
+            width: buttonSize,
+            height: buttonSize,
             decoration: BoxDecoration(
               color: _isRecording 
                   ? const Color(0xFFEF4444).withOpacity(0.3) 
                   : const Color(0xFF8B5CF6).withOpacity(0.2),
-              borderRadius: BorderRadius.circular(25),
+              borderRadius: BorderRadius.circular(buttonSize / 2),
               border: Border.all(
                 color: _isRecording 
                     ? const Color(0xFFEF4444).withOpacity(0.5)
@@ -2253,16 +2688,19 @@ class _AIChatPageState extends State<AIChatPage> {
                   icon: Icon(
                     _isRecording ? Icons.stop : Icons.mic,
                     color: _isRecording ? const Color(0xFFEF4444) : const Color(0xFF8B5CF6),
-                    size: 24,
+                    size: isSmallScreen ? 20 : 24,
                   ),
                 ),
                 // Kayıt süresi göstergesi
                 if (_isRecording)
                   Positioned(
-                    right: 8,
-                    top: 8,
+                    right: isSmallScreen ? 4 : 8,
+                    top: isSmallScreen ? 4 : 8,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isSmallScreen ? 4 : 6, 
+                        vertical: isSmallScreen ? 1 : 2
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFEF4444),
                         borderRadius: BorderRadius.circular(10),
@@ -2276,9 +2714,9 @@ class _AIChatPageState extends State<AIChatPage> {
                       ),
                       child: Text(
                         _mediaService.formatDuration(_recordingDuration),
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Colors.white,
-                          fontSize: 10,
+                          fontSize: isSmallScreen ? 8 : 10,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -2287,45 +2725,58 @@ class _AIChatPageState extends State<AIChatPage> {
               ],
             ),
           ),
-          const SizedBox(width: 8),
-          Container(
-            decoration: BoxDecoration(
-              color: const Color(0xFF8B5CF6).withOpacity(0.2),
-              borderRadius: BorderRadius.circular(25),
-              border: Border.all(
-                color: const Color(0xFF8B5CF6).withOpacity(0.4),
-                width: 1,
+          
+          SizedBox(width: isSmallScreen ? 6 : 8),
+          
+          // Mesaj giriş alanı
+          Expanded(
+            child: Container(
+              height: inputHeight,
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E293B),
+                borderRadius: BorderRadius.circular(inputHeight / 2),
+                border: Border.all(
+                  color: const Color(0xFF8B5CF6).withOpacity(0.4),
+                  width: 1.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF8B5CF6).withOpacity(0.1),
+                    blurRadius: 8,
+                    spreadRadius: 0,
+                  ),
+                ],
+              ),
+              child: TextField(
+                controller: _messageController,
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: isSmallScreen ? 14 : 16,
+                  letterSpacing: 0.2,
+                ),
+                decoration: InputDecoration(
+                  hintText: AppLocalizations.of(context)!.writeMessage,
+                  hintStyle: TextStyle(
+                    color: const Color(0xFF94A3B8),
+                    fontSize: isSmallScreen ? 14 : 16,
+                  ),
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: isSmallScreen ? 16 : 20, 
+                    vertical: isSmallScreen ? 12 : 15
+                  ),
+                ),
+                onSubmitted: (_) => _sendMessage(),
               ),
             ),
-            child: PopupMenuButton<ImageSource>(
-              icon: const Icon(Icons.camera_alt, color: Color(0xFF8B5CF6), size: 24),
-              onSelected: (ImageSource source) => _pickImage(source: source),
-              itemBuilder: (context) => [
-                const PopupMenuItem(
-                  value: ImageSource.camera,
-                  child: Row(
-                    children: [
-                      Icon(Icons.camera_alt, color: Color(0xFF8B5CF6)),
-                      SizedBox(width: 8),
-                      Text('Kamera'),
-                    ],
-                  ),
-                ),
-                const PopupMenuItem(
-                  value: ImageSource.gallery,
-                  child: Row(
-                    children: [
-                      Icon(Icons.photo_library, color: Color(0xFF8B5CF6)),
-                      SizedBox(width: 8),
-                      Text('Galeri'),
-                    ],
-                  ),
-                ),
-              ],
-            ),
           ),
-          const SizedBox(width: 8),
+          
+          SizedBox(width: isSmallScreen ? 6 : 8),
+          
+          // Gönder butonu
           Container(
+            width: buttonSize,
+            height: buttonSize,
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 colors: [
@@ -2333,7 +2784,7 @@ class _AIChatPageState extends State<AIChatPage> {
                   Color(0xFFEC4899),
                 ],
               ),
-              borderRadius: BorderRadius.circular(25),
+              borderRadius: BorderRadius.circular(buttonSize / 2),
               boxShadow: [
                 BoxShadow(
                   color: const Color(0xFF8B5CF6).withOpacity(0.3),
@@ -2344,7 +2795,11 @@ class _AIChatPageState extends State<AIChatPage> {
             ),
             child: IconButton(
               onPressed: _sendMessage,
-              icon: const Icon(Icons.send, color: Colors.white, size: 24),
+              icon: Icon(
+                Icons.send, 
+                color: Colors.white, 
+                size: isSmallScreen ? 20 : 24
+              ),
             ),
           ),
         ],
@@ -2352,7 +2807,103 @@ class _AIChatPageState extends State<AIChatPage> {
     );
   }
 
+  Future<void> _stopFirebaseMessageStream() async {
+    if (_messageSubscription != null) {
+      print('🛑 Firebase mesaj stream durduruluyor');
+      await _messageSubscription!.cancel();
+      _messageSubscription = null;
+      print('✅ Firebase mesaj stream durduruldu');
+    }
+  }
 
+  void _startFirebaseMessageStream() {
+    if (widget.pet?.id == null) return;
+    
+    print('🔄 Firebase mesaj stream başlatılıyor - Pet ID: ${widget.pet!.id}');
+    print('👤 Kullanıcı ID: ${_auth.currentUser?.uid}');
+    print('📧 Kullanıcı e-posta doğrulandı mı: ${_auth.currentUser?.emailVerified}');
+    
+    try {
+      _messageSubscription = _firestore
+          .collection('hayvanlar')
+          .doc(widget.pet!.id)
+          .collection('messages')
+          .orderBy('timestamp', descending: false)
+          .snapshots()
+          .listen((snapshot) {
+        print('📨 Firebase\'den ${snapshot.docs.length} mesaj alındı');
+        
+        if (snapshot.docs.isNotEmpty) {
+          print('📝 İlk mesaj örneği: ${snapshot.docs.first.data()}');
+        }
+        
+        final messages = snapshot.docs.map((doc) {
+          final data = doc.data();
+          print('🔍 Mesaj verisi: $data');
+          return ChatMessage(
+            text: data['text'] ?? '',
+            isUser: data['userId'] == _auth.currentUser?.uid,
+            timestamp: (data['timestamp'] as Timestamp).toDate(),
+            imagePath: data['imagePath'],
+            audioPath: data['audioPath'],
+          );
+        }).toList();
+        
+        print('✅ ${messages.length} mesaj işlendi');
+        
+        // Sadece Firebase'den gelen mesajları ekle, hoş geldin mesajını koru
+        if (_messages.length <= 1) {
+          // Eğer sadece hoş geldin mesajı varsa, Firebase mesajlarını ekle
+          setState(() {
+            _messages.addAll(messages);
+          });
+        } else {
+          // Eğer zaten sohbet varsa, Firebase mesajlarını güncelle
+          setState(() {
+            // Hoş geldin mesajını koru
+            final welcomeMessage = _messages.first;
+            _messages.clear();
+            _messages.add(welcomeMessage);
+            _messages.addAll(messages);
+          });
+        }
+        
+        print('📱 UI güncellendi, toplam mesaj sayısı: ${_messages.length}');
+        
+        // Yeni mesajlar geldiğinde en alta kaydır
+        if (messages.isNotEmpty) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (_scrollController.hasClients) {
+              _scrollController.animateTo(
+                _scrollController.position.maxScrollExtent,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOut,
+              );
+            }
+            });
+          }
+        }, onError: (error) {
+          print('❌ Firebase mesaj stream hatası: $error');
+          print('🔍 Hata detayı: ${error.toString()}');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('${AppLocalizations.of(context)!.errorOccurred}: $error'),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        });
+      } catch (e) {
+        print('❌ Firebase stream başlatılamadı: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${AppLocalizations.of(context)!.errorOccurred}: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
 }
 
 class ChatMessage {

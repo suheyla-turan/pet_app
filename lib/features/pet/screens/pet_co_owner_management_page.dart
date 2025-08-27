@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -9,6 +10,7 @@ import 'package:provider/provider.dart';
 import 'package:pati_takip/features/pet/models/pet.dart';
 import 'package:pati_takip/services/firestore_service.dart';
 import 'package:pati_takip/providers/theme_provider.dart';
+import 'package:pati_takip/l10n/app_localizations.dart';
 
 class PetCoOwnerManagementPage extends StatefulWidget {
   final Pet pet;
@@ -34,6 +36,8 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
   final TextEditingController _messageController = TextEditingController();
   final TextEditingController _imageCaptionController = TextEditingController();
   File? _selectedImage;
+  StreamSubscription<List<Map<String, dynamic>>>? _messageSubscription;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -41,6 +45,124 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
     _tabController = TabController(length: 2, vsync: this);
     _loadCoOwners();
     _loadMessages();
+    _startMessageStream();
+  }
+
+  void _startMessageStream() {
+    print('🔄 Mesaj stream başlatılıyor - Pet ID: ${widget.pet.id}');
+    _messageSubscription = FirestoreService.streamCoOwnerMessages(widget.pet.id!)
+        .listen((messages) {
+      print('📨 Stream\'den ${messages.length} mesaj alındı');
+      print('📝 Mesajlar: ${messages.map((m) => '${m['senderName']}: ${m['message']}').toList()}');
+      print('🕐 Client Timestamp\'ler: ${messages.map((m) => m['createdAt']).toList()}');
+      
+      print('🔄 Stream setState çağrılıyor - önceki mesaj sayısı: ${_messages.length}');
+      
+      // Geçici mesajları gerçek mesajlarla değiştir
+      final updatedMessages = List<Map<String, dynamic>>.from(messages);
+      
+      // Local mesajları kaldır (gerçek mesajlar geldiğinde)
+      _messages.removeWhere((msg) => msg['isLocal'] == true);
+      
+      // Geçici mesajları kaldır (gerçek mesajlar geldiğinde)
+      _messages.removeWhere((msg) => msg['messageId'].toString().startsWith('temp_'));
+      
+      // Optimistic update'leri temizle
+      _messages.removeWhere((msg) => msg['isOptimistic'] == true);
+      
+      // Sending durumundaki mesajları temizle
+      _messages.removeWhere((msg) => msg['status'] == 'sending');
+      
+      // Pending durumundaki mesajları temizle
+      _messages.removeWhere((msg) => msg['isPending'] == true);
+      
+      // Stream'den gelen mesajları ekle
+      for (final message in messages) {
+        if (!_messages.any((m) => m['messageId'] == message['messageId'])) {
+          _messages.add(message);
+        }
+      }
+      
+      // Mesajları createdAt'e göre sırala
+      _messages.sort((a, b) {
+        final aTime = a['createdAt'] as dynamic;
+        final bTime = b['createdAt'] as dynamic;
+        if (aTime == null || bTime == null) return 0;
+        return aTime.compareTo(bTime); // Ascending (eski mesajlar üstte)
+      });
+      
+      // Duplicate'ları temizle
+      final uniqueMessages = <Map<String, dynamic>>[];
+      final seenIds = <String>{};
+      
+      for (final message in _messages) {
+        final messageId = message['messageId'].toString();
+        if (!seenIds.contains(messageId)) {
+          seenIds.add(messageId);
+          uniqueMessages.add(message);
+        }
+      }
+      
+      // Delivery durumundaki mesajları temizle
+      uniqueMessages.removeWhere((msg) => msg['isDelivered'] == false);
+      
+      // Read durumundaki mesajları temizle
+      uniqueMessages.removeWhere((msg) => msg['isRead'] == false);
+      
+      // Archive durumundaki mesajları temizle
+      uniqueMessages.removeWhere((msg) => msg['isArchived'] == true);
+      
+      // Delete durumundaki mesajları temizle
+      uniqueMessages.removeWhere((msg) => msg['isDeleted'] == true);
+      
+      // Flag durumundaki mesajları temizle
+      uniqueMessages.removeWhere((msg) => msg['isFlagged'] == true);
+      
+      // Spam durumundaki mesajları temizle
+      uniqueMessages.removeWhere((msg) => msg['isSpam'] == true);
+      
+      // Block durumundaki mesajları temizle
+      uniqueMessages.removeWhere((msg) => msg['isBlocked'] == true);
+      
+      // Mute durumundaki mesajları temizle
+      uniqueMessages.removeWhere((msg) => msg['isMuted'] == true);
+      
+      // Hide durumundaki mesajları temizle
+      uniqueMessages.removeWhere((msg) => msg['isHidden'] == true);
+      
+      // Pin durumundaki mesajları temizle
+      uniqueMessages.removeWhere((msg) => msg['isPinned'] == true);
+      
+      // Forward durumundaki mesajları temizle
+      uniqueMessages.removeWhere((msg) => msg['isForwarded'] == true);
+      
+      // Reply durumundaki mesajları temizle
+      uniqueMessages.removeWhere((msg) => msg['isReplied'] == true);
+      
+      // Edit durumundaki mesajları temizle
+      uniqueMessages.removeWhere((msg) => msg['isEdited'] == true);
+      
+      setState(() {
+        _messages = uniqueMessages;
+      });
+      print('✅ Stream setState tamamlandı - yeni mesaj sayısı: ${_messages.length}');
+      
+      // Yeni mesajlar geldiğinde en alta kaydır
+      if (messages.isNotEmpty && _scrollController.hasClients) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (_scrollController.hasClients) {
+            _scrollController.animateTo(
+              _scrollController.position.maxScrollExtent,
+              duration: const Duration(milliseconds: 200), // Daha hızlı scroll
+              curve: Curves.easeOutCubic, // Daha smooth scroll
+            );
+          }
+        });
+      }
+    }, onError: (error) {
+      print('❌ Mesaj stream hatası: $error');
+      print('🔍 Hata detayı: ${error.toString()}');
+    });
   }
 
   Future<void> _loadCoOwners() async {
@@ -50,9 +172,9 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
         _coOwners = coOwners;
       });
     } catch (e) {
-      String errorMessage = 'Eş sahipler yüklenirken hata: $e';
+      String errorMessage = '${AppLocalizations.of(context)!.coOwnersLoadingError}: ${e.toString()}';
       if (e.toString().contains('Hayvan bulunamadı')) {
-        errorMessage = 'Hayvan bulunamadı. Lütfen sayfayı yenileyin.';
+        errorMessage = AppLocalizations.of(context)!.petNotFound;
       }
       
       ScaffoldMessenger.of(context).showSnackBar(
@@ -66,15 +188,23 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
   }
 
   Future<void> _loadMessages() async {
+    print('📥 Manuel mesaj yükleme başlatılıyor - Pet ID: ${widget.pet.id}');
     try {
       final messages = await FirestoreService.getCoOwnerMessages(widget.pet.id!);
+      print('📨 Manuel olarak ${messages.length} mesaj yüklendi');
+      print('📝 Yüklenen mesajlar: ${messages.map((m) => m['message']).toList()}');
+      
+      print('🔄 setState çağrılıyor - önceki mesaj sayısı: ${_messages.length}');
       setState(() {
         _messages = messages;
       });
+      print('✅ setState tamamlandı - yeni mesaj sayısı: ${_messages.length}');
+      
     } catch (e) {
-      String errorMessage = 'Mesajlar yüklenirken hata: $e';
+      print('❌ Mesaj yükleme hatası: $e');
+      String errorMessage = '${AppLocalizations.of(context)!.errorOccurred} $e';
       if (e.toString().contains('Hayvan bulunamadı')) {
-        errorMessage = 'Hayvan bulunamadı. Lütfen sayfayı yenileyin.';
+        errorMessage = AppLocalizations.of(context)!.petNotFound;
       }
       
       ScaffoldMessenger.of(context).showSnackBar(
@@ -91,8 +221,8 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
     final email = _emailController.text.trim();
     if (email.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Lütfen email adresi girin'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.emailRequired),
           backgroundColor: Colors.orange,
         ),
       );
@@ -107,15 +237,15 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
       await FirestoreService.sendCoOwnerRequest(widget.pet.id!, email);
       _emailController.clear();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('✅ Eş sahip isteği gönderildi'),
+        SnackBar(
+          content: Text('✅ ${AppLocalizations.of(context)!.coOwnerRequestSent}'),
           backgroundColor: Colors.green,
         ),
       );
     } catch (e) {
-      String errorMessage = 'İstek gönderilirken hata: $e';
+      String errorMessage = '${AppLocalizations.of(context)!.errorOccurred} $e';
       if (e.toString().contains('Hayvan bulunamadı')) {
-        errorMessage = 'Hayvan bulunamadı. Lütfen sayfayı yenileyin.';
+        errorMessage = AppLocalizations.of(context)!.petNotFound;
       }
       
       ScaffoldMessenger.of(context).showSnackBar(
@@ -136,22 +266,87 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
     final message = _messageController.text.trim();
     if (message.isEmpty) return;
 
+    print('📤 Mesaj gönderiliyor: "$message" - Pet ID: ${widget.pet.id}');
+    print('📱 Mevcut mesaj sayısı: ${_messages.length}');
+    
     setState(() {
       _isLoading = true;
     });
 
     try {
+      print('🔄 FirestoreService.sendCoOwnerMessage çağrılıyor...');
+      
       await FirestoreService.sendCoOwnerMessage(
         widget.pet.id!,
         message,
         'text',
       );
+      
+      print('✅ Mesaj başarıyla gönderildi');
       _messageController.clear();
-      await _loadMessages();
+      
+      print('📱 Mesaj gönderildi, local state güncelleniyor...');
+      
+      // Local state'e mesajı ekle (anında görünmesi için)
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser != null) {
+        final now = DateTime.now();
+        final newMessage = {
+          'messageId': 'temp_${now.millisecondsSinceEpoch}',
+          'petId': widget.pet.id,
+          'petName': widget.pet.name,
+          'senderId': currentUser.uid,
+          'senderName': currentUser.displayName ?? 'İsimsiz Kullanıcı',
+          'senderEmail': currentUser.email ?? '',
+          'message': message,
+          'messageType': 'text',
+          'timestamp': now,
+          'createdAt': now.millisecondsSinceEpoch,
+          'isOwnMessage': true,
+          'type': 'co_owner_message',
+          'isOptimistic': true, // Optimistic update flag
+          'status': 'sending', // Mesaj durumu
+          'localId': 'temp_${now.millisecondsSinceEpoch}', // Local ID ekle
+          'isLocal': true, // Local mesaj flag'i
+          'isPending': true, // Pending durumu
+          'isDelivered': false, // Delivery durumu
+          'isRead': false, // Read durumu
+          'isArchived': false, // Archive durumu
+          'isDeleted': false, // Delete durumu
+          'isFlagged': false, // Flag durumu
+          'isSpam': false, // Spam durumu
+          'isBlocked': false, // Block durumu
+          'isMuted': false, // Mute durumu
+          'isHidden': false, // Hide durumu
+          'isPinned': false, // Pin durumu
+          'isForwarded': false, // Forward durumu
+          'isReplied': false, // Reply durumu
+          'isEdited': false, // Edit durumu
+        };
+        
+        setState(() {
+          _messages.add(newMessage);
+        });
+        
+        print('📱 Local state güncellendi, mesaj sayısı: ${_messages.length}');
+      }
+      
+      // Mesaj gönderildikten sonra en alta kaydır
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollController.hasClients) {
+          _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 200), // Daha hızlı scroll
+            curve: Curves.easeOutCubic, // Daha smooth scroll
+          );
+        }
+      });
+      
     } catch (e) {
-      String errorMessage = 'Mesaj gönderilirken hata: $e';
+      print('❌ Mesaj gönderme hatası: $e');
+      String errorMessage = '${AppLocalizations.of(context)!.errorOccurred} $e';
       if (e.toString().contains('Hayvan bulunamadı')) {
-        errorMessage = 'Hayvan bulunamadı. Lütfen sayfayı yenileyin.';
+        errorMessage = AppLocalizations.of(context)!.petNotFound;
       }
       
       ScaffoldMessenger.of(context).showSnackBar(
@@ -186,12 +381,12 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Resim Açıklaması'),
+        title: Text(AppLocalizations.of(context)!.addNoteOptional),
         content: TextField(
           controller: _imageCaptionController,
-          decoration: const InputDecoration(
-            hintText: 'Resim için açıklama yazın (opsiyonel)',
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            hintText: AppLocalizations.of(context)!.addNoteOptional,
+            border: const OutlineInputBorder(),
           ),
           maxLines: 3,
         ),
@@ -204,14 +399,14 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
                 _imageCaptionController.clear();
               });
             },
-            child: const Text('İptal'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(context);
               await _sendImageMessage();
             },
-            child: const Text('Gönder'),
+            child: Text(AppLocalizations.of(context)!.send),
           ),
         ],
       ),
@@ -230,7 +425,7 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
       // Şimdilik sadece caption'ı gönderelim
       await FirestoreService.sendCoOwnerMessage(
         widget.pet.id!,
-        _imageCaptionController.text.trim().isEmpty ? 'Görsel mesaj' : _imageCaptionController.text.trim(),
+        _imageCaptionController.text.trim().isEmpty ? AppLocalizations.of(context)!.imageNoteAddedMessage : _imageCaptionController.text.trim(),
         'image',
         imageFile: _selectedImage,
       );
@@ -242,9 +437,9 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
       
       await _loadMessages();
     } catch (e) {
-      String errorMessage = 'Resim gönderilirken hata: $e';
+      String errorMessage = '${AppLocalizations.of(context)!.errorOccurred} $e';
       if (e.toString().contains('Hayvan bulunamadı')) {
-        errorMessage = 'Hayvan bulunamadı. Lütfen sayfayı yenileyin.';
+        errorMessage = AppLocalizations.of(context)!.petNotFound;
       }
       
       ScaffoldMessenger.of(context).showSnackBar(
@@ -286,37 +481,42 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
 
     // Ses kayıt işlemi burada yapılacak
     // Şimdilik sadece süreyi gösterelim
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Ses kaydı tamamlandı: $_recordingDuration saniye'),
-        backgroundColor: Colors.green,
-      ),
-    );
+          ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Voice recording completed: $_recordingDuration seconds'),
+          backgroundColor: Colors.green,
+        ),
+      );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.transparent, // Şeffaf app bar - sayfa arka planı ile uyumlu
-        title: Text('${widget.pet.name} - Eş Sahip Yönetimi'),
-        centerTitle: true,
-        foregroundColor: Colors.white,
-        titleTextStyle: const TextStyle(
-          fontSize: 24,
-          fontWeight: FontWeight.w700,
-          color: Colors.white,
-        ),
-        iconTheme: const IconThemeData(
-          color: Colors.white,
+        systemOverlayStyle: SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Theme.of(context).brightness == Brightness.dark ? Brightness.light : Brightness.dark,
+          statusBarBrightness: Theme.of(context).brightness == Brightness.dark ? Brightness.dark : Brightness.light,
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
+          color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87,
         ),
+        title: Text(
+          '${widget.pet.name} - ${AppLocalizations.of(context)!.coOwnerManagement}',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87,
+          ),
+        ),
+        centerTitle: true,
+        backgroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.transparent : Colors.white.withOpacity(0.9),
+        elevation: Theme.of(context).brightness == Brightness.dark ? 0 : 2,
+        foregroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87,
       ),
-              body: Container(
+      body: Container(
         decoration: BoxDecoration(
           gradient: Provider.of<ThemeProvider>(context).getBackgroundGradient(
             Theme.of(context).brightness == Brightness.dark
@@ -327,15 +527,15 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
             children: [
               // Tab Bar
               Container(
-                color: Colors.transparent, // AppBar'ın arka planını kaldır
+                color: Colors.transparent,
                 child: TabBar(
                   controller: _tabController,
-                  labelColor: Colors.purple,
-                  unselectedLabelColor: Colors.white.withOpacity(0.7), // AppBar'ın arka planı ile uyumlu
-                  indicatorColor: Colors.purple,
-                  tabs: const [
-                    Tab(text: 'Eş Sahip Ekle'),
-                    Tab(text: 'Mesajlaşma'),
+                  labelColor: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87,
+                  unselectedLabelColor: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black54,
+                  indicatorColor: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87,
+                  tabs: [
+                    Tab(text: AppLocalizations.of(context)!.addCoOwner),
+                    Tab(text: AppLocalizations.of(context)!.messaging),
                   ],
                 ),
               ),
@@ -345,8 +545,8 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
                 child: TabBarView(
                   controller: _tabController,
                   children: [
-                    _buildCoOwnerManagementTab(true), // isDark yerine true
-                    _buildMessagingTab(true), // isDark yerine true
+                    _buildCoOwnerManagementTab(Theme.of(context).brightness == Brightness.dark),
+                    _buildMessagingTab(Theme.of(context).brightness == Brightness.dark),
                   ],
                 ),
               ),
@@ -384,9 +584,9 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
             // Eş sahip listesi
             if (_coOwners.isNotEmpty) ...[
               Text(
-                'Eş Sahipler',
-                style: const TextStyle(
-                  color: Colors.white,
+                AppLocalizations.of(context)!.coOwners,
+                style: TextStyle(
+                  color: isDark ? Colors.white : Colors.black87,
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
@@ -400,26 +600,26 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
                   children: [
                     Icon(
                       Icons.people_outline,
-                      color: Colors.grey[400],
+                      color: isDark ? Colors.grey[400] : Colors.grey[600],
                       size: 80,
                     ),
                     const SizedBox(height: 16),
-                                         Text(
-                       'Henüz eş sahip eklenmemiş',
-                       style: TextStyle(
-                         color: Colors.grey[400],
-                         fontSize: 18,
-                         fontWeight: FontWeight.w500,
-                       ),
-                     ),
+                    Text(
+                      AppLocalizations.of(context)!.noCoOwnersYet,
+                      style: TextStyle(
+                        color: isDark ? Colors.grey[400] : Colors.black87,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                     const SizedBox(height: 8),
-                                         Text(
-                       'Eş sahip eklemek için yukarıdaki formu kullanın',
-                       style: TextStyle(
-                         color: Colors.grey[500],
-                         fontSize: 14,
-                       ),
-                     ),
+                    Text(
+                      AppLocalizations.of(context)!.useFormAboveToAddCoOwner,
+                      style: TextStyle(
+                        color: isDark ? Colors.grey[500] : Colors.black54,
+                        fontSize: 14,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -435,7 +635,7 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF2D2D2D),
+        color: isDark ? const Color(0xFF2D2D2D) : Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -448,10 +648,10 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Eş Sahip Ekle',
+          Text(
+            AppLocalizations.of(context)!.addCoOwner,
             style: TextStyle(
-              color: Colors.white,
+              color: isDark ? Colors.white : Colors.black87,
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
@@ -460,14 +660,26 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
           TextField(
             controller: _emailController,
             decoration: InputDecoration(
-              labelText: 'E-posta Adresi',
-              hintText: 'eşsahip@email.com',
+              labelText: AppLocalizations.of(context)!.emailAddress,
+              hintText: AppLocalizations.of(context)!.emailHint,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
-              prefixIcon: const Icon(Icons.email),
+              prefixIcon: Icon(
+                Icons.email,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
               filled: true,
-              fillColor: Colors.grey[700],
+              fillColor: isDark ? Colors.grey[700] : Colors.grey[100],
+              labelStyle: TextStyle(
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+              hintStyle: TextStyle(
+                color: isDark ? Colors.grey[400] : Colors.grey[600],
+              ),
+            ),
+            style: TextStyle(
+              color: isDark ? Colors.white : Colors.black87,
             ),
             keyboardType: TextInputType.emailAddress,
           ),
@@ -483,7 +695,7 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.person_add),
-              label: Text(_isLoading ? 'Gönderiliyor...' : 'Eş Sahip İsteği Gönder'),
+              label: Text(_isLoading ? AppLocalizations.of(context)!.sending : AppLocalizations.of(context)!.sendCoOwnerRequest),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.purple,
                 foregroundColor: Colors.white,
@@ -537,7 +749,7 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Ana Sahip',
+                      AppLocalizations.of(context)!.mainOwner,
                       style: TextStyle(
                         color: isDark ? Colors.grey[300] : Colors.grey[600],
                         fontSize: 12,
@@ -545,11 +757,19 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
                       ),
                     ),
                     Text(
-                      currentUser?.email ?? 'Bilinmeyen',
+                      currentUser?.displayName ?? AppLocalizations.of(context)!.anonymousUser,
                       style: TextStyle(
                         color: isDark ? Colors.white : Colors.black87,
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      currentUser?.email ?? '',
+                      style: TextStyle(
+                        color: isDark ? Colors.grey[400] : Colors.grey[600],
+                        fontSize: 12,
+                        fontWeight: FontWeight.w400,
                       ),
                     ),
                   ],
@@ -563,7 +783,7 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    'Sahip',
+                    AppLocalizations.of(context)!.mainOwner,
                     style: TextStyle(
                       color: Colors.green.shade700,
                       fontSize: 12,
@@ -611,19 +831,27 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Eş Sahip',
+                  AppLocalizations.of(context)!.coOwner,
                   style: TextStyle(
-                    color: isDark ? Colors.grey[300] : Colors.grey[600],
+                    color: isDark ? Colors.grey[300] : Colors.black87,
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
                 Text(
-                  coOwner['email'] ?? 'Bilinmeyen',
+                  coOwner['displayName'] ?? AppLocalizations.of(context)!.anonymousUser,
                   style: TextStyle(
                     color: isDark ? Colors.white : Colors.black87,
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  coOwner['email'] ?? '',
+                  style: TextStyle(
+                    color: isDark ? Colors.grey[400] : Colors.black87,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w400,
                   ),
                 ),
               ],
@@ -647,17 +875,32 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Eş Sahibi Kaldır'),
-        content: const Text('Bu eş sahibi kaldırmak istediğinizden emin misiniz?'),
+        title: Text(
+          AppLocalizations.of(context)!.removeCoOwner,
+          style: TextStyle(
+            color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87,
+          ),
+        ),
+        content: Text(
+          AppLocalizations.of(context)!.removeCoOwnerConfirmation,
+          style: TextStyle(
+            color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[300] : Colors.black87,
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('İptal'),
+            child: Text(
+              AppLocalizations.of(context)!.cancel,
+              style: TextStyle(
+                color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[300] : Colors.black87,
+              ),
+            ),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Kaldır'),
+            child: Text(AppLocalizations.of(context)!.remove),
           ),
         ],
       ),
@@ -668,15 +911,17 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
         await FirestoreService.removeCoOwner(widget.pet.id!, uid);
         await _loadCoOwners();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Eş sahip kaldırıldı'),
-            backgroundColor: Colors.green,
+          SnackBar(
+            content: Text(
+              '✅ ${AppLocalizations.of(context)!.coOwnerRemoved}',
+              style: const TextStyle(color: Colors.white),
+            ),
           ),
         );
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Eş sahip kaldırılırken hata: $e'),
+            content: Text('${AppLocalizations.of(context)!.errorRemovingCoOwner}: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -685,6 +930,9 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
   }
 
   Widget _buildMessagingTab(bool isDark) {
+    print('🏗️ Mesajlaşma sekmesi oluşturuluyor - mesaj sayısı: ${_messages.length}');
+    print('🔍 _messages.isEmpty: ${_messages.isEmpty}');
+    
     return Column(
       children: [
         // Mesaj listesi
@@ -738,13 +986,19 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
                   ),
                   child: TextField(
                     controller: _messageController,
-                    decoration: const InputDecoration(
-                      hintText: 'Mesaj yazın...',
+                    decoration: InputDecoration(
+                      hintText: AppLocalizations.of(context)!.writeMessage,
                       border: InputBorder.none,
                       contentPadding: EdgeInsets.symmetric(
                         horizontal: 20,
                         vertical: 12,
                       ),
+                      hintStyle: TextStyle(
+                        color: isDark ? Colors.grey[400] : Colors.grey[600],
+                      ),
+                    ),
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black87,
                     ),
                     maxLines: null,
                     textCapitalization: TextCapitalization.sentences,
@@ -797,18 +1051,18 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
           ),
           const SizedBox(height: 16),
           Text(
-            'Henüz mesaj yok',
+            AppLocalizations.of(context)!.noMessagesYet,
             style: TextStyle(
-              color: isDark ? Colors.grey[400] : Colors.grey[600],
+              color: isDark ? Colors.grey[400] : Colors.black87,
               fontSize: 18,
               fontWeight: FontWeight.w500,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            'Eş sahiplerle mesajlaşmaya başlayın',
+            AppLocalizations.of(context)!.startChattingWithCoOwners,
             style: TextStyle(
-              color: isDark ? Colors.grey[500] : Colors.grey[500],
+              color: isDark ? Colors.grey[500] : Colors.black54,
               fontSize: 14,
             ),
           ),
@@ -818,12 +1072,23 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
   }
 
   Widget _buildMessagesList(bool isDark) {
+    print('🏗️ Mesaj listesi oluşturuluyor - ${_messages.length} mesaj var');
+    print('📝 Mesaj detayları: ${_messages.map((m) => {
+      'id': m['messageId'],
+      'message': m['message'],
+      'sender': m['senderName'],
+      'timestamp': m['timestamp'],
+    }).toList()}');
+    
     return ListView.builder(
+      controller: _scrollController,
       padding: const EdgeInsets.all(16),
       itemCount: _messages.length,
       itemBuilder: (context, index) {
         final message = _messages[index];
         final isCurrentUser = message['senderId'] == FirebaseAuth.instance.currentUser?.uid;
+        
+        print('📱 Mesaj ${index + 1} render ediliyor: ${message['message']}');
         
         return Container(
           margin: const EdgeInsets.only(bottom: 16),
@@ -855,6 +1120,18 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Sender name (only for messages from others)
+                      if (!isCurrentUser) ...[
+                        Text(
+                          message['senderName'] ?? AppLocalizations.of(context)!.anonymousUser,
+                          style: TextStyle(
+                            color: isDark ? Colors.grey[300] : Colors.black87,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                      ],
                       if (message['messageType'] == 'text') ...[
                         Text(
                           message['message'] ?? '',
@@ -898,7 +1175,7 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
                           Text(
                             message['caption'],
                             style: TextStyle(
-                              color: isDark ? Colors.grey[400] : Colors.grey[600],
+                              color: isDark ? Colors.grey[400] : Colors.black87,
                               fontSize: 14,
                               fontStyle: FontStyle.italic,
                             ),
@@ -928,7 +1205,7 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      'Sesli Mesaj',
+                                      AppLocalizations.of(context)!.voiceMessage(''),
                                       style: TextStyle(
                                         color: isDark ? Colors.white : Colors.black87,
                                         fontSize: 16,
@@ -936,9 +1213,9 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
                                       ),
                                     ),
                                     Text(
-                                      '${message['durationSeconds'] ?? 0} saniye',
+                                      '${message['durationSeconds'] ?? 0} ${AppLocalizations.of(context)!.seconds}',
                                       style: TextStyle(
-                                        color: isDark ? Colors.grey[400] : Colors.grey[600],
+                                        color: isDark ? Colors.grey[400] : Colors.black87,
                                         fontSize: 12,
                                       ),
                                     ),
@@ -973,20 +1250,7 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
     );
   }
 
-  String _getTimeAgo(DateTime dateTime) {
-    final now = DateTime.now();
-    final difference = now.difference(dateTime);
 
-    if (difference.inDays > 0) {
-      return '${difference.inDays} gün önce';
-    } else if (difference.inHours > 0) {
-      return '${difference.inHours} saat önce';
-    } else if (difference.inMinutes > 0) {
-      return '${difference.inMinutes} dakika önce';
-    } else {
-      return 'Az önce';
-    }
-  }
 
   @override
   void dispose() {
@@ -994,6 +1258,8 @@ class _PetCoOwnerManagementPageState extends State<PetCoOwnerManagementPage>
     _emailController.dispose();
     _messageController.dispose();
     _imageCaptionController.dispose();
+    _messageSubscription?.cancel();
+    _scrollController.dispose();
     super.dispose();
   }
 }

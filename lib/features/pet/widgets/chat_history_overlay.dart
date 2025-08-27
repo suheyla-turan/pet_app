@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pati_takip/l10n/app_localizations.dart';
 import '../models/chat_history.dart';
 import '../../../services/chat_history_service.dart';
 
@@ -9,6 +10,7 @@ class ChatHistoryOverlay extends StatefulWidget {
   final Function(ChatHistory) onChatSelected;
   final VoidCallback onClose;
   final VoidCallback onClearCurrentChat;
+  final Function(ChatHistory)? onDeleteChat;
 
   const ChatHistoryOverlay({
     super.key,
@@ -18,6 +20,7 @@ class ChatHistoryOverlay extends StatefulWidget {
     required this.onChatSelected,
     required this.onClose,
     required this.onClearCurrentChat,
+    this.onDeleteChat,
   });
 
   @override
@@ -58,12 +61,18 @@ class _ChatHistoryOverlayState extends State<ChatHistoryOverlay>
 
   Future<void> _loadChatHistory() async {
     try {
+      print('🔄 Chat history overlay\'de veri yükleniyor...');
       final history = await ChatHistoryService.getChatHistory();
+      print('📊 Chat history service\'den ${history.length} chat döndü');
+      
       setState(() {
         _chatHistory = history;
         _isLoading = false;
       });
+      
+      print('✅ Chat history overlay state güncellendi');
     } catch (e) {
+      print('❌ Chat history overlay\'de hata: $e');
       setState(() {
         _isLoading = false;
       });
@@ -71,28 +80,36 @@ class _ChatHistoryOverlayState extends State<ChatHistoryOverlay>
   }
 
   Future<void> _deleteChat(ChatHistory chat) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Sohbeti Sil'),
-        content: Text('"${chat.title}" sohbetini silmek istediğinizden emin misiniz?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('İptal'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Sil'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm == true) {
-      await ChatHistoryService.deleteChat(chat.id);
+    // Eğer onDeleteChat callback'i tanımlıysa, onu kullan
+    if (widget.onDeleteChat != null) {
+      await widget.onDeleteChat!(chat);
+      // Callback'den sonra chat history'yi yeniden yükle
       await _loadChatHistory();
+    } else {
+      // Fallback: Eski yöntem
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Sohbeti Sil'),
+          content: Text('"${chat.title}" sohbetini silmek istediğinizden emin misiniz?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('İptal'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Sil'),
+            ),
+          ],
+        ),
+      );
+
+      if (confirm == true) {
+        await ChatHistoryService.deleteChat(chat.id);
+        await _loadChatHistory();
+      }
     }
   }
 
@@ -104,6 +121,8 @@ class _ChatHistoryOverlayState extends State<ChatHistoryOverlay>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return AnimatedBuilder(
       animation: _slideAnimation,
       builder: (context, child) {
@@ -115,151 +134,157 @@ class _ChatHistoryOverlayState extends State<ChatHistoryOverlay>
           child: child,
         );
       },
-      child: Container(
-        width: MediaQuery.of(context).size.width * 0.5,
-        height: double.infinity,
-        decoration: BoxDecoration(
-          color: const Color(0xFF1A1A1A),
-          border: Border(
-            left: BorderSide(
-              color: Colors.white.withOpacity(0.1),
-              width: 1,
-            ),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.3),
-              blurRadius: 10,
-              spreadRadius: 2,
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            // Header
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.05),
-                border: Border(
-                  bottom: BorderSide(
-                    color: Colors.white.withOpacity(0.1),
-                    width: 1,
-                  ),
-                ),
+      child: Material(
+        color: Colors.transparent,
+        child: Container(
+          width: MediaQuery.of(context).size.width * 0.9, // Made wider
+          height: double.infinity,
+          decoration: BoxDecoration(
+            color: const Color(0xFF1A1A1A),
+            border: Border(
+              left: BorderSide(
+                color: Colors.white.withOpacity(0.1),
+                width: 1,
               ),
-              child: Row(
-                children: [
-                  IconButton(
-                    onPressed: _closeOverlay,
-                    icon: const Icon(Icons.close, color: Colors.white),
-                  ),
-                  const Expanded(
-                    child: Text(
-                      'Sohbet Geçmişi',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                      ),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                blurRadius: 10,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.all(20), // Increased padding
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.05),
+                  border: Border(
+                    bottom: BorderSide(
+                      color: Colors.white.withOpacity(0.1),
+                      width: 1,
                     ),
                   ),
-                ],
-              ),
-            ),
-            
-            // New Chat Button
-            Container(
-              margin: const EdgeInsets.all(16),
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: widget.onNewChat,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF8B5CF6),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
                 ),
-                icon: const Icon(Icons.add_comment, size: 20),
-                label: const Text(
-                  'Yeni Sohbet',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
-            
-            // Clear Current Chat Button
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: widget.onClearCurrentChat,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFEF4444),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                icon: const Icon(Icons.clear, size: 18),
-                label: const Text(
-                  'Mevcut Sohbeti Temizle',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
-            
-            // Chat History List
-            Expanded(
-              child: _isLoading
-                  ? const Center(
-                      child: CircularProgressIndicator(
-                        color: Color(0xFF8B5CF6),
+                child: Row(
+                  children: [
+                    IconButton(
+                      onPressed: _closeOverlay,
+                      icon: const Icon(Icons.close, color: Colors.white, size: 24), // Made icon bigger
+                      iconSize: 24, // Set icon size
+                    ),
+                    Expanded(
+                      child: Text(
+                        l10n.chatHistory,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 20, // Made bigger
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    )
-                  : _chatHistory.isEmpty
-                      ? _buildEmptyState()
-                      : _buildChatHistoryList(),
-            ),
-          ],
+                    ),
+                  ],
+                ),
+              ),
+              
+              // New Chat Button
+              Container(
+                margin: const EdgeInsets.all(20), // Increased margin
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: widget.onNewChat,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF8B5CF6),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 20), // Increased padding
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16), // Increased border radius
+                    ),
+                  ),
+                  icon: const Icon(Icons.add_comment, size: 24), // Made icon bigger
+                  label: Text(
+                    l10n.newChat,
+                    style: const TextStyle(
+                      fontSize: 18, // Made bigger
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+              
+              // Clear Current Chat Button
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 12), // Increased margins
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: widget.onClearCurrentChat,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFEF4444),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16), // Increased padding
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16), // Increased border radius
+                    ),
+                  ),
+                  icon: const Icon(Icons.clear, size: 20), // Made icon bigger
+                  label: Text(
+                    l10n.clearCurrentChat,
+                    style: const TextStyle(
+                      fontSize: 16, // Made bigger
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+              
+
+              
+              // Chat History List
+              Expanded(
+                child: _isLoading
+                    ? const Center(
+                        child: CircularProgressIndicator(
+                          color: Color(0xFF8B5CF6),
+                        ),
+                      )
+                    : _chatHistory.isEmpty
+                        ? _buildEmptyState(l10n)
+                        : _buildChatHistoryList(),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(AppLocalizations l10n) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
             Icons.chat_bubble_outline,
-            size: 64,
+            size: 80, // Made bigger
             color: Colors.white.withOpacity(0.3),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20), // Increased spacing
           Text(
-            'Henüz sohbet geçmişi yok',
+            l10n.noChatHistoryYet,
             style: TextStyle(
               color: Colors.white.withOpacity(0.6),
-              fontSize: 16,
+              fontSize: 18, // Made bigger
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            'Yeni bir sohbet başlatın!',
+            l10n.startNewChat,
             style: TextStyle(
               color: Colors.white.withOpacity(0.4),
-              fontSize: 14,
+              fontSize: 16, // Made bigger
             ),
           ),
         ],

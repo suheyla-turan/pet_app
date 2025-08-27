@@ -25,44 +25,61 @@ class _FeedbackPageState extends State<FeedbackPage> {
     return Scaffold(
       // Klavye açılırken performans optimizasyonu
       resizeToAvoidBottomInset: false,
-      appBar: AppBar(
-        title: const Text('PatiTakip'),
-        elevation: 0,
-        backgroundColor: Colors.transparent, // Şeffaf app bar - sayfa arka planı ile uyumlu
-        foregroundColor: themeProvider.getPrimaryTextColor(isDark),
-        titleTextStyle: TextStyle(
-          fontSize: 24,
-          fontWeight: FontWeight.w700,
-          color: themeProvider.getPrimaryTextColor(isDark),
-        ),
-        iconTheme: IconThemeData(
-          color: themeProvider.getPrimaryTextColor(isDark),
-        ),
-      ),
       body: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
           gradient: themeProvider.getBackgroundGradient(isDark),
         ),
-        child: _sent
-            ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.check_circle, color: Colors.green, size: 48),
-                    const SizedBox(height: 16),
-                    Text(
-                      AppLocalizations.of(context)!.feedbackThanks, 
+        child: Column(
+          children: [
+            // App Bar
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: Icon(
+                      Icons.arrow_back,
+                      color: themeProvider.getPrimaryTextColor(isDark),
+                    ),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  Expanded(
+                    child: Text(
+                      'PatiTakip',
                       style: TextStyle(
-                        fontSize: 18,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w700,
                         color: themeProvider.getPrimaryTextColor(isDark),
+                        letterSpacing: 0.5,
                       ),
                     ),
-                  ],
-                ),
-              )
-            : Form(
+                  ),
+                ],
+              ),
+            ),
+            
+            // Content
+            Expanded(
+              child: _sent
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.check_circle, color: Colors.green, size: 48),
+                          const SizedBox(height: 16),
+                          Text(
+                            AppLocalizations.of(context)!.feedbackThanks, 
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: themeProvider.getPrimaryTextColor(isDark),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : Form(
                 key: _formKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -108,6 +125,9 @@ class _FeedbackPageState extends State<FeedbackPage> {
                   ],
                 ),
               ),
+            ),
+          ],
+        ),
       ),
     );
   }

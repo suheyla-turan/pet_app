@@ -4,6 +4,7 @@ import '../models/pet.dart';
 import 'package:pati_takip/services/notification_service.dart';
 import 'package:pati_takip/l10n/app_localizations.dart';
 import '../../../providers/theme_provider.dart';
+import 'package:flutter/services.dart';
 
 class VaccinePage extends StatefulWidget {
   final List<Vaccine> vaccines;
@@ -25,7 +26,7 @@ class _VaccinePageState extends State<VaccinePage> {
         NotificationService.scheduleNotification(
           id: vaccine.name.hashCode ^ vaccine.date.hashCode,
           title: AppLocalizations.of(context)!.vaccineTime,
-          body: '${vaccine.name} ${AppLocalizations.of(context)!.vaccineTime} geldi!',
+          body: '${vaccine.name} aşı zamanı geldi!',
           scheduledTime: vaccine.date,
         );
       }
@@ -40,12 +41,25 @@ class _VaccinePageState extends State<VaccinePage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(widget.showDone ? AppLocalizations.of(context)!.doneVaccineAdd : AppLocalizations.of(context)!.vaccineAdd),
+        title: Text(
+          widget.showDone ? AppLocalizations.of(context)!.doneVaccineAdd : AppLocalizations.of(context)!.vaccineAdd,
+          style: TextStyle(
+            color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87,
+          ),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
-              decoration: InputDecoration(labelText: AppLocalizations.of(context)!.vaccineName),
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.vaccineName,
+                labelStyle: TextStyle(
+                  color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87,
+                ),
+              ),
+              style: TextStyle(
+                color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87,
+              ),
               onChanged: (value) => name = value,
             ),
             const SizedBox(height: 12),
@@ -61,12 +75,25 @@ class _VaccinePageState extends State<VaccinePage> {
                   selectedDate = picked;
                 }
               },
-              child: Text(AppLocalizations.of(context)!.selectDate),
+              child: Text(
+                AppLocalizations.of(context)!.selectDate,
+                style: TextStyle(
+                  color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87,
+                ),
+              ),
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text(AppLocalizations.of(context)!.cancel)),
+          TextButton(
+            onPressed: () => Navigator.pop(context), 
+            child: Text(
+              AppLocalizations.of(context)!.cancel,
+              style: TextStyle(
+                color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87,
+              ),
+            ),
+          ),
           ElevatedButton(
             onPressed: () {
               if (name.isNotEmpty && selectedDate != null) {
@@ -74,7 +101,12 @@ class _VaccinePageState extends State<VaccinePage> {
                 Navigator.pop(context);
               }
             },
-            child: Text(AppLocalizations.of(context)!.add),
+            child: Text(
+              AppLocalizations.of(context)!.add,
+              style: TextStyle(
+                color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87,
+              ),
+            ),
           ),
         ],
       ),
@@ -93,25 +125,28 @@ class _VaccinePageState extends State<VaccinePage> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('PatiTakip'),
-          centerTitle: true,
-          backgroundColor: Colors.transparent, // Şeffaf app bar - sayfa arka planı ile uyumlu
-          elevation: 0,
-          foregroundColor: Colors.white,
-          titleTextStyle: const TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.w700,
-            color: Colors.white,
-          ),
-          iconTheme: const IconThemeData(
-            color: Colors.white,
+          systemOverlayStyle: SystemUiOverlayStyle(
+            statusBarColor: Colors.transparent,
+            statusBarIconBrightness: Theme.of(context).brightness == Brightness.dark ? Brightness.light : Brightness.dark,
+            statusBarBrightness: Theme.of(context).brightness == Brightness.dark ? Brightness.dark : Brightness.light,
           ),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
-            onPressed: () {
-              Navigator.pop(context, widget.vaccines); // AppBar geri butonunda da güncel listeyi döndür
-            },
+            onPressed: () => Navigator.pop(context, widget.vaccines),
+            color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87,
           ),
+          title: Text(
+            widget.showDone ? AppLocalizations.of(context)!.completedVaccines : AppLocalizations.of(context)!.vaccinesToBeTaken,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87,
+            ),
+          ),
+          centerTitle: true,
+          backgroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.transparent : Colors.white.withOpacity(0.9),
+          elevation: Theme.of(context).brightness == Brightness.dark ? 0 : 2,
+          foregroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87,
         ),
         body: Container(
           decoration: BoxDecoration(
@@ -119,42 +154,94 @@ class _VaccinePageState extends State<VaccinePage> {
               Theme.of(context).brightness == Brightness.dark
             ),
           ),
-          child: filteredVaccines.isEmpty
-              ? Center(child: Text(AppLocalizations.of(context)!.noVaccines(widget.showDone.toString())))
-              : ListView.builder(
-                itemCount: filteredVaccines.length,
-                itemBuilder: (context, index) {
-                  final vaccine = filteredVaccines[index];
-                  return ListTile(
-                    leading: Icon(widget.showDone ? Icons.check : Icons.vaccines, color: widget.showDone ? Colors.green : Colors.orange),
-                    title: Text(vaccine.name),
-                    subtitle: Text(AppLocalizations.of(context)!.date(vaccine.date.toString())),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (!widget.showDone)
-                          IconButton(
-                            icon: const Icon(Icons.check_circle, color: Colors.green),
-                            tooltip: 'Mark as Done',
-                            onPressed: () async {
-                              setState(() {
-                                vaccine.isDone = true;
-                              });
-                            },
+          child: Column(
+            children: [
+              // Content
+              Expanded(
+                child: filteredVaccines.isEmpty
+                    ? Center(
+                        child: Container(
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.9),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
                           ),
-                        IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () {
-                            setState(() {
-                              widget.vaccines.remove(vaccine);
-                            });
-                          },
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.vaccines_outlined,
+                                size: 64,
+                                color: Colors.grey[600],
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                                                 widget.showDone ? AppLocalizations.of(context)!.completedVaccines : AppLocalizations.of(context)!.vaccinesToBeTaken,
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                  color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
                         ),
-                      ],
-                    ),
-                  );
-                },
+                      )
+                    : ListView.builder(
+                        itemCount: filteredVaccines.length,
+                        itemBuilder: (context, index) {
+                          final vaccine = filteredVaccines[index];
+                          return ListTile(
+                            leading: Icon(widget.showDone ? Icons.check : Icons.vaccines, color: widget.showDone ? Colors.green : Colors.orange),
+                            title: Text(
+                              vaccine.name,
+                              style: TextStyle(
+                                color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87,
+                              ),
+                            ),
+                            subtitle: Text(
+                              AppLocalizations.of(context)!.date(vaccine.date.toString()),
+                              style: TextStyle(
+                                color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[300] : Colors.black87,
+                              ),
+                            ),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (!widget.showDone)
+                                  IconButton(
+                                    icon: const Icon(Icons.check_circle, color: Colors.green),
+                                                                         tooltip: AppLocalizations.of(context)!.markAsDone,
+                                    onPressed: () async {
+                                      setState(() {
+                                        vaccine.isDone = true;
+                                      });
+                                    },
+                                  ),
+                                IconButton(
+                                  icon: const Icon(Icons.delete, color: Colors.red),
+                                  onPressed: () {
+                                    setState(() {
+                                      widget.vaccines.remove(vaccine);
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
               ),
+            ],
+          ),
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: _showAddDialog,

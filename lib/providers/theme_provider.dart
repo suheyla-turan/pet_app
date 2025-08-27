@@ -104,7 +104,7 @@ class ThemeProvider with ChangeNotifier {
       appBarTheme: const AppBarTheme(
         elevation: 0,
         centerTitle: true,
-        backgroundColor: Colors.transparent, // Şeffaf app bar - ana menü gibi
+        backgroundColor: Color(0xFF2D3748), // Dark background for better contrast
         foregroundColor: Colors.white,
         titleTextStyle: TextStyle(
           fontSize: 24,
@@ -114,6 +114,7 @@ class ThemeProvider with ChangeNotifier {
         iconTheme: IconThemeData(
           color: Colors.white,
         ),
+        surfaceTintColor: Colors.transparent,
       ),
       cardTheme: CardThemeData(
         elevation: 8,
@@ -259,6 +260,43 @@ class ThemeProvider with ChangeNotifier {
   // Ana menü shadow colors
   Color getShadowColor(bool isDark) {
     return Colors.black.withValues(alpha: isDark ? 0.3 : 0.08);
+  }
+
+  // Gelişmiş okunabilirlik için kart arka planı
+  Color getReadableCardBackgroundColor(bool isDark) {
+    return isDark 
+      ? Colors.grey.shade800.withValues(alpha: 0.9) // Daha opak
+      : Colors.white.withValues(alpha: 0.95); // Daha opak
+  }
+
+  // Okunabilirlik için güçlendirilmiş metin renkleri
+  Color getHighContrastTextColor(bool isDark) {
+    return isDark 
+      ? Colors.white // Maksimum kontrast
+      : const Color(0xFF1A202C); // Daha koyu, daha okunabilir
+  }
+
+  Color getHighContrastSecondaryTextColor(bool isDark) {
+    return isDark 
+      ? Colors.grey.shade200 // Daha açık
+      : Colors.grey.shade700; // Daha koyu
+  }
+
+  // Güçlendirilmiş gölge efekti
+  List<BoxShadow> getReadableCardShadow(bool isDark) {
+    return [
+      BoxShadow(
+        color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.15),
+        blurRadius: 25,
+        offset: const Offset(0, 10),
+        spreadRadius: 1,
+      ),
+      BoxShadow(
+        color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.08),
+        blurRadius: 10,
+        offset: const Offset(0, 4),
+      ),
+    ];
   }
 
   // Profile/settings pages - Ana menü tarzı varyasyon

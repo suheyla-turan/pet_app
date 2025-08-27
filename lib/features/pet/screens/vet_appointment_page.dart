@@ -70,8 +70,8 @@ class _VetAppointmentPageState extends State<VetAppointmentPage> {
   Future<void> _saveAppointment() async {
     if (_selectedDate == null || _selectedTime == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Lütfen tarih ve saat seçin'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.selectDateAndTime),
           backgroundColor: Colors.red,
         ),
       );
@@ -137,7 +137,7 @@ class _VetAppointmentPageState extends State<VetAppointmentPage> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${widget.pet.name} için veteriner randevusu kaydedildi'),
+          content: Text(AppLocalizations.of(context)!.appointmentSaved(widget.pet.name)),
           backgroundColor: Colors.green,
         ),
       );
@@ -146,7 +146,7 @@ class _VetAppointmentPageState extends State<VetAppointmentPage> {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Hata oluştu: $e'),
+          content: Text(AppLocalizations.of(context)!.errorOccurred(e.toString())),
           backgroundColor: Colors.red,
         ),
       );
@@ -204,7 +204,7 @@ class _VetAppointmentPageState extends State<VetAppointmentPage> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${widget.pet.name} için veteriner randevusu iptal edildi'),
+          content: Text(AppLocalizations.of(context)!.appointmentCancelled(widget.pet.name)),
           backgroundColor: Colors.orange,
         ),
       );
@@ -213,7 +213,7 @@ class _VetAppointmentPageState extends State<VetAppointmentPage> {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Hata oluştu: $e'),
+          content: Text(AppLocalizations.of(context)!.errorOccurred(e.toString())),
           backgroundColor: Colors.red,
         ),
       );
@@ -226,165 +226,246 @@ class _VetAppointmentPageState extends State<VetAppointmentPage> {
 
   @override
   Widget build(BuildContext context) {
-    final localizations = AppLocalizations.of(context);
     final hasAppointment = widget.pet.vetAppointment != null;
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('${widget.pet.name} - Veteriner Randevusu'),
-        foregroundColor: Colors.white,
-        backgroundColor: Colors.transparent, // Şeffaf app bar - sayfa arka planı ile uyumlu
-        elevation: 0,
-        titleTextStyle: const TextStyle(
-          fontSize: 24,
-          fontWeight: FontWeight.w700,
-          color: Colors.white,
-        ),
-        iconTheme: const IconThemeData(
-          color: Colors.white,
-        ),
-      ),
-              body: Container(
+      body: Container(
         decoration: BoxDecoration(
-          gradient: Provider.of<ThemeProvider>(context).getBackgroundGradient(
-            Theme.of(context).brightness == Brightness.dark
-          ),
+          gradient: themeProvider.getBackgroundGradient(isDark),
         ),
         child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Mevcut randevu bilgisi
-                if (hasAppointment) ...[
-                  Card(
-                    color: const Color(0xFF8B5CF6).withOpacity(0.1),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        children: [
-                          const Icon(
-                            Icons.calendar_today,
-                            color: Color(0xFF8B5CF6),
-                            size: 48,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Mevcut Randevu',
-                            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                              color: const Color(0xFF8B5CF6),
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            DateFormat('EEEE, d MMMM yyyy', 'tr_TR').format(widget.pet.vetAppointment!),
-                            style: Theme.of(context).textTheme.titleLarge,
-                          ),
-                          Text(
-                            DateFormat('HH:mm').format(widget.pet.vetAppointment!),
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        ],
+          child: Column(
+            children: [
+              // App Bar
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back),
+                      onPressed: () => Navigator.pop(context),
+                      color: themeProvider.getPrimaryTextColor(isDark),
+                    ),
+                    Expanded(
+                      child: Text(
+                        '${widget.pet.name} - ${AppLocalizations.of(context)!.vetAppointmentTitle}',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w700,
+                          color: themeProvider.getPrimaryTextColor(isDark),
+                          letterSpacing: 0.5,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 24),
-                ],
-
-                // Tarih seçici
-                Card(
-                  child: ListTile(
-                    leading: const Icon(Icons.calendar_today, color: Color(0xFF8B5CF6)),
-                    title: Text(_selectedDate != null 
-                      ? DateFormat('EEEE, d MMMM yyyy', 'tr_TR').format(_selectedDate!)
-                      : 'Tarih Seçin'),
-                    subtitle: const Text('Randevu tarihi'),
-                    onTap: () => _selectDate(context),
-                    trailing: const Icon(Icons.arrow_forward_ios),
-                  ),
+                  ],
                 ),
-
-                const SizedBox(height: 16),
-
-                // Saat seçici
-                Card(
-                  child: ListTile(
-                    leading: const Icon(Icons.access_time, color: Color(0xFF8B5CF6)),
-                    title: Text(_selectedTime != null 
-                      ? _selectedTime!.format(context)
-                      : 'Saat Seçin'),
-                    subtitle: const Text('Randevu saati'),
-                    onTap: () => _selectTime(context),
-                    trailing: const Icon(Icons.arrow_forward_ios),
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-
-                // Notlar
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Notlar',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
+              ),
+              
+              // Content
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Mevcut randevu bilgisi
+                      if (hasAppointment) ...[
+                        Card(
+                          color: themeProvider.getReadableCardBackgroundColor(isDark),
+                          shadowColor: themeProvider.getShadowColor(isDark),
+                          elevation: 8,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              children: [
+                                Icon(
+                                  Icons.calendar_today,
+                                  color: Theme.of(context).colorScheme.primary,
+                                  size: 48,
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  AppLocalizations.of(context)!.existingAppointment,
+                                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                    color: Theme.of(context).colorScheme.primary,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  DateFormat('EEEE, d MMMM yyyy', 'tr_TR').format(widget.pet.vetAppointment!),
+                                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    color: themeProvider.getPrimaryTextColor(isDark),
+                                  ),
+                                ),
+                                Text(
+                                  DateFormat('HH:mm').format(widget.pet.vetAppointment!),
+                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    color: themeProvider.getSecondaryTextColor(isDark),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        TextField(
-                          controller: _notesController,
-                          maxLines: 3,
-                          decoration: const InputDecoration(
-                            hintText: 'Randevu ile ilgili notlar...',
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
+                        const SizedBox(height: 24),
                       ],
-                    ),
+
+                      // Tarih seçici
+                      Card(
+                        color: themeProvider.getReadableCardBackgroundColor(isDark),
+                        shadowColor: themeProvider.getShadowColor(isDark),
+                        elevation: 8,
+                        child: ListTile(
+                          leading: Icon(
+                            Icons.calendar_today, 
+                            color: Theme.of(context).colorScheme.primary
+                          ),
+                          title: Text(
+                            _selectedDate != null 
+                              ? DateFormat('EEEE, d MMMM yyyy', 'tr_TR').format(_selectedDate!)
+                              : AppLocalizations.of(context)!.selectDate,
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: themeProvider.getPrimaryTextColor(isDark),
+                            ),
+                          ),
+                          subtitle: Text(
+                            AppLocalizations.of(context)!.appointmentDate,
+                            style: TextStyle(
+                              color: themeProvider.getSecondaryTextColor(isDark),
+                              fontSize: 14,
+                            ),
+                          ),
+                          onTap: () => _selectDate(context),
+                          trailing: Icon(
+                            Icons.arrow_forward_ios,
+                            color: themeProvider.getSecondaryTextColor(isDark),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // Saat seçici
+                      Card(
+                        color: themeProvider.getReadableCardBackgroundColor(isDark),
+                        shadowColor: themeProvider.getShadowColor(isDark),
+                        elevation: 8,
+                        child: ListTile(
+                          leading: Icon(
+                            Icons.access_time, 
+                            color: Theme.of(context).colorScheme.primary
+                          ),
+                          title: Text(
+                            _selectedTime != null 
+                              ? _selectedTime!.format(context)
+                              : AppLocalizations.of(context)!.selectTime,
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: themeProvider.getPrimaryTextColor(isDark),
+                            ),
+                          ),
+                          subtitle: Text(
+                            AppLocalizations.of(context)!.appointmentTime,
+                            style: TextStyle(
+                              color: themeProvider.getSecondaryTextColor(isDark),
+                              fontSize: 14,
+                            ),
+                          ),
+                          onTap: () => _selectTime(context),
+                          trailing: Icon(
+                            Icons.arrow_forward_ios,
+                            color: themeProvider.getSecondaryTextColor(isDark),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // Notlar
+                      Card(
+                        color: themeProvider.getReadableCardBackgroundColor(isDark),
+                        shadowColor: themeProvider.getShadowColor(isDark),
+                        elevation: 8,
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                AppLocalizations.of(context)!.notes,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: themeProvider.getPrimaryTextColor(isDark),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              TextField(
+                                controller: _notesController,
+                                maxLines: 3,
+                                style: TextStyle(
+                                  color: themeProvider.getPrimaryTextColor(isDark),
+                                ),
+                                decoration: InputDecoration(
+                                  hintText: AppLocalizations.of(context)!.appointmentNotesHint,
+                                  hintStyle: TextStyle(
+                                    color: themeProvider.getSecondaryTextColor(isDark),
+                                  ),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(15),
+                                  ),
+                                  filled: true,
+                                  fillColor: isDark 
+                                    ? Colors.grey.shade800 
+                                    : Colors.grey.shade50,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      const Spacer(),
+
+                      // Butonlar
+                      if (hasAppointment) ...[
+                        ElevatedButton.icon(
+                          onPressed: _isLoading ? null : _cancelAppointment,
+                          icon: const Icon(Icons.cancel),
+                          label: Text(AppLocalizations.of(context)!.cancelAppointment),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+
+                      ElevatedButton.icon(
+                        onPressed: _isLoading ? null : _saveAppointment,
+                        icon: Icon(hasAppointment ? Icons.edit : Icons.save),
+                        label: Text(hasAppointment ? AppLocalizations.of(context)!.updateAppointment : AppLocalizations.of(context)!.saveAppointment),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Theme.of(context).colorScheme.primary,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                      ),
+                      
+                      // Alt navigasyon çubuğu için ekstra boşluk
+                      const SizedBox(height: 20),
+                    ],
                   ),
                 ),
-
-                const Spacer(),
-
-                // Butonlar
-                if (hasAppointment) ...[
-                  ElevatedButton.icon(
-                    onPressed: _isLoading ? null : _cancelAppointment,
-                    icon: const Icon(Icons.cancel),
-                    label: const Text('Randevuyu İptal Et'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
-
-                ElevatedButton.icon(
-                  onPressed: _isLoading ? null : _saveAppointment,
-                  icon: Icon(hasAppointment ? Icons.edit : Icons.save),
-                  label: Text(hasAppointment ? 'Randevuyu Güncelle' : 'Randevu Kaydet'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF8B5CF6),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
-                ),
-                
-                // Alt navigasyon çubuğu için ekstra boşluk
-                const SizedBox(height: 20),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
