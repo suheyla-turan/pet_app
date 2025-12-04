@@ -431,7 +431,7 @@ class _VetAppointmentPageState extends State<VetAppointmentPage> {
                         ),
                       ),
 
-                      const SizedBox(height: 32),
+                      const Spacer(),
 
                       // Butonlar
                       if (hasAppointment) ...[

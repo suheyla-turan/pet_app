@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 
@@ -27,7 +27,7 @@ class _VetAppointmentPageState extends State<VetAppointmentPage> {
   @override
   void initState() {
     super.initState();
-    // Mevcut randevu varsa yÃ¼kle
+    // Mevcut randevu varsa yükle
     if (widget.pet.vetAppointment != null) {
       _selectedDate = widget.pet.vetAppointment;
       _selectedTime = TimeOfDay.fromDateTime(widget.pet.vetAppointment!);
@@ -83,7 +83,7 @@ class _VetAppointmentPageState extends State<VetAppointmentPage> {
     });
 
     try {
-      // Randevu tarihini oluÅŸtur
+      // Randevu tarihini oluştur
       final appointmentDateTime = DateTime(
         _selectedDate!.year,
         _selectedDate!.month,
@@ -92,7 +92,7 @@ class _VetAppointmentPageState extends State<VetAppointmentPage> {
         _selectedTime!.minute,
       );
 
-      // Pet'i gÃ¼ncelle
+      // Pet'i güncelle
       final updatedPet = Pet(
         name: widget.pet.name,
         gender: widget.pet.gender,
@@ -116,7 +116,7 @@ class _VetAppointmentPageState extends State<VetAppointmentPage> {
         vetAppointment: appointmentDateTime,
       );
 
-      // Firestore'da gÃ¼ncelle
+      // Firestore'da güncelle
       if (widget.pet.id != null) {
         await FirestoreService.hayvanGuncelle(widget.pet.id!, updatedPet);
       }
@@ -130,7 +130,7 @@ class _VetAppointmentPageState extends State<VetAppointmentPage> {
         );
       }
 
-      // Provider'Ä± gÃ¼ncelle
+      // Provider'ı güncelle
       if (mounted) {
         context.read<PetProvider>().updatePet(widget.pet.name, updatedPet);
       }
@@ -163,7 +163,7 @@ class _VetAppointmentPageState extends State<VetAppointmentPage> {
     });
 
     try {
-      // Pet'i gÃ¼ncelle
+      // Pet'i güncelle
       final updatedPet = Pet(
         name: widget.pet.name,
         gender: widget.pet.gender,
@@ -187,7 +187,7 @@ class _VetAppointmentPageState extends State<VetAppointmentPage> {
         vetAppointment: null,
       );
 
-      // Firestore'da gÃ¼ncelle
+      // Firestore'da güncelle
       if (widget.pet.id != null) {
         await FirestoreService.hayvanGuncelle(widget.pet.id!, updatedPet);
       }
@@ -197,7 +197,7 @@ class _VetAppointmentPageState extends State<VetAppointmentPage> {
         await NotificationService.cancelVetAppointmentNotifications(widget.pet.id!);
       }
 
-      // Provider'Ä± gÃ¼ncelle
+      // Provider'ı güncelle
       if (mounted) {
         context.read<PetProvider>().updatePet(widget.pet.name, updatedPet);
       }
@@ -313,7 +313,7 @@ class _VetAppointmentPageState extends State<VetAppointmentPage> {
                         const SizedBox(height: 24),
                       ],
 
-                      // Tarih seÃ§ici
+                      // Tarih seçici
                       Card(
                         color: themeProvider.getReadableCardBackgroundColor(isDark),
                         shadowColor: themeProvider.getShadowColor(isDark),
@@ -350,7 +350,7 @@ class _VetAppointmentPageState extends State<VetAppointmentPage> {
 
                       const SizedBox(height: 16),
 
-                      // Saat seÃ§ici
+                      // Saat seçici
                       Card(
                         color: themeProvider.getReadableCardBackgroundColor(isDark),
                         shadowColor: themeProvider.getShadowColor(isDark),
@@ -431,7 +431,7 @@ class _VetAppointmentPageState extends State<VetAppointmentPage> {
                         ),
                       ),
 
-                      const SizedBox(height: 32),
+                      const Spacer(),
 
                       // Butonlar
                       if (hasAppointment) ...[
@@ -459,7 +459,7 @@ class _VetAppointmentPageState extends State<VetAppointmentPage> {
                         ),
                       ),
                       
-                      // Alt navigasyon Ã§ubuÄŸu iÃ§in ekstra boÅŸluk
+                      // Alt navigasyon çubuğu için ekstra boşluk
                       const SizedBox(height: 20),
                     ],
                   ),
