@@ -54,12 +54,25 @@ class PetMessage {
   final String sender;
   final String text;
   final int timestamp;
-  PetMessage({this.key, required this.sender, required this.text, required this.timestamp});
+  final String? imagePath;
+  final String? audioPath;
+  
+  PetMessage({
+    this.key, 
+    required this.sender, 
+    required this.text, 
+    required this.timestamp,
+    this.imagePath,
+    this.audioPath,
+  });
+  
   factory PetMessage.fromMap(Map map, [String? key]) => PetMessage(
     key: key,
     sender: map['sender'],
     text: map['text'],
     timestamp: map['timestamp'],
+    imagePath: map['imagePath'],
+    audioPath: map['audioPath'],
   );
 }
 
@@ -67,6 +80,8 @@ extension PetChatRealtime on RealtimeService {
   Future<void> addPetMessage(String petId, String senderUid, String text, {
     String? petName,
     String? senderName,
+    String? imagePath,
+    String? audioPath,
   }) async {
     await _safeDatabaseOperation(() async {
       final msgRef = _db.child('pet_chats').child(petId).child('messages').push();
@@ -74,6 +89,8 @@ extension PetChatRealtime on RealtimeService {
         'sender': senderUid,
         'text': text,
         'timestamp': DateTime.now().millisecondsSinceEpoch,
+        if (imagePath != null) 'imagePath': imagePath,
+        if (audioPath != null) 'audioPath': audioPath,
       };
       await msgRef.set(messageData);
       

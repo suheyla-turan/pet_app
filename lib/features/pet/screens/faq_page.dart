@@ -179,12 +179,12 @@ class _FAQPageState extends State<FAQPage> with TickerProviderStateMixin {
             answer: l10n.faqShareAccountAnswer,
           ),
           FAQItem(
-            question: "İnternet bağlantısı olmadan uygulamayı kullanabilir miyim?",
-            answer: "Temel özellikler sınırlı olarak offline çalışır, ancak veri senkronizasyonu ve AI sohbet için internet bağlantısı gereklidir.",
+            question: l10n.faqOfflineUse,
+            answer: l10n.faqOfflineUseAnswer,
           ),
           FAQItem(
-            question: "Uygulama ne kadar yer kaplar?",
-            answer: "PatiTakip yaklaşık 50-100 MB yer kaplar. Fotoğraflar bulutta saklandığı için cihazınızda çok yer kaplamaz.",
+            question: l10n.faqAppSize,
+            answer: l10n.faqAppSizeAnswer,
           ),
         ],
       ),
@@ -202,12 +202,12 @@ class _FAQPageState extends State<FAQPage> with TickerProviderStateMixin {
             answer: l10n.faqTermsOfServiceAnswer,
           ),
           FAQItem(
-            question: "Hata raporu nasıl gönderirim?",
-            answer: "Uygulama içindeki 'Geri Bildirim' bölümünü kullanarak hata raporu gönderebilirsiniz. Detaylı açıklama yaparsanız daha hızlı yardım edebiliriz.",
+            question: l10n.faqBugReport,
+            answer: l10n.faqBugReportAnswer,
           ),
           FAQItem(
-            question: "Özellik önerisi nasıl yapabilirim?",
-            answer: "Yeni özellik önerilerinizi 'Geri Bildirim' bölümünden gönderebilirsiniz. Tüm öneriler değerlendirilir ve en popüler olanlar geliştirilir.",
+            question: l10n.faqFeatureRequest,
+            answer: l10n.faqFeatureRequestAnswer,
           ),
         ],
       ),

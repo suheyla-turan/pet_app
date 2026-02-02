@@ -74,9 +74,10 @@ class _PetListPageState extends State<PetListPage> with TickerProviderStateMixin
           WidgetsBinding.instance.addPostFrameCallback((_) {
             authProvider.signOutUnverifiedUser();
           });
+          final loc = AppLocalizations.of(context)!;
           return Scaffold(
             appBar: AppBar(
-              title: Text('E-posta Doğrulama Gerekli'),
+              title: Text(loc.emailVerificationRequired),
               centerTitle: true,
             ),
             body: Center(
@@ -86,7 +87,7 @@ class _PetListPageState extends State<PetListPage> with TickerProviderStateMixin
                   Icon(Icons.mark_email_unread_outlined, size: 64, color: Colors.orange),
                   SizedBox(height: 16),
                   Text(
-                    'E-posta adresinizi doğrulamanız gerekiyor',
+                    loc.emailVerificationDescription,
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     textAlign: TextAlign.center,
                   ),

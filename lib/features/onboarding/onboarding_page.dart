@@ -755,13 +755,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 widget.onComplete?.call();
                                 
                                 // Başarı mesajı göster ve e-posta doğrulama gerekliliğini belirt
+                                final loc = AppLocalizations.of(context)!;
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: Text('Hesap başarıyla oluşturuldu! Lütfen e-posta doğrulaması için e-postanızı kontrol edin.'),
+                                    content: Text('${loc.ok}! ${loc.emailVerificationDescription}'),
                                     backgroundColor: Colors.green[600],
                                     duration: Duration(seconds: 8),
                                     action: SnackBarAction(
-                                      label: AppLocalizations.of(context)!.ok,
+                                      label: loc.ok,
                                       textColor: Colors.white,
                                       onPressed: () {
                                         ScaffoldMessenger.of(context).removeCurrentSnackBar();

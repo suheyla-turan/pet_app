@@ -341,10 +341,34 @@ class _VetAppointmentPageState extends State<VetAppointmentPage> {
                             ),
                           ),
                           onTap: () => _selectDate(context),
-                          trailing: Icon(
-                            Icons.arrow_forward_ios,
-                            color: themeProvider.getSecondaryTextColor(isDark),
-                          ),
+                          trailing: _selectedDate != null
+                              ? Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                      icon: Icon(
+                                        Icons.clear,
+                                        color: Colors.red.shade400,
+                                        size: 20,
+                                      ),
+                                      onPressed: () {
+                                        setState(() {
+                                          _selectedDate = null;
+                                        });
+                                      },
+                                      tooltip: 'Tarihi sil',
+                                    ),
+                                    Icon(
+                                      Icons.arrow_forward_ios,
+                                      color: themeProvider.getSecondaryTextColor(isDark),
+                                      size: 16,
+                                    ),
+                                  ],
+                                )
+                              : Icon(
+                                  Icons.arrow_forward_ios,
+                                  color: themeProvider.getSecondaryTextColor(isDark),
+                                ),
                         ),
                       ),
 
@@ -378,10 +402,38 @@ class _VetAppointmentPageState extends State<VetAppointmentPage> {
                             ),
                           ),
                           onTap: () => _selectTime(context),
-                          trailing: Icon(
-                            Icons.arrow_forward_ios,
-                            color: themeProvider.getSecondaryTextColor(isDark),
-                          ),
+                          trailing: _selectedTime != null
+                              ? Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                      icon: Icon(
+                                        Icons.clear,
+                                        color: Colors.red.shade400,
+                                        size: 20,
+                                      ),
+                                      onPressed: () async {
+                                        // Saati sil
+                                        setState(() {
+                                          _selectedTime = null;
+                                        });
+                                        
+                                        // Randevuyu da sil
+                                        await _cancelAppointment();
+                                      },
+                                      tooltip: 'Saati sil ve randevuyu iptal et',
+                                    ),
+                                    Icon(
+                                      Icons.arrow_forward_ios,
+                                      color: themeProvider.getSecondaryTextColor(isDark),
+                                      size: 16,
+                                    ),
+                                  ],
+                                )
+                              : Icon(
+                                  Icons.arrow_forward_ios,
+                                  color: themeProvider.getSecondaryTextColor(isDark),
+                                ),
                         ),
                       ),
 

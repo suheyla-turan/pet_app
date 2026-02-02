@@ -325,11 +325,8 @@ class _RootPageState extends State<RootPage> {
         
         // Kullanıcı giriş yapmış ama e-posta doğrulanmamış
         if (authProvider.isLoggedInButNotVerified) {
-          // E-posta doğrulanmamış kullanıcıları otomatik olarak çıkış yap
-          // Bu sayede giriş ekranına yönlendirilirler
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            authProvider.signOutUnverifiedUser();
-          });
+          // Email verification ekranını göster
+          // Otomatik çıkış yapma, kullanıcı email doğrulayıncaya kadar burada kalacak
           return EmailVerificationScreen();
         }
         

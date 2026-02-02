@@ -6,15 +6,24 @@ service cloud.firestore {
       return request.auth != null && request.auth.token.email_verified == true;
     }
     
-    // Profil bilgileri - sadece e-posta doğrulanmış kullanıcılar
-    match /profiller/{userId} {
-      allow read: if request.auth != null && request.auth.uid == userId;
-      allow write: if request.auth != null && request.auth.uid == userId && isEmailVerified();
+    // Giriş yapan herhangi bir kullanıcı için kontrol
+    function isAuthenticated() {
+      return request.auth != null;
     }
     
-    // Hayvan bilgileri - sadece e-posta doğrulanmış kullanıcılar
+    // Profil bilgileri - sadece kendi profilini okuyabilir, kendisi yazabilir
+    match /profiller/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Hayvan bilgileri
     match /hayvanlar/{petId} {
-      allow read, write: if isEmailVerified();
+      // Okuma: Email verified kullanıcılar
+      allow read: if isEmailVerified();
+      // Yazma: Sadece sahip olup email verified kullanıcılar
+      allow write: if isEmailVerified();
       
       // Pet mesajları - sadece pet sahipleri ve eş sahipleri
       match /messages/{messageId} {
@@ -29,17 +38,25 @@ service cloud.firestore {
       allow read, write: if isEmailVerified();
     }
     
-    // Ortak sahip istekleri - sadece e-posta doğrulanmış kullanıcılar
+    // Ortak sahip istekleri - herhangi bir giriş yapan kullanıcı gönderebilir, email verified olmasa da
     match /co_owner_requests/{requestId} {
-      allow read, write: if isEmailVerified();
+      allow create: if request.auth != null;
+      allow read: if request.auth != null && (
+        request.auth.uid == resource.data.requesterId ||
+        request.auth.uid == resource.data.requestedUserId
+      );
+      allow update, delete: if request.auth != null && (
+        request.auth.uid == resource.data.requesterId ||
+        request.auth.uid == resource.data.requestedUserId
+      );
     }
     
-    // Pet mesajları - sadece e-posta doğrulanmış kullanıcılar
+    // Pet mesajları - e-posta doğrulanmış kullanıcılar
     match /pet_messages/{petId} {
       allow read, write: if isEmailVerified();
     }
     
-    // Diğer tüm belgeler - sadece e-posta doğrulanmış kullanıcılar
+    // Diğer tüm belgeler - e-posta doğrulanmış kullanıcılar
     match /{document=**} {
       allow read, write: if isEmailVerified();
     }

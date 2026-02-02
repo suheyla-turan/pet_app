@@ -54,22 +54,20 @@ class AuthService {
 
       // E-posta doğrulama gönder
       try {
-        await result.user!.sendEmailVerification();
+        await sendEmailVerification();
         print('✅ E-posta doğrulama gönderildi');
       } catch (verificationError) {
         print('⚠️ E-posta doğrulama gönderme hatası: $verificationError');
+        // Devam et, kullanıcı tekrar deneyebilir
       }
 
       // Display name güncellemesini daha sonra yap
       _updateDisplayNameLater(result.user!, name);
 
-      // Kayıt başarılı olduktan sonra otomatik olarak çıkış yap
-      // Böylece kullanıcı giriş ekranına yönlendirilir
-      await Future.delayed(Duration(milliseconds: 1000)); // Kısa bir bekleme
-      await _auth.signOut();
-      print('✅ Kayıt sonrası otomatik çıkış yapıldı, giriş ekranına yönlendiriliyor');
+      // KAYıT SONRASI OTOMATİK ÇIKIŞ YAPMA - E-POSTA VERİFİKASYON EKRANI GÖSTER
+      // Kullanıcı giriş yapmış kalsın, email verification ekranına yönlendirilecek
+      print('✅ Kayıt işlemi tamamlandı, kullanıcı email verification ekranına yönlendirilecek');
 
-      print('✅ Kayıt işlemi tamamlandı');
       return result;
     } catch (e) {
       print('❌ Kayıt hatası: $e');
@@ -97,11 +95,17 @@ class AuthService {
               print('⚠️ Firestore kayıt hatası (ikinci deneme): $firestoreError');
             }
             
-            // Başarılı olarak kabul et ve çıkış yap
-            await Future.delayed(Duration(milliseconds: 1000));
-            await _auth.signOut();
-            print('✅ PigeonUserDetails hatası atlandı, kayıt başarılı ve çıkış yapıldı');
-            return null; // Kullanıcı zaten oluşturuldu, null döndür
+            // Email verification gönder
+            try {
+              await sendEmailVerification();
+              print('✅ E-posta doğrulama gönderildi');
+            } catch (verificationError) {
+              print('⚠️ E-posta doğrulama gönderme hatası: $verificationError');
+            }
+            
+            // PigeonUserDetails hatası atlandı, kayıt başarılı
+            print('✅ PigeonUserDetails hatası atlandı, kayıt başarılı');
+            return null; // Kullanıcı zaten oluşturuldu
           }
         } catch (checkError) {
           print('⚠️ Kullanıcı kontrol hatası: $checkError');
@@ -136,14 +140,10 @@ class AuthService {
         password: password,
       );
       
-      // E-posta doğrulama kontrolü
+      // E-posta doğrulama kontrolü - doğrulanmamışsa uyarı ver ama giriş yaptır
       if (result.user != null && !result.user!.emailVerified) {
-        // E-posta doğrulanmamışsa oturumu kapat
-        await _auth.signOut();
-        throw FirebaseAuthException(
-          code: 'email-not-verified',
-          message: 'E-posta adresiniz henüz doğrulanmamış. Lütfen e-postanızı kontrol edin.',
-        );
+        print('⚠️ Kullanıcı e-posta doğrulanmamış: ${result.user!.email}');
+        // Giriş yapmasına izin ver, email verification ekranı gösterilecek
       }
       
       return result;
@@ -281,15 +281,50 @@ class AuthService {
     try {
       final user = _auth.currentUser;
       if (user != null && !user.emailVerified) {
-        await user.sendEmailVerification();
-        print('✅ E-posta doğrulama gönderildi');
+        print('📧 E-posta doğrulama başlatılıyor: ${user.email}');
+        
+        // ActionCodeSettings ile email verification gönder
+        // Bu sayede custom domain ve daha iyi deliverability sağlanır
+        final actionCodeSettings = ActionCodeSettings(
+          url: 'https://pati-takip.firebaseapp.com/?verificationCode={CODE}&continueUrl=pati-takip://verify-email',
+          handleCodeInApp: true,
+          iOSBundleId: 'com.example.pati_takip',
+          androidPackageName: 'com.example.pati_takip',
+          androidInstallApp: true,
+        );
+        
+        // ActionCodeSettings ile e-posta doğrulama gönder
+        try {
+          await user.sendEmailVerification(actionCodeSettings);
+          print('✅ E-posta doğrulama gönderildi (ActionCodeSettings ile)');
+          print('📨 E-posta gönderilen adres: ${user.email}');
+          print('🕐 Lütfen spam klasörünü de kontrol edin');
+        } catch (e) {
+          // ActionCodeSettings hatası durumunda fallback olarak normal şekilde gönder
+          print('⚠️ ActionCodeSettings ile gönderme başarısız: $e');
+          print('🔄 Normal şekilde email gönderme deneniyor...');
+          
+          try {
+            await user.sendEmailVerification();
+            print('✅ E-posta doğrulama gönderildi (normal şekilde)');
+            print('📨 E-posta gönderilen adres: ${user.email}');
+            print('💡 Default Firebase sender kullanılıyor (noreply@firebase.com)');
+            print('🕐 Lütfen spam klasörünü de kontrol edin');
+          } catch (fallbackError) {
+            print('❌ Email gönderme başarısız: $fallbackError');
+            print('📋 Hata detayı: ${fallbackError.toString()}');
+            throw Exception('Email verification gönderilemedi: $fallbackError');
+          }
+        }
       } else if (user?.emailVerified == true) {
-        print('ℹ️ E-posta zaten doğrulanmış');
+        print('ℹ️ E-posta zaten doğrulanmış: ${user?.email}');
       } else {
         print('❌ Kullanıcı bulunamadı');
+        throw Exception('Kullanıcı oturumu geçerli değil');
       }
     } catch (e) {
       print('❌ E-posta doğrulama gönderme hatası: $e');
+      print('🔍 Hata türü: ${e.runtimeType}');
       rethrow;
     }
   }

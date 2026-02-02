@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import 'package:pati_takip/l10n/app_localizations.dart';
 
 class EmailVerificationDialog extends StatefulWidget {
   const EmailVerificationDialog({super.key});
@@ -15,6 +16,7 @@ class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     return AlertDialog(
       backgroundColor: const Color(0xFF2C2C2C),
       shape: RoundedRectangleBorder(
@@ -24,8 +26,8 @@ class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
         children: [
           Icon(Icons.email, color: Colors.blue, size: 28),
           const SizedBox(width: 12),
-          const Text(
-            'E-posta Doğrulama',
+          Text(
+            loc.emailVerificationRequired,
             style: TextStyle(
               color: Colors.white,
               fontSize: 20,
@@ -38,14 +40,41 @@ class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Hesabınızı güvenli hale getirmek için e-posta adresinizi doğrulamanız gerekiyor.',
+          Text(
+            loc.emailVerificationDescription,
             style: TextStyle(
               color: Colors.white70,
               fontSize: 16,
             ),
           ),
           const SizedBox(height: 16),
+          // Spam folder warning
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.orange.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.orange.withOpacity(0.3)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.warning_rounded, color: Colors.orange, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    '⚠️ E-postayı spam/promosyon klasörlerinde de kontrol edin!',
+                    style: TextStyle(
+                      color: Colors.orange.withOpacity(0.9),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          // Info message
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
@@ -59,10 +88,10 @@ class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'E-posta doğrulaması yapılmadan bazı özellikler kullanılamayabilir.',
+                    '💡 E-posta 5-30 dakika içinde ulaşmalıdır. Gelmezse "Gönder"i tekrar tıklamayı deneyin.',
                     style: TextStyle(
                       color: Colors.blue.withOpacity(0.8),
-                      fontSize: 14,
+                      fontSize: 13,
                     ),
                   ),
                 ),
@@ -74,8 +103,8 @@ class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text(
-            'Daha Sonra',
+          child: Text(
+            loc.cancel,
             style: TextStyle(
               color: Colors.grey,
               fontSize: 16,
@@ -100,8 +129,8 @@ class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
                     valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                   ),
                 )
-              : const Text(
-                  'Doğrulama Gönder',
+              : Text(
+                  loc.send,
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 16,
@@ -126,8 +155,8 @@ class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
                     valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                   ),
                 )
-              : const Text(
-                  'Kontrol Et',
+              : Text(
+                  loc.check,
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 16,
@@ -141,6 +170,7 @@ class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
 
   Future<void> _sendVerificationEmail() async {
     setState(() => _isSending = true);
+    final loc = AppLocalizations.of(context)!;
     
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
@@ -149,31 +179,33 @@ class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
       if (success) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('✅ Doğrulama e-postası gönderildi!'),
+            SnackBar(
+              content: Text('✅ E-posta gönderildi! Spam klasörünü de kontrol edin.'),
               backgroundColor: Colors.green,
-              duration: Duration(seconds: 3),
+              duration: const Duration(seconds: 4),
             ),
           );
         }
       } else {
         if (mounted) {
+          final errorMsg = authProvider.errorMessage ?? 'Bilinmeyen hata';
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('❌ Hata: ${authProvider.errorMessage}'),
+              content: Text('❌ Hata: $errorMsg'),
               backgroundColor: Colors.red,
-              duration: const Duration(seconds: 3),
+              duration: const Duration(seconds: 4),
             ),
           );
         }
       }
     } catch (e) {
       if (mounted) {
+        print('❌ Email gönderme hatası: $e');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('❌ Hata: $e'),
+            content: Text('❌ E-posta gönderilemedi. Lütfen internet bağlantınızı kontrol edin.'),
             backgroundColor: Colors.red,
-            duration: const Duration(seconds: 3),
+            duration: const Duration(seconds: 4),
           ),
         );
       }
@@ -186,6 +218,7 @@ class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
 
   Future<void> _checkVerification() async {
     setState(() => _isChecking = true);
+    final loc = AppLocalizations.of(context)!;
     
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
@@ -194,8 +227,8 @@ class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
       if (authProvider.isEmailVerified) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('✅ E-posta doğrulandı!'),
+            SnackBar(
+              content: Text('✅ ${loc.emailVerificationRequired}!'),
               backgroundColor: Colors.green,
               duration: Duration(seconds: 3),
             ),
@@ -205,8 +238,8 @@ class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('ℹ️ E-posta henüz doğrulanmamış. Lütfen bekleyin.'),
+            SnackBar(
+              content: Text('ℹ️ ${loc.emailVerificationDescription}'),
               backgroundColor: Colors.orange,
               duration: Duration(seconds: 3),
             ),
@@ -217,7 +250,7 @@ class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('❌ Hata: $e'),
+            content: Text('❌ ${loc.errorOccurred(e.toString())}'),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 3),
           ),

@@ -31,6 +31,7 @@ class PetProvider with ChangeNotifier {
       _updatePetValues();
       _checkLowValues();
       _checkVaccines();
+      _checkPastAppointments(); // Geçmiş randevuları kontrol et
     });
   }
 
@@ -139,6 +140,67 @@ class PetProvider with ChangeNotifier {
           }
         }
       }
+    }
+  }
+
+  /// Geçmiş veteriner randevularını otomatik sil
+  void _checkPastAppointments() {
+    for (final pet in _pets) {
+      if (pet.vetAppointment != null) {
+        final now = DateTime.now();
+        
+        // Randevu tarihi/saati geçmişse sil
+        if (pet.vetAppointment!.isBefore(now)) {
+          print('⏰ ${pet.name} için veteriner randevusu zamanı geçti, siliniyor...');
+          
+          // Geçmiş randevuyu sil
+          _deleteExpiredAppointment(pet);
+        }
+      }
+    }
+  }
+
+  /// Geçmiş randevuyu sil
+  Future<void> _deleteExpiredAppointment(Pet pet) async {
+    try {
+      if (pet.id == null) return;
+      
+      // Randevuyu null yap
+      final updatedPet = Pet(
+        name: pet.name,
+        gender: pet.gender,
+        birthDate: pet.birthDate,
+        satiety: pet.satiety,
+        happiness: pet.happiness,
+        energy: pet.energy,
+        care: pet.care,
+        satietyInterval: pet.satietyInterval,
+        happinessInterval: pet.happinessInterval,
+        energyInterval: pet.energyInterval,
+        careInterval: pet.careInterval,
+        vaccines: pet.vaccines,
+        type: pet.type,
+        breed: pet.breed,
+        imagePath: pet.imagePath,
+        lastUpdate: pet.lastUpdate,
+        owners: pet.owners,
+        id: pet.id,
+        creator: pet.creator,
+        vetAppointment: null, // Randevuyu sil
+      );
+      
+      // Firestore'da güncelle
+      await FirestoreService.hayvanGuncelle(pet.id!, updatedPet);
+      
+      // Bildirimleri iptal et
+      await NotificationService.cancelVetAppointmentNotifications(pet.id!);
+      
+      // Local state güncelle
+      updatePet(pet.name, updatedPet);
+      
+      print('✅ Geçmiş randevu otomatik silindi: ${pet.name}');
+    } catch (e) {
+      print('❌ Geçmiş randevu silinirken hata: $e');
     }
   }
 

@@ -817,25 +817,33 @@ class FirestoreService {
   // Eşsahip istek sistemi metodları
   static Future<void> sendCoOwnerRequest(String petId, String email) async {
     try {
+      print('📤 Eş sahip isteği gönderme başlatıldı - PetID: $petId, Email: $email');
+      
       // Mevcut kullanıcıyı kontrol et
       final currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser == null) {
         throw Exception('Kullanıcı oturumu yok. Lütfen tekrar giriş yapın.');
       }
+      print('✅ Kullanıcı oturumu doğrulandı: ${currentUser.uid}');
 
       // Hayvan dokümanını getir ve yetkiyi kontrol et
+      print('🔍 Hayvan dökümanı aranıyor: $petId');
       final petDoc = await FirebaseFirestore.instance.collection('hayvanlar').doc(petId).get();
       if (!petDoc.exists) {
-        throw Exception('Hayvan bulunamadı');
+        throw Exception('Hayvan bulunamadı. PetID: $petId');
       }
+      print('✅ Hayvan bulundu');
 
       final petData = petDoc.data()!;
+      final petName = petData['name'] ?? 'İsimsiz Hayvan';
       final ownerIds = List<String>.from(petData['owners'] ?? []);
+      print('📋 Hayvan sahibi sayısı: ${ownerIds.length}, Sahip IDs: $ownerIds');
 
       // Kullanıcının bu hayvana sahip olup olmadığını kontrol et
       if (!ownerIds.contains(currentUser.uid)) {
         throw Exception('Bu hayvana eş sahip isteği gönderme yetkiniz yok. Sadece hayvan sahipleri eş sahip isteği gönderebilir.');
       }
+      print('✅ Sahip yetki kontrolü geçti');
 
       // Email ile kullanıcıyı bul
       print('🔍 Email ile kullanıcı aranıyor: $email');
@@ -843,52 +851,50 @@ class FirestoreService {
       final usersSnapshot = await FirebaseFirestore.instance
           .collection('profiller')
           .where('email', isEqualTo: email)
+          .limit(1)
           .get();
       
       print('📊 Bulunan kullanıcı sayısı: ${usersSnapshot.docs.length}');
       
       if (usersSnapshot.docs.isEmpty) {
-        // Debug: Tüm profiller koleksiyonunu kontrol et
-        final allUsersSnapshot = await FirebaseFirestore.instance
-            .collection('profiller')
-            .get();
-        print('📋 Toplam kullanıcı sayısı: ${allUsersSnapshot.docs.length}');
-        
-        // İlk birkaç kullanıcının email'ini yazdır
-        for (int i = 0; i < allUsersSnapshot.docs.length && i < 3; i++) {
-          final userData = allUsersSnapshot.docs[i].data();
-          print('👤 Kullanıcı ${i + 1}: ${userData['email']}');
-        }
-        
+        print('❌ Email ile kullanıcı bulunamadı: $email');
         throw Exception('Bu email adresi ile kayıtlı kullanıcı bulunamadı. Kullanıcının önce uygulamaya kayıtlı olması gerekiyor.');
       }
       
       final userDoc = usersSnapshot.docs.first;
       final userId = userDoc.id;
+      final userData = userDoc.data();
+      print('✅ Kullanıcı bulundu: ${userData['name'] ?? 'İsimsiz'} ($userId)');
       
       // Kendine istek göndermeye çalışıyorsa engelle
       if (userId == currentUser.uid) {
         throw Exception('Kendinize eş sahip isteği gönderemezsiniz.');
       }
+      print('✅ Kendi kendine istek engeli kontrol geçti');
 
       // Kullanıcı zaten eş sahip mi kontrol et
       if (ownerIds.contains(userId)) {
         throw Exception('Bu kullanıcı zaten eş sahip.');
       }
+      print('✅ Zaten eş sahip kontrolü geçti');
 
       // Zaten bekleyen istek var mı kontrol et
+      print('🔍 Bekleyen istek kontrolü yapılıyor...');
       final existingRequest = await FirebaseFirestore.instance
           .collection('co_owner_requests')
           .where('petId', isEqualTo: petId)
           .where('requestedUserId', isEqualTo: userId)
           .where('status', isEqualTo: 'pending')
+          .limit(1)
           .get();
       
       if (existingRequest.docs.isNotEmpty) {
         throw Exception('Bu kullanıcıya zaten eş sahip isteği gönderilmiş.');
       }
+      print('✅ Bekleyen istek yok');
       
       // Reddedilen istek varsa sil (tekrar istek atılabilmesi için)
+      print('🔍 Reddedilen istek kontrol ediliyor...');
       final rejectedRequest = await FirebaseFirestore.instance
           .collection('co_owner_requests')
           .where('petId', isEqualTo: petId)
@@ -898,12 +904,14 @@ class FirestoreService {
       
       for (final doc in rejectedRequest.docs) {
         await doc.reference.delete();
+        print('🗑️ Reddedilen istek silindi: ${doc.id}');
       }
       
       // İsteği kaydet
+      print('📝 İstek kaydediliyor...');
       await FirebaseFirestore.instance.collection('co_owner_requests').add({
         'petId': petId,
-        'petName': petData['name'] ?? 'İsimsiz Hayvan',
+        'petName': petName,
         'requesterId': currentUser.uid,
         'requesterName': currentUser.displayName ?? 'İsimsiz Kullanıcı',
         'requesterEmail': currentUser.email ?? '',
@@ -914,10 +922,10 @@ class FirestoreService {
         'message': 'Bu hayvana eş sahip olmak ister misiniz?',
       });
       
-      print('✅ Eş sahip isteği gönderildi: $email');
+      print('✅ Eş sahip isteği başarıyla gönderildi: $email -> $petName');
     } catch (e) {
       print('❌ HATA - Eş sahip isteği gönderilemedi: $e');
-      throw e;
+      rethrow;
     }
   }
 

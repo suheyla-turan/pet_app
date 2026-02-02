@@ -25,13 +25,10 @@ class AuthProvider extends ChangeNotifier {
       print('🔍 Auth state değişikliği: ${user?.email ?? 'null'}');
       _user = user;
       
-      // Eğer kullanıcı giriş yapmış ama e-posta doğrulanmamışsa otomatik çıkış yap
+      // Kullanıcı giriş yapmış mı sadece kontrol et, otomatik çıkış yapma
       if (user != null && !user.emailVerified) {
-        print('⚠️ Auth state değişikliği: Doğrulanmamış e-posta ile giriş yapıldı, otomatik çıkış yapılıyor');
-        // Kısa bir bekleme sonrası otomatik çıkış yap
-        Future.delayed(Duration(milliseconds: 1000), () {
-          signOutUnverifiedUser();
-        });
+        print('⚠️ Auth state değişikliği: Doğrulanmamış e-posta ile giriş yapıldı');
+        // Email verification ekranı gösterilecek, otomatik çıkış yapılmayacak
       }
       
       notifyListeners();
@@ -49,12 +46,20 @@ class AuthProvider extends ChangeNotifier {
 
   // E-posta doğrulama durumunu periyodik olarak kontrol et
   void _startEmailVerificationCheck() {
-    // Her 30 saniyede bir e-posta doğrulama durumunu kontrol et
-    Future.delayed(Duration(seconds: 30), () {
+    // Her 15 saniyede bir e-posta doğrulama durumunu kontrol et
+    Future.delayed(Duration(seconds: 15), () {
       if (_user != null && !_user!.emailVerified) {
-        // E-posta doğrulanmamışsa otomatik çıkış yap
-        print('⚠️ Periyodik kontrol: E-posta doğrulanmamış, otomatik çıkış yapılıyor');
-        signOutUnverifiedUser();
+        // E-posta doğrulama durumunu yenile
+        print('🔄 Periyodik kontrol: E-posta doğrulama durumu kontrol ediliyor');
+        _authService.reloadAndCheckEmailVerification().then((_) {
+          // Eğer doğrulandıysa kullanıcı state'i güncelle
+          _user = _authService.currentUser;
+          notifyListeners();
+        });
+        _startEmailVerificationCheck(); // Tekrar başlat
+      } else if (_user != null && _user!.emailVerified) {
+        print('✅ Periyodik kontrol: E-posta doğrulanmış');
+        notifyListeners();
         _startEmailVerificationCheck(); // Tekrar başlat
       } else {
         _startEmailVerificationCheck(); // Tekrar başlat

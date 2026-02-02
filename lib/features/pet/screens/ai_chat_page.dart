@@ -71,9 +71,7 @@ class _AIChatPageState extends State<AIChatPage> {
     
     // Add personalized welcome message
     _messages.add(ChatMessage(
-      text: widget.pet != null 
-          ? 'Merhaba! ${widget.pet!.name} hakkında size yardımcı olmaya geldim! 🐾\n\nEvcil hayvanınızın sağlığı, davranışı, beslenmesi ve bakımı hakkında kişiselleştirilmiş tavsiyeler verebilirim. Ne öğrenmek istiyorsunuz?'
-          : 'Merhaba! Ben sizin AI evcil hayvan bakım asistanınızım. Size nasıl yardımcı olabilirim?',
+      text: _getWelcomeMessage(),
       isUser: false,
       timestamp: DateTime.now(),
     ));
@@ -310,9 +308,10 @@ class _AIChatPageState extends State<AIChatPage> {
           'userName': _auth.currentUser!.displayName ?? 'Anonim',
           'timestamp': Timestamp.now(),
           'type': 'text',
+          'sessionId': _currentChatHistory?.id,
         });
         
-        print('✅ Mesaj Firebase\'e gönderildi');
+        print('✅ Mesaj Firebase\'e gönderildi (SessionID: ${_currentChatHistory?.id})');
       }
       
       // Kullanıcı mesajını ekle (Firebase stream aktif olsa da olmasa da)
@@ -355,9 +354,10 @@ class _AIChatPageState extends State<AIChatPage> {
                 'userName': 'AI Asistan',
                 'timestamp': Timestamp.now(),
                 'type': 'ai_response',
+                'sessionId': _currentChatHistory?.id,
               });
               
-              print('✅ AI yanıtı Firebase\'e gönderildi');
+              print('✅ AI yanıtı Firebase\'e gönderildi (SessionID: ${_currentChatHistory?.id})');
             }
             
             setState(() {
@@ -1168,9 +1168,14 @@ Yanıt:
         petName: widget.pet?.name,
       );
       
+      // Restart Firebase message stream
+      if (widget.pet != null) {
+        _startFirebaseMessageStream();
+      }
+      
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context)!.startNewChat),
+          content: Text(AppLocalizations.of(context)!.newChatStarted),
           backgroundColor: Colors.green,
           duration: const Duration(seconds: 2),
         ),
@@ -1263,12 +1268,17 @@ Yanıt:
                     ));
                   });
                   
+                  // Restart Firebase message stream
+                  if (widget.pet != null) {
+                    _startFirebaseMessageStream();
+                  }
+                  
                   // Close the overlay
                   _hideChatHistoryOverlay();
                   
                   ScaffoldMessenger.of(originalContext).showSnackBar(
                     SnackBar(
-                      content: Text(AppLocalizations.of(originalContext)!.startNewChat),
+                      content: Text(AppLocalizations.of(originalContext)!.newChatStarted),
                       backgroundColor: Colors.green,
                       duration: const Duration(seconds: 2),
                     ),
@@ -2819,9 +2829,12 @@ Yanıt:
   void _startFirebaseMessageStream() {
     if (widget.pet?.id == null) return;
     
+    // Save the current session ID to filter old messages
+    final currentSessionId = _currentChatHistory?.id;
+    
     print('🔄 Firebase mesaj stream başlatılıyor - Pet ID: ${widget.pet!.id}');
+    print('📋 Session ID: $currentSessionId');
     print('👤 Kullanıcı ID: ${_auth.currentUser?.uid}');
-    print('📧 Kullanıcı e-posta doğrulandı mı: ${_auth.currentUser?.emailVerified}');
     
     try {
       _messageSubscription = _firestore
@@ -2831,13 +2844,25 @@ Yanıt:
           .orderBy('timestamp', descending: false)
           .snapshots()
           .listen((snapshot) {
+        // Only process if this is still the current session
+        if (currentSessionId != _currentChatHistory?.id) {
+          print('⏭️  Eski session mesajı yoksayıldı, bu stream artık geçersiz');
+          return;
+        }
+        
         print('📨 Firebase\'den ${snapshot.docs.length} mesaj alındı');
         
         if (snapshot.docs.isNotEmpty) {
           print('📝 İlk mesaj örneği: ${snapshot.docs.first.data()}');
         }
         
-        final messages = snapshot.docs.map((doc) {
+        final messages = snapshot.docs
+            .where((doc) {
+              // Filter messages by current session ID
+              final messageSessionId = doc.get('sessionId');
+              return messageSessionId == currentSessionId || messageSessionId == null;
+            })
+            .map((doc) {
           final data = doc.data();
           print('🔍 Mesaj verisi: $data');
           return ChatMessage(
@@ -2851,37 +2876,40 @@ Yanıt:
         
         print('✅ ${messages.length} mesaj işlendi');
         
-        // Sadece Firebase'den gelen mesajları ekle, hoş geldin mesajını koru
-        if (_messages.length <= 1) {
-          // Eğer sadece hoş geldin mesajı varsa, Firebase mesajlarını ekle
-          setState(() {
-            _messages.addAll(messages);
-          });
-        } else {
-          // Eğer zaten sohbet varsa, Firebase mesajlarını güncelle
-          setState(() {
-            // Hoş geldin mesajını koru
-            final welcomeMessage = _messages.first;
-            _messages.clear();
-            _messages.add(welcomeMessage);
-            _messages.addAll(messages);
-          });
-        }
-        
-        print('📱 UI güncellendi, toplam mesaj sayısı: ${_messages.length}');
-        
-        // Yeni mesajlar geldiğinde en alta kaydır
-        if (messages.isNotEmpty) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (_scrollController.hasClients) {
-              _scrollController.animateTo(
-                _scrollController.position.maxScrollExtent,
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeOut,
-              );
-            }
+        // Only update if this is still the current session
+        if (currentSessionId == _currentChatHistory?.id) {
+          // Sadece Firebase'den gelen mesajları ekle, hoş geldin mesajını koru
+          if (_messages.length <= 1) {
+            // Eğer sadece hoş geldin mesajı varsa, Firebase mesajlarını ekle
+            setState(() {
+              _messages.addAll(messages);
+            });
+          } else {
+            // Eğer zaten sohbet varsa, Firebase mesajlarını güncelle
+            setState(() {
+              // Hoş geldin mesajını koru
+              final welcomeMessage = _messages.first;
+              _messages.clear();
+              _messages.add(welcomeMessage);
+              _messages.addAll(messages);
             });
           }
+          
+          print('📱 UI güncellendi, toplam mesaj sayısı: ${_messages.length}');
+          
+          // Yeni mesajlar geldiğinde en alta kaydır
+          if (messages.isNotEmpty) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (_scrollController.hasClients) {
+                _scrollController.animateTo(
+                  _scrollController.position.maxScrollExtent,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOut,
+                );
+              }
+            });
+          }
+        }
         }, onError: (error) {
           print('❌ Firebase mesaj stream hatası: $error');
           print('🔍 Hata detayı: ${error.toString()}');

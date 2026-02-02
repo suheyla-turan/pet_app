@@ -134,10 +134,35 @@ class _PetDetailPageState extends State<PetDetailPage> with TickerProviderStateM
         final user = Provider.of<AuthProvider>(context, listen: false).user;
         if (user != null) {
           final realtime = RealtimeService();
-          await realtime.addPetMessage(_pet.id!, user.uid, '🎤 Ses mesajı (${_formatDuration(duration)})');
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Ses mesajı gönderildi!')),
-          );
+          try {
+            // Ses dosyasını message olarak ekle (gerçek dosya path'ı ile)
+            await realtime.addPetMessage(
+              _pet.id!, 
+              user.uid, 
+              '🎤 Ses mesajı (${_formatDuration(duration)})',
+              audioPath: path, // Ses dosyası path'ı gönder
+            );
+            final loc = AppLocalizations.of(context)!;
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('✅ ${loc.send}'),
+                  backgroundColor: Colors.green,
+                  duration: const Duration(seconds: 2),
+                ),
+              );
+            }
+          } catch (e) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('❌ Ses not eklenemedi: $e'),
+                  backgroundColor: Colors.red,
+                  duration: const Duration(seconds: 3),
+                ),
+              );
+            }
+          }
         }
       };
       
@@ -1752,6 +1777,67 @@ Colors.grey.shade700.withOpacity(0.9),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            // Görsel varsa göster
+                            if (msg.imagePath != null && msg.imagePath!.isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 8.0),
+                                child: Container(
+                                  constraints: const BoxConstraints(maxHeight: 200),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Image.file(
+                                      File(msg.imagePath!),
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (context, error, stackTrace) {
+                                        return Container(
+                                          height: 120,
+                                          color: Colors.grey.shade300,
+                                          child: const Center(
+                                            child: Icon(Icons.image_not_supported, size: 40),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            // Ses varsa göster
+                            if (msg.audioPath != null && msg.audioPath!.isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 8.0),
+                                child: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.play_circle_filled,
+                                        color: Colors.blue.shade700,
+                                        size: 24,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          'Ses not',
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            color: Colors.blue.shade700,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
                             // Message text with better wrapping
                             Text(
                               msg.text,
@@ -2022,7 +2108,7 @@ Colors.grey.shade700.withOpacity(0.9),
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) {
           return AlertDialog(
-            title: const Text('Görsel Not Ekle'),
+            title: Text(AppLocalizations.of(context)!.imageNoteAdded),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -2118,11 +2204,32 @@ Colors.grey.shade700.withOpacity(0.9),
                         final message = note.isNotEmpty 
                             ? '📷 $note'
                             : '📷 Görsel not eklendi';
-                        await realtime.addPetMessage(_pet.id!, user.uid, message);
-                        Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Görsel not eklendi!')),
-                        );
+                        try {
+                          // Görsel dosyasını message olarak ekle (gerçek dosya path'ı ile)
+                          await realtime.addPetMessage(
+                            _pet.id!, 
+                            user.uid, 
+                            message,
+                            imagePath: selectedImagePath, // Görsel dosyası path'ı gönder
+                          );
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('✅ Görsel not eklendi!'),
+                              backgroundColor: Colors.green,
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                        } catch (e) {
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('❌ Görsel not eklenemedi: $e'),
+                              backgroundColor: Colors.red,
+                              duration: const Duration(seconds: 3),
+                            ),
+                          );
+                        }
                       }
                     : null,
                 child: const Text('Ekle'),
@@ -2308,7 +2415,7 @@ class AIChatHistoryPage extends StatelessWidget {
       ),
       body: Container(
         decoration: Provider.of<ThemeProvider>(context).getBackgroundDecoration(Theme.of(context).brightness == Brightness.dark),
-        child: const Center(child: Text('Sohbet geçmişi burada görünecek.')),
+        child: Center(child: Text(AppLocalizations.of(context)!.noMessagesYet)),
       ),
     );
   }
